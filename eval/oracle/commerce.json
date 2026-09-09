@@ -1,0 +1,131 @@
+{
+  "app/[page]/layout.tsx": [],
+  "app/[page]/opengraph-image.tsx": [],
+  "app/[page]/page.tsx": [],
+  "app/api/revalidate/route.ts": [],
+  "app/error.tsx": [],
+  "app/globals.css": [],
+  "app/layout.tsx": [
+    "app/globals.css"
+  ],
+  "app/opengraph-image.tsx": [],
+  "app/page.tsx": [],
+  "app/product/[handle]/page.tsx": [],
+  "app/robots.ts": [],
+  "app/search/[collection]/opengraph-image.tsx": [],
+  "app/search/[collection]/page.tsx": [],
+  "app/search/children-wrapper.tsx": [],
+  "app/search/layout.tsx": [
+    "app/search/children-wrapper.tsx"
+  ],
+  "app/search/loading.tsx": [],
+  "app/search/page.tsx": [],
+  "app/sitemap.ts": [],
+  "components/carousel.tsx": [
+    "components/grid/tile.tsx"
+  ],
+  "components/cart/actions.ts": [],
+  "components/cart/add-to-cart.tsx": [
+    "components/cart/cart-context.tsx"
+  ],
+  "components/cart/cart-context.tsx": [],
+  "components/cart/delete-item-button.tsx": [],
+  "components/cart/edit-item-quantity-button.tsx": [],
+  "components/cart/modal.tsx": [
+    "components/cart/actions.ts",
+    "components/cart/cart-context.tsx",
+    "components/cart/delete-item-button.tsx",
+    "components/cart/edit-item-quantity-button.tsx",
+    "components/cart/open-cart.tsx"
+  ],
+  "components/cart/open-cart.tsx": [],
+  "components/grid/index.tsx": [],
+  "components/grid/three-items.tsx": [],
+  "components/grid/tile.tsx": [
+    "components/label.tsx"
+  ],
+  "components/icons/logo.tsx": [],
+  "components/label.tsx": [
+    "components/price.tsx"
+  ],
+  "components/layout/footer-menu.tsx": [],
+  "components/layout/footer.tsx": [],
+  "components/layout/navbar/index.tsx": [
+    "components/layout/navbar/mobile-menu.tsx",
+    "components/layout/navbar/search.tsx"
+  ],
+  "components/layout/navbar/mobile-menu.tsx": [
+    "components/layout/navbar/search.tsx"
+  ],
+  "components/layout/navbar/search.tsx": [],
+  "components/layout/product-grid-items.tsx": [],
+  "components/layout/search/collections.tsx": [
+    "components/layout/search/filter/index.tsx"
+  ],
+  "components/layout/search/filter/dropdown.tsx": [
+    "components/layout/search/filter/index.tsx",
+    "components/layout/search/filter/item.tsx"
+  ],
+  "components/layout/search/filter/index.tsx": [
+    "components/layout/search/filter/dropdown.tsx",
+    "components/layout/search/filter/item.tsx"
+  ],
+  "components/layout/search/filter/item.tsx": [
+    "components/layout/search/filter/index.tsx"
+  ],
+  "components/loading-dots.tsx": [],
+  "components/logo-square.tsx": [
+    "components/icons/logo.tsx"
+  ],
+  "components/opengraph-image.tsx": [
+    "components/icons/logo.tsx"
+  ],
+  "components/price.tsx": [],
+  "components/product/gallery.tsx": [],
+  "components/product/product-description.tsx": [
+    "components/product/variant-selector.tsx"
+  ],
+  "components/product/variant-selector.tsx": [],
+  "components/prose.tsx": [],
+  "components/welcome-toast.tsx": [],
+  "lib/constants.ts": [],
+  "lib/shopify/fragments/cart.ts": [
+    "lib/shopify/fragments/product.ts"
+  ],
+  "lib/shopify/fragments/image.ts": [],
+  "lib/shopify/fragments/product.ts": [
+    "lib/shopify/fragments/image.ts",
+    "lib/shopify/fragments/seo.ts"
+  ],
+  "lib/shopify/fragments/seo.ts": [],
+  "lib/shopify/index.ts": [
+    "lib/shopify/mutations/cart.ts",
+    "lib/shopify/queries/cart.ts",
+    "lib/shopify/queries/collection.ts",
+    "lib/shopify/queries/menu.ts",
+    "lib/shopify/queries/page.ts",
+    "lib/shopify/queries/product.ts",
+    "lib/shopify/types.ts"
+  ],
+  "lib/shopify/mutations/cart.ts": [
+    "lib/shopify/fragments/cart.ts"
+  ],
+  "lib/shopify/queries/cart.ts": [
+    "lib/shopify/fragments/cart.ts"
+  ],
+  "lib/shopify/queries/collection.ts": [
+    "lib/shopify/fragments/product.ts",
+    "lib/shopify/fragments/seo.ts"
+  ],
+  "lib/shopify/queries/menu.ts": [],
+  "lib/shopify/queries/page.ts": [
+    "lib/shopify/fragments/seo.ts"
+  ],
+  "lib/shopify/queries/product.ts": [
+    "lib/shopify/fragments/product.ts"
+  ],
+  "lib/shopify/types.ts": [],
+  "lib/type-guards.ts": [],
+  "lib/utils.ts": [],
+  "next.config.ts": []
+}

@@ -1,0 +1,338 @@
+[
+  {
+    "id": "hono-cors",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for cors",
+    "expected_files": [
+      "src/middleware/cors/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-cors-origin",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for Access-Control-Allow-Origin",
+    "expected_files": [
+      "src/middleware/cors/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-basic-auth",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for basicAuth",
+    "expected_files": [
+      "src/middleware/basic-auth/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-etag",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for etag",
+    "expected_files": [
+      "src/middleware/etag/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-logger",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for logger",
+    "expected_files": [
+      "src/middleware/logger/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-trie-router",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for TrieRouter",
+    "expected_files": [
+      "src/router/trie-router/router.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-jwt-sign",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for sign JWT token",
+    "expected_files": [
+      "src/utils/jwt/jwt.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-body-limit",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for bodyLimit",
+    "expected_files": [
+      "src/middleware/body-limit/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-csrf",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for csrf",
+    "expected_files": [
+      "src/middleware/csrf/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-timeout",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for timeout",
+    "expected_files": [
+      "src/middleware/timeout/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-compression",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for compress",
+    "expected_files": [
+      "src/middleware/compress/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-pretty-json",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for prettyJSON",
+    "expected_files": [
+      "src/middleware/pretty-json/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "commerce-quantity",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "query": "Find the server action implementation that removes a cart line when its requested quantity is zero.",
+    "expected_files": [
+      "components/cart/actions.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "commerce-variant",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "query": "Find the client component that updates URL search parameters when selecting a product option.",
+    "expected_files": [
+      "components/product/variant-selector.tsx"
+    ],
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "commerce-webhook-route",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "query": "Find the Next.js route file registering the POST endpoint for the revalidation webhook.",
+    "expected_files": [
+      "app/api/revalidate/route.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "commerce-webhook-logic",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "query": "Find the implementation that checks webhook topics and calls revalidateTag for products and collections.",
+    "expected_files": [
+      "lib/shopify/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "commerce-optimistic-cart",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "query": "Find the client cart state implementation with optimistic cart item updates.",
+    "expected_files": [
+      "components/cart/cart-context.tsx"
+    ],
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "commerce-product-metadata",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "query": "Find the product detail route implementation that hides products with HIDDEN_PRODUCT_TAG from search engine indexing in its metadata.",
+    "expected_files": [
+      "app/product/[handle]/page.tsx"
+    ],
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "typedi-service-registration",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "query": "Find the class decorator implementation that builds service metadata and registers it in the default container.",
+    "expected_files": [
+      "src/decorators/service.decorator.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "typedi-single-injection",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "query": "Find the single-service injection decorator implementation that registers a property or constructor parameter handler.",
+    "expected_files": [
+      "src/decorators/inject.decorator.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "typedi-many-injection",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "query": "Find the decorator implementation that injects a list of services using getMany.",
+    "expected_files": [
+      "src/decorators/inject-many.decorator.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "typedi-lazy-types",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "query": "Find the helper implementation that delays cyclic type references and uses reflected design:paramtypes metadata.",
+    "expected_files": [
+      "src/utils/resolve-to-type-wrapper.util.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "typedi-registry",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "query": "Find the implementation that rejects duplicate container IDs during registration.",
+    "expected_files": [
+      "src/container-registry.class.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  },
+  {
+    "id": "typedi-service-resolution",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "query": "Find the container implementation that resolves registered services from local or global metadata and instantiates them.",
+    "expected_files": [
+      "src/container-instance.class.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Source inspected before running the evaluated model; implementation location, not tests."
+    }
+  }
+]

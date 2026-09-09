@@ -1,0 +1,402 @@
+[
+  {
+    "id": "auth",
+    "group": "tier1",
+    "dirs": [
+      "src/auth"
+    ],
+    "top_symbols": [
+      "validateSession"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Authentication"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "billing",
+    "group": "tier1",
+    "dirs": [
+      "src/billing"
+    ],
+    "top_symbols": [
+      "calculateInvoice"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Billing"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "search",
+    "group": "tier1",
+    "dirs": [
+      "src/search"
+    ],
+    "top_symbols": [
+      "rankResults"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Search"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "email",
+    "group": "tier1",
+    "dirs": [
+      "src/email"
+    ],
+    "top_symbols": [
+      "sendMessage"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Email"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "cache",
+    "group": "tier1",
+    "dirs": [
+      "src/cache"
+    ],
+    "top_symbols": [
+      "evictExpired"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Cache"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "storage",
+    "group": "tier1",
+    "dirs": [
+      "src/storage"
+    ],
+    "top_symbols": [
+      "saveObject"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Storage"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "payments",
+    "group": "tier1",
+    "dirs": [
+      "src/payments"
+    ],
+    "top_symbols": [
+      "refundPayment"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Payments"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "catalog",
+    "group": "tier2",
+    "dirs": [
+      "app/catalog"
+    ],
+    "top_symbols": [
+      "listProducts"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Catalog"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "cart",
+    "group": "tier2",
+    "dirs": [
+      "app/cart"
+    ],
+    "top_symbols": [
+      "addItem"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Cart"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "checkout",
+    "group": "tier2",
+    "dirs": [
+      "app/checkout"
+    ],
+    "top_symbols": [
+      "submitOrder"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Checkout"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "inventory",
+    "group": "tier2",
+    "dirs": [
+      "app/inventory"
+    ],
+    "top_symbols": [
+      "reserveStock"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Inventory"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "shipping",
+    "group": "tier2",
+    "dirs": [
+      "app/shipping"
+    ],
+    "top_symbols": [
+      "quoteDelivery"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Shipping"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "users",
+    "group": "tier2",
+    "dirs": [
+      "app/users"
+    ],
+    "top_symbols": [
+      "updateProfile"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Users"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "reports",
+    "group": "tier2",
+    "dirs": [
+      "app/reports"
+    ],
+    "top_symbols": [
+      "generateReport"
+    ],
+    "external_deps": [],
+    "file_count": 3,
+    "acceptable_names": [
+      "Reports"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "queue",
+    "group": "tier3",
+    "dirs": [
+      "src/queue"
+    ],
+    "top_symbols": [
+      "retryJob"
+    ],
+    "external_deps": [],
+    "file_count": 4,
+    "acceptable_names": [
+      "Queue"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "events",
+    "group": "tier3",
+    "dirs": [
+      "src/events"
+    ],
+    "top_symbols": [
+      "publishEvent"
+    ],
+    "external_deps": [],
+    "file_count": 4,
+    "acceptable_names": [
+      "Events"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "metrics",
+    "group": "tier3",
+    "dirs": [
+      "src/metrics"
+    ],
+    "top_symbols": [
+      "recordCounter"
+    ],
+    "external_deps": [],
+    "file_count": 4,
+    "acceptable_names": [
+      "Metrics"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "audit",
+    "group": "tier3",
+    "dirs": [
+      "src/audit"
+    ],
+    "top_symbols": [
+      "appendRecord"
+    ],
+    "external_deps": [],
+    "file_count": 4,
+    "acceptable_names": [
+      "Audit"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "config",
+    "group": "tier3",
+    "dirs": [
+      "src/config"
+    ],
+    "top_symbols": [
+      "loadSettings"
+    ],
+    "external_deps": [],
+    "file_count": 4,
+    "acceptable_names": [
+      "Configuration"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  },
+  {
+    "id": "notifications",
+    "group": "tier3",
+    "dirs": [
+      "src/notifications"
+    ],
+    "top_symbols": [
+      "notifyUser"
+    ],
+    "external_deps": [],
+    "file_count": 4,
+    "acceptable_names": [
+      "Notifications"
+    ],
+    "grounding_aliases": {
+      "authentication": "auth",
+      "configuration": "config"
+    },
+    "annotation": "Authored synthetic subsystem; expected name assigned from its intended responsibility, not labeler output."
+  }
+]

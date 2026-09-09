@@ -1,0 +1,463 @@
+[
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "lib/shopify/fragments",
+      "lib/shopify/queries",
+      "lib/shopify"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "lib",
+      "next"
+    ],
+    "file_count": 12,
+    "files": [
+      "lib/shopify/fragments/product.ts",
+      "lib/shopify/fragments/seo.ts",
+      "lib/shopify/fragments/cart.ts",
+      "lib/shopify/fragments/image.ts",
+      "lib/shopify/mutations/cart.ts",
+      "lib/shopify/queries/cart.ts",
+      "lib/shopify/queries/collection.ts",
+      "lib/shopify/queries/menu.ts",
+      "lib/shopify/queries/page.ts",
+      "lib/shopify/queries/product.ts",
+      "lib/shopify/types.ts",
+      "lib/shopify/index.ts"
+    ],
+    "id": 0,
+    "top_symbols": [
+      "addToCart",
+      "createCart",
+      "getCart",
+      "getCollection",
+      "getCollectionProducts",
+      "getCollections",
+      "getMenu",
+      "getPage"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "components/layout/search/filter",
+      "components/layout/search"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "lib",
+      "react",
+      "clsx",
+      "next"
+    ],
+    "file_count": 4,
+    "files": [
+      "components/layout/search/filter/index.tsx",
+      "components/layout/search/filter/item.tsx",
+      "components/layout/search/filter/dropdown.tsx",
+      "components/layout/search/collections.tsx"
+    ],
+    "id": 1,
+    "top_symbols": [
+      "FilterList",
+      "FilterItem",
+      "FilterItemDropdown",
+      "Collections",
+      "FilterItemList",
+      "PathFilterItem",
+      "SortFilterItem",
+      "ListItem"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "components",
+      "components/icons",
+      "components/grid"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "clsx",
+      "next",
+      "lib",
+      "components",
+      "fs"
+    ],
+    "file_count": 12,
+    "files": [
+      "components/icons/logo.tsx",
+      "components/price.tsx",
+      "components/label.tsx",
+      "components/grid/tile.tsx",
+      "components/carousel.tsx",
+      "components/grid/index.tsx",
+      "components/grid/three-items.tsx",
+      "components/loading-dots.tsx",
+      "components/logo-square.tsx",
+      "components/opengraph-image.tsx",
+      "components/prose.tsx",
+      "components/welcome-toast.tsx"
+    ],
+    "id": 2,
+    "top_symbols": [
+      "LogoIcon",
+      "GridTileImage",
+      "Carousel",
+      "LogoSquare",
+      "OpengraphImage",
+      "ThreeItemGrid",
+      "WelcomeToast",
+      "Grid"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "app/search"
+    ],
+    "entry_points": [
+      "layout /search",
+      "page /search"
+    ],
+    "external_deps": [
+      "components",
+      "lib",
+      "react",
+      "next"
+    ],
+    "file_count": 4,
+    "files": [
+      "app/search/layout.tsx",
+      "app/search/page.tsx",
+      "app/search/children-wrapper.tsx",
+      "app/search/loading.tsx"
+    ],
+    "id": 3,
+    "top_symbols": [
+      "SearchLayout",
+      "SearchPage",
+      "ChildrenWrapper",
+      "Loading",
+      "metadata",
+      "products",
+      "resultsText",
+      "searchParams"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "app"
+    ],
+    "entry_points": [
+      "layout /",
+      "page /"
+    ],
+    "external_deps": [
+      "components",
+      "lib",
+      "geist",
+      "next",
+      "react"
+    ],
+    "file_count": 6,
+    "files": [
+      "app/layout.tsx",
+      "app/page.tsx",
+      "app/error.tsx",
+      "app/opengraph-image.tsx",
+      "app/robots.ts",
+      "app/sitemap.ts"
+    ],
+    "id": 4,
+    "top_symbols": [
+      "HomePage",
+      "RootLayout",
+      "Error",
+      "Image",
+      "robots",
+      "sitemap",
+      "metadata",
+      "Route"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "components/cart"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "lib",
+      "react",
+      "clsx",
+      "components",
+      "next"
+    ],
+    "file_count": 7,
+    "files": [
+      "components/cart/cart-context.tsx",
+      "components/cart/actions.ts",
+      "components/cart/delete-item-button.tsx",
+      "components/cart/edit-item-quantity-button.tsx",
+      "components/cart/open-cart.tsx",
+      "components/cart/add-to-cart.tsx",
+      "components/cart/modal.tsx"
+    ],
+    "id": 5,
+    "top_symbols": [
+      "CartProvider",
+      "useCart",
+      "DeleteItemButton",
+      "EditItemQuantityButton",
+      "OpenCart",
+      "addItem",
+      "createCartAndSetCookie",
+      "redirectToCheckout"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "app/[page]"
+    ],
+    "entry_points": [
+      "layout /:page",
+      "page /:page"
+    ],
+    "external_deps": [
+      "components",
+      "lib",
+      "next"
+    ],
+    "file_count": 3,
+    "files": [
+      "app/[page]/layout.tsx",
+      "app/[page]/page.tsx",
+      "app/[page]/opengraph-image.tsx"
+    ],
+    "id": 6,
+    "top_symbols": [
+      "Layout",
+      "Page",
+      "generateMetadata",
+      "Image",
+      "params"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "components/layout/navbar"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "next",
+      "lib",
+      "react",
+      "components"
+    ],
+    "file_count": 3,
+    "files": [
+      "components/layout/navbar/search.tsx",
+      "components/layout/navbar/mobile-menu.tsx",
+      "components/layout/navbar/index.tsx"
+    ],
+    "id": 7,
+    "top_symbols": [
+      "Search",
+      "SearchSkeleton",
+      "MobileMenu",
+      "Navbar",
+      "searchParams",
+      "[isOpen, setIsOpen]",
+      "closeMobileMenu",
+      "handleResize"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "app/search/[collection]"
+    ],
+    "entry_points": [
+      "page /search/:collection"
+    ],
+    "external_deps": [
+      "components",
+      "lib",
+      "next"
+    ],
+    "file_count": 2,
+    "files": [
+      "app/search/[collection]/page.tsx",
+      "app/search/[collection]/opengraph-image.tsx"
+    ],
+    "id": 8,
+    "top_symbols": [
+      "CategoryPage",
+      "generateMetadata",
+      "Image",
+      "collection",
+      "params",
+      "products",
+      "searchParams",
+      "{ sort }"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "app/api/revalidate"
+    ],
+    "entry_points": [
+      "API /api/revalidate"
+    ],
+    "external_deps": [
+      "lib",
+      "next"
+    ],
+    "file_count": 1,
+    "files": [
+      "app/api/revalidate/route.ts"
+    ],
+    "id": 9,
+    "top_symbols": [
+      "POST"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "app/product/[handle]"
+    ],
+    "entry_points": [
+      "page /product/:handle"
+    ],
+    "external_deps": [
+      "components",
+      "lib",
+      "next",
+      "react"
+    ],
+    "file_count": 1,
+    "files": [
+      "app/product/[handle]/page.tsx"
+    ],
+    "id": 10,
+    "top_symbols": [
+      "ProductPage",
+      "generateMetadata",
+      "RelatedProducts",
+      "indexable",
+      "params",
+      "product",
+      "productJsonLd",
+      "{ url, width, height, altText: alt }"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "components/product"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "components",
+      "lib",
+      "next",
+      "clsx"
+    ],
+    "file_count": 3,
+    "files": [
+      "components/product/variant-selector.tsx",
+      "components/product/gallery.tsx",
+      "components/product/product-description.tsx"
+    ],
+    "id": 11,
+    "top_symbols": [
+      "VariantSelector",
+      "Gallery",
+      "ProductDescription",
+      "Combination",
+      "combinations",
+      "filtered",
+      "hasNoOptionsOrJustOneOption",
+      "isActive"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "components/layout"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "lib",
+      "next",
+      "components",
+      "react",
+      "clsx"
+    ],
+    "file_count": 3,
+    "files": [
+      "components/layout/footer-menu.tsx",
+      "components/layout/footer.tsx",
+      "components/layout/product-grid-items.tsx"
+    ],
+    "id": 12,
+    "top_symbols": [
+      "Footer",
+      "FooterMenu",
+      "FooterMenuItem",
+      "ProductGridItems",
+      "[active, setActive]",
+      "copyrightDate",
+      "copyrightName",
+      "currentYear"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "lib"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "next"
+    ],
+    "file_count": 3,
+    "files": [
+      "lib/constants.ts",
+      "lib/type-guards.ts",
+      "lib/utils.ts"
+    ],
+    "id": 13,
+    "top_symbols": [
+      "ShopifyErrorLike",
+      "findError",
+      "SortFilterItem",
+      "DEFAULT_OPTION",
+      "HIDDEN_PRODUCT_TAG",
+      "SHOPIFY_GRAPHQL_API_ENDPOINT",
+      "TAGS",
+      "baseUrl"
+    ]
+  }
+]

@@ -1,0 +1,170 @@
+[
+  {
+    "id": "hono-cors",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for cors",
+    "expected_files": [
+      "src/middleware/cors/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-cors-origin",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for Access-Control-Allow-Origin",
+    "expected_files": [
+      "src/middleware/cors/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-basic-auth",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for basicAuth",
+    "expected_files": [
+      "src/middleware/basic-auth/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-etag",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for etag",
+    "expected_files": [
+      "src/middleware/etag/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-logger",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for logger",
+    "expected_files": [
+      "src/middleware/logger/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-trie-router",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for TrieRouter",
+    "expected_files": [
+      "src/router/trie-router/router.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-jwt-sign",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for sign JWT token",
+    "expected_files": [
+      "src/utils/jwt/jwt.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-body-limit",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for bodyLimit",
+    "expected_files": [
+      "src/middleware/body-limit/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-csrf",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for csrf",
+    "expected_files": [
+      "src/middleware/csrf/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-timeout",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for timeout",
+    "expected_files": [
+      "src/middleware/timeout/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-compression",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for compress",
+    "expected_files": [
+      "src/middleware/compress/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  },
+  {
+    "id": "hono-pretty-json",
+    "repo": "repos/hono",
+    "tier": 1,
+    "query": "Find the implementation file for prettyJSON",
+    "expected_files": [
+      "src/middleware/pretty-json/index.ts"
+    ],
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Source-inspected implementation location; tests and re-exports do not satisfy this task."
+    }
+  }
+]

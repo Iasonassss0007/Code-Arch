@@ -1,0 +1,131 @@
+{
+  "reference_sha256": "b0c3e8ddbaafb28f7acec93e872273c7d71e917ea51095acd182f01f5b458f6d",
+  "review_model": "openai/gpt-4.1-mini",
+  "usage": {
+    "prompt_tokens": 8409,
+    "completion_tokens": 1368,
+    "total_tokens": 9777,
+    "cost": 0.0055524,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0055524,
+      "upstream_inference_prompt_cost": 0.0033636,
+      "upstream_inference_completions_cost": 0.0021888
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "reviews": [
+    {
+      "id": "hono-0",
+      "verdict": "accept",
+      "reason": "The proposed names 'Hono HTTP Core' and 'HTTP Core and Middleware' accurately reflect the cluster's content, which includes request context, the Hono application, and middleware. These names clearly distinguish this core cluster from others."
+    },
+    {
+      "id": "hono-1",
+      "verdict": "accept",
+      "reason": "The names 'JSX', 'JSX Rendering', and 'HTML and JSX Rendering' appropriately describe the cluster focused on JSX node types, hooks, and HTML helpers for rendering. They distinguish this cluster from other rendering or JSX-related clusters."
+    },
+    {
+      "id": "hono-2",
+      "verdict": "accept",
+      "reason": "The names 'Routers', 'Routing', and 'Router Implementations and Benchmarks' accurately describe the cluster containing router implementations, URL helpers, and router benchmarks. These names clearly differentiate this cluster from others."
+    },
+    {
+      "id": "hono-3",
+      "verdict": "accept",
+      "reason": "The proposed names 'SSG', 'Static Site Generation', and 'Static Serving and SSG' correctly capture the cluster's focus on static site generation, static serving, and platform adapters. The names distinguish this cluster from others related to runtime or middleware."
+    },
+    {
+      "id": "hono-4",
+      "verdict": "accept",
+      "reason": "The names 'JWT' and 'JWT and Encoding' accurately reflect the cluster's content, which centers on JWT signing, verification, and encoding helpers. These names clearly distinguish this cluster from other utility or middleware clusters."
+    },
+    {
+      "id": "hono-5",
+      "verdict": "accept",
+      "reason": "The names 'Streaming' and 'Streaming and AWS Lambda' appropriately describe the cluster containing streaming utilities and AWS Lambda event adapters. These names distinguish this cluster from others focused on routing or core HTTP functionality."
+    },
+    {
+      "id": "hono-6",
+      "verdict": "accept",
+      "reason": "The names 'Deno Router Benchmarks' and 'Routers Deno' accurately describe this cluster of router comparison code under benchmarks/routers-deno. These names clearly separate this cluster from production router implementations."
+    },
+    {
+      "id": "hono-7",
+      "verdict": "accept",
+      "reason": "The names 'React JSX Benchmarks' and 'React JSX' correctly identify this cluster as comparative JSX benchmarks under react-jsx, distinct from other JSX benchmark clusters. The names are clear and specific."
+    },
+    {
+      "id": "hono-8",
+      "verdict": "accept",
+      "reason": "The names 'JSX Benchmarks' and 'JSX Benchmark Suite' suitably describe this benchmark harness cluster, which is distinct from production JSX and the react-jsx benchmark cluster. The names are clear and appropriate."
+    },
+    {
+      "id": "hono-9",
+      "verdict": "accept",
+      "reason": "The names 'ETag' and 'ETag Middleware' accurately reflect the cluster's focus on digest generation and ETag middleware with tests. These names clearly distinguish this cluster from other middleware or utility clusters."
+    },
+    {
+      "id": "commerce-0",
+      "verdict": "accept",
+      "reason": "The names 'Shopify', 'Shopify API', and 'Shopify GraphQL' accurately describe this cluster containing Shopify data access, queries, fragments, and cart mutations. The names are clear and distinguish this cluster from others."
+    },
+    {
+      "id": "commerce-1",
+      "verdict": "accept",
+      "reason": "The names 'Search Filters', 'Filter', and 'Filters' appropriately describe this cluster of search filter controls and collection navigation. These names clearly distinguish this cluster from other search or UI components."
+    },
+    {
+      "id": "commerce-2",
+      "verdict": "accept",
+      "reason": "The names 'Storefront Components', 'Storefront UI', and 'Product Display Components' accurately capture this cluster of shared UI components like price, label, product tiles, carousel, and logos. The names are clear and distinct."
+    },
+    {
+      "id": "commerce-3",
+      "verdict": "accept",
+      "reason": "The names 'Search' and 'Search Route' correctly describe this cluster containing the search route page and layout, separate from filter controls and collection routes. The names are clear and specific."
+    },
+    {
+      "id": "commerce-4",
+      "verdict": "accept",
+      "reason": "The names 'Storefront Root', 'Application Shell', and 'Home and Site Metadata' accurately reflect this cluster containing root layout, home page, error page, social image, robots, and sitemap. These names clearly distinguish this cluster."
+    },
+    {
+      "id": "commerce-5",
+      "verdict": "accept",
+      "reason": "The names 'Cart' and 'Shopping Cart' appropriately describe this cluster of cart state, server actions, and client controls. These names clearly distinguish this cluster from other UI or data clusters."
+    },
+    {
+      "id": "commerce-6",
+      "verdict": "accept",
+      "reason": "The names 'Content Pages', 'CMS Pages', and 'Dynamic Pages' suitably describe this cluster of dynamic content page routes and metadata, distinct from product routes. The names are clear and appropriate."
+    },
+    {
+      "id": "commerce-7",
+      "verdict": "accept",
+      "reason": "The names 'Navbar' and 'Navigation Bar' accurately describe this cluster of desktop and mobile navigation and search UI components. These names clearly distinguish this cluster from other UI components."
+    },
+    {
+      "id": "commerce-8",
+      "verdict": "accept",
+      "reason": "The names 'Collection' and 'Collection Route' correctly describe this cluster containing collection-specific route and metadata. The names are clear and specific."
+    },
+    {
+      "id": "commerce-9",
+      "verdict": "accept",
+      "reason": "The names 'Revalidate' and 'Revalidation Webhook' accurately reflect this cluster containing an HTTP POST route delegating revalidation to Shopify data access. These names clearly distinguish this cluster."
+    }
+  ],
+  "human_reviewed": false,
+  "candidate_outputs_visible_to_reviewer": false
+}

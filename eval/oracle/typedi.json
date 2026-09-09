@@ -1,0 +1,101 @@
+{
+  "container-instance.class.ts": [
+    "container-registry.class.ts",
+    "empty.const.ts",
+    "error/cannot-instantiate-value.error.ts",
+    "error/service-not-found.error.ts",
+    "interfaces/handler.interface.ts",
+    "interfaces/service-metadata.interface.ts",
+    "interfaces/service-options.interface.ts",
+    "token.class.ts",
+    "types/constructable.type.ts",
+    "types/container-identifier.type.ts",
+    "types/container-scope.type.ts",
+    "types/service-identifier.type.ts"
+  ],
+  "container-registry.class.ts": [
+    "container-instance.class.ts",
+    "types/container-identifier.type.ts"
+  ],
+  "decorators/inject-many.decorator.ts": [
+    "container-registry.class.ts",
+    "error/cannot-inject-value.error.ts",
+    "token.class.ts",
+    "types/constructable.type.ts",
+    "types/service-identifier.type.ts",
+    "utils/resolve-to-type-wrapper.util.ts"
+  ],
+  "decorators/inject.decorator.ts": [
+    "container-registry.class.ts",
+    "error/cannot-inject-value.error.ts",
+    "token.class.ts",
+    "types/constructable.type.ts",
+    "types/service-identifier.type.ts",
+    "utils/resolve-to-type-wrapper.util.ts"
+  ],
+  "decorators/service.decorator.ts": [
+    "container-registry.class.ts",
+    "empty.const.ts",
+    "interfaces/service-metadata.interface.ts",
+    "interfaces/service-options.interface.ts",
+    "types/constructable.type.ts"
+  ],
+  "empty.const.ts": [],
+  "error/cannot-inject-value.error.ts": [
+    "types/constructable.type.ts"
+  ],
+  "error/cannot-instantiate-value.error.ts": [
+    "token.class.ts",
+    "types/service-identifier.type.ts"
+  ],
+  "error/service-not-found.error.ts": [
+    "token.class.ts",
+    "types/service-identifier.type.ts"
+  ],
+  "index.ts": [
+    "container-instance.class.ts",
+    "container-registry.class.ts",
+    "decorators/inject-many.decorator.ts",
+    "decorators/inject.decorator.ts",
+    "decorators/service.decorator.ts",
+    "error/cannot-inject-value.error.ts",
+    "error/cannot-instantiate-value.error.ts",
+    "error/service-not-found.error.ts",
+    "interfaces/handler.interface.ts",
+    "interfaces/service-metadata.interface.ts",
+    "interfaces/service-options.interface.ts",
+    "token.class.ts",
+    "types/constructable.type.ts",
+    "types/service-identifier.type.ts"
+  ],
+  "interfaces/container-options.interface.ts": [],
+  "interfaces/handler.interface.ts": [
+    "container-instance.class.ts",
+    "types/constructable.type.ts"
+  ],
+  "interfaces/service-metadata.interface.ts": [
+    "container-instance.class.ts",
+    "types/constructable.type.ts",
+    "types/container-identifier.type.ts",
+    "types/container-scope.type.ts",
+    "types/service-identifier.type.ts"
+  ],
+  "interfaces/service-options.interface.ts": [
+    "interfaces/service-metadata.interface.ts"
+  ],
+  "token.class.ts": [],
+  "types/abstract-constructable.type.ts": [],
+  "types/constructable.type.ts": [],
+  "types/container-identifier.type.ts": [],
+  "types/container-scope.type.ts": [],
+  "types/service-identifier.type.ts": [
+    "token.class.ts",
+    "types/abstract-constructable.type.ts",
+    "types/constructable.type.ts"
+  ],
+  "utils/resolve-to-type-wrapper.util.ts": [
+    "token.class.ts",
+    "types/constructable.type.ts",
+    "types/service-identifier.type.ts"
+  ]
+}

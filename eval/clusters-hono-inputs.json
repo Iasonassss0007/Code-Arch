@@ -1,0 +1,857 @@
+[
+  {
+    "depended_on_by": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      9
+    ],
+    "depends_on": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "dirs": [
+      "src",
+      "src/utils",
+      "src/client"
+    ],
+    "entry_points": [
+      "entry: src/index.ts"
+    ],
+    "external_deps": [
+      "vitest",
+      "crypto",
+      "msw",
+      "path",
+      "async_hooks"
+    ],
+    "file_count": 171,
+    "files": [
+      "src/context.ts",
+      "src/types.ts",
+      "src/hono.ts",
+      "src/index.ts",
+      "src/router.ts",
+      "src/utils/types.ts",
+      "src/utils/http-status.ts",
+      "src/utils/headers.ts",
+      "src/helper/conninfo/index.ts",
+      "src/hono-base.ts",
+      "src/http-exception.ts",
+      "src/request.ts",
+      "src/helper/conninfo/types.ts",
+      "src/router/trie-router/index.ts",
+      "src/helper/cookie/index.ts",
+      "src/router/smart-router/index.ts",
+      "src/helper/websocket/index.ts",
+      "src/router/smart-router/router.ts",
+      "src/utils/crypto.ts",
+      "src/utils/cookie.ts",
+      "src/client/types.ts",
+      "src/utils/buffer.ts",
+      "src/client/index.ts",
+      "src/helper/adapter/index.ts",
+      "src/utils/accept.ts",
+      "src/utils/constants.ts",
+      "src/middleware/basic-auth/index.ts",
+      "src/utils/body.ts",
+      "src/utils/color.ts",
+      "src/adapter/lambda-edge/handler.ts",
+      "src/compose.ts",
+      "src/client/utils.ts",
+      "src/middleware/powered-by/index.ts",
+      "src/middleware/jwt/index.ts",
+      "src/validator/utils.ts",
+      "src/adapter/deno/websocket.ts",
+      "src/client/client.ts",
+      "src/helper/dev/index.ts",
+      "src/middleware/language/language.ts",
+      "src/request/constants.ts",
+      "src/adapter/netlify/conninfo.ts",
+      "src/middleware/body-limit/index.ts",
+      "src/helper/accepts/accepts.ts",
+      "src/utils/ipaddr.ts",
+      "src/utils/handler.ts",
+      "src/adapter/cloudflare-pages/conninfo.ts",
+      "src/adapter/vercel/conninfo.ts",
+      "src/adapter/vercel/handler.ts",
+      "src/utils/compress.ts",
+      "src/middleware/timing/timing.ts",
+      "src/validator/index.ts",
+      "src/adapter/service-worker/types.ts",
+      "src/adapter/lambda-edge/conninfo.ts",
+      "src/adapter/deno/conninfo.ts",
+      "src/adapter/deno/ssg.ts",
+      "src/middleware/request-id/request-id.ts",
+      "src/middleware/secure-headers/secure-headers.ts",
+      "src/validator/validator.ts",
+      "src/adapter/cloudflare-pages/handler.ts",
+      "src/adapter/service-worker/handler.ts",
+      "src/helper/testing/index.ts",
+      "src/middleware/logger/index.ts",
+      "src/helper/route/index.ts",
+      "src/adapter/netlify/mod.ts",
+      "src/middleware/compress/index.ts",
+      "src/client/fetch-result-please.ts",
+      "src/adapter/netlify/handler.ts",
+      "src/helper/factory/index.ts",
+      "src/middleware/jwt/jwt.ts",
+      "src/middleware/secure-headers/permissions-policy.ts",
+      "src/helper/proxy/index.ts",
+      "src/middleware/context-storage/index.ts",
+      "src/middleware/cors/index.ts",
+      "src/middleware/method-not-allowed/index.ts",
+      "src/middleware/method-override/index.ts",
+      "src/middleware/pretty-json/index.ts",
+      "src/middleware/timing/index.ts",
+      "src/middleware/trailing-slash/index.ts",
+      "src/preset/quick.ts",
+      "src/preset/tiny.ts",
+      "src/middleware/bearer-auth/index.ts",
+      "src/middleware/cache/index.ts",
+      "src/middleware/combine/index.ts",
+      "src/middleware/csrf/index.ts",
+      "src/middleware/language/index.ts",
+      "src/middleware/request-id/index.ts",
+      "src/middleware/secure-headers/index.ts",
+      "src/adapter/deno/serve-static.ts",
+      "src/adapter/deno/index.ts",
+      "src/middleware/ip-restriction/index.ts",
+      "src/middleware/timeout/index.ts",
+      "perf-measures/type-check/client.ts",
+      "runtime-tests/bun/color.test.ts",
+      "runtime-tests/bun/index.test.tsx",
+      "runtime-tests/deno/hono.test.ts",
+      "runtime-tests/deno/middleware.test.tsx",
+      "runtime-tests/deno/ssg.test.tsx",
+      "runtime-tests/deno/stream.test.ts",
+      "runtime-tests/fastly/index.test.ts",
+      "runtime-tests/lambda-edge/index.test.ts",
+      "runtime-tests/node/index.test.ts",
+      "runtime-tests/workerd/index.test.ts",
+      "runtime-tests/workerd/index.ts",
+      "src/adapter/cloudflare-pages/conninfo.test.ts",
+      "src/adapter/cloudflare-pages/handler.test.ts",
+      "src/adapter/cloudflare-pages/index.ts",
+      "src/adapter/deno/conninfo.test.ts",
+      "src/adapter/deno/websocket.test.ts",
+      "src/adapter/lambda-edge/conninfo.test.ts",
+      "src/adapter/lambda-edge/handler.test.ts",
+      "src/adapter/lambda-edge/index.ts",
+      "src/adapter/netlify/conninfo.test.ts",
+      "src/adapter/netlify/index.ts",
+      "src/adapter/service-worker/handler.test.ts",
+      "src/adapter/service-worker/index.ts",
+      "src/adapter/vercel/conninfo.test.ts",
+      "src/adapter/vercel/handler.test.ts",
+      "src/adapter/vercel/index.ts",
+      "src/client/client.test.ts",
+      "src/client/types.test.ts",
+      "src/client/utils.test.ts",
+      "src/compose.test.ts",
+      "src/context.test.ts",
+      "src/helper/accepts/accepts.test.ts",
+      "src/helper/accepts/index.ts",
+      "src/helper/adapter/index.test.ts",
+      "src/helper/cookie/index.test.ts",
+      "src/helper/dev/index.test.ts",
+      "src/helper/factory/index.test.ts",
+      "src/helper/proxy/index.test.ts",
+      "src/helper/route/index.test.ts",
+      "src/helper/testing/index.test.ts",
+      "src/helper/websocket/index.test.ts",
+      "src/hono.test.ts",
+      "src/http-exception.test.ts",
+      "src/middleware/basic-auth/index.test.ts",
+      "src/middleware/bearer-auth/index.test.ts",
+      "src/middleware/body-limit/index.test.ts",
+      "src/middleware/cache/index.test.ts",
+      "src/middleware/combine/index.test.ts",
+      "src/middleware/compress/index.test.ts",
+      "src/middleware/context-storage/index.test.ts",
+      "src/middleware/cors/index.test.ts",
+      "src/middleware/csrf/index.test.ts",
+      "src/middleware/ip-restriction/index.test.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/language/index.test.ts",
+      "src/middleware/logger/index.test.ts",
+      "src/middleware/method-not-allowed/index.test.ts",
+      "src/middleware/method-override/index.test.ts",
+      "src/middleware/powered-by/index.test.ts",
+      "src/middleware/pretty-json/index.test.ts",
+      "src/middleware/request-id/index.test.ts",
+      "src/middleware/secure-headers/index.test.ts",
+      "src/middleware/timeout/index.test.ts",
+      "src/middleware/timing/index.test.ts",
+      "src/middleware/trailing-slash/index.test.ts",
+      "src/preset/quick.test.ts",
+      "src/preset/tiny.test.ts",
+      "src/request.test.ts",
+      "src/types.test.ts",
+      "src/utils/accept.test.ts",
+      "src/utils/body.test.ts",
+      "src/utils/buffer.test.ts",
+      "src/utils/color.test.ts",
+      "src/utils/cookie.test.ts",
+      "src/utils/crypto.test.ts",
+      "src/utils/ipaddr.test.ts",
+      "src/utils/types.test.ts",
+      "src/validator/utils.test.ts",
+      "src/validator/validator.test.ts"
+    ],
+    "id": 0,
+    "top_symbols": [
+      "Context",
+      "Hono",
+      "UnsupportedPathError",
+      "ContextRenderer",
+      "ContextVariableMap",
+      "ExecutionContext",
+      "HTTPException",
+      "HonoRequest"
+    ]
+  },
+  {
+    "depended_on_by": [
+      0,
+      3,
+      5,
+      8
+    ],
+    "depends_on": [
+      0,
+      3
+    ],
+    "dirs": [
+      "src/jsx",
+      "src/jsx/dom",
+      "src/utils"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "jsdom",
+      "vitest",
+      "async_hooks"
+    ],
+    "file_count": 57,
+    "files": [
+      "src/utils/html.ts",
+      "src/jsx/base.ts",
+      "src/jsx/constants.ts",
+      "src/jsx/index.ts",
+      "src/helper/html/index.ts",
+      "src/jsx/context.ts",
+      "src/jsx/hooks/index.ts",
+      "src/jsx/streaming.ts",
+      "src/jsx/dom/index.ts",
+      "src/jsx/dom/render.ts",
+      "src/jsx/intrinsic-elements.ts",
+      "src/jsx/utils.ts",
+      "src/jsx/children.ts",
+      "src/jsx/dom/context.ts",
+      "src/jsx/intrinsic-element/common.ts",
+      "src/jsx/components.ts",
+      "src/jsx/dom/hooks/index.ts",
+      "src/helper/css/index.ts",
+      "src/jsx/types.ts",
+      "src/helper/css/common.ts",
+      "src/jsx/dom/components.ts",
+      "src/jsx/dom/intrinsic-element/components.ts",
+      "src/jsx/intrinsic-element/components.ts",
+      "src/jsx/dom/jsx-dev-runtime.ts",
+      "src/jsx/dom/jsx-runtime.ts",
+      "src/jsx/dom/utils.ts",
+      "src/helper/css/common.case.test.tsx",
+      "src/jsx/dom/css.ts",
+      "src/jsx/dom/client.ts",
+      "src/jsx/dom/server.ts",
+      "src/jsx/jsx-runtime.ts",
+      "src/jsx/jsx-dev-runtime.ts",
+      "src/middleware/jsx-renderer/index.ts",
+      "runtime-tests/deno-jsx/jsx.test.tsx",
+      "src/helper/css/index.test.tsx",
+      "src/helper/html/index.test.ts",
+      "src/jsx/base.test.tsx",
+      "src/jsx/children.test.ts",
+      "src/jsx/components.test.tsx",
+      "src/jsx/context-isolation.test.ts",
+      "src/jsx/dom/client.test.tsx",
+      "src/jsx/dom/components.test.tsx",
+      "src/jsx/dom/context.test.tsx",
+      "src/jsx/dom/css.test.tsx",
+      "src/jsx/dom/hooks/index.test.tsx",
+      "src/jsx/dom/index.test.tsx",
+      "src/jsx/dom/intrinsic-element/components.test.tsx",
+      "src/jsx/dom/server.test.tsx",
+      "src/jsx/hooks/dom.test.tsx",
+      "src/jsx/hooks/string.test.tsx",
+      "src/jsx/index.test.tsx",
+      "src/jsx/intrinsic-element/components.test.tsx",
+      "src/jsx/jsx-runtime.test.tsx",
+      "src/jsx/streaming.test.tsx",
+      "src/jsx/utils.test.ts",
+      "src/middleware/jsx-renderer/index.test.tsx",
+      "src/utils/html.test.ts"
+    ],
+    "id": 1,
+    "top_symbols": [
+      "JSXFragmentNode",
+      "JSXNode",
+      "useRef",
+      "jsxDEV",
+      "ElementChildrenAttribute",
+      "IntrinsicAttributes",
+      "IntrinsicElements",
+      "Context"
+    ]
+  },
+  {
+    "depended_on_by": [
+      0,
+      3,
+      6
+    ],
+    "depends_on": [
+      0
+    ],
+    "dirs": [
+      "benchmarks/routers/src",
+      "src/router/reg-exp-router",
+      "src/utils"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "mitata",
+      "find-my-way",
+      "koa-tree-router",
+      "trek-router",
+      "express"
+    ],
+    "file_count": 40,
+    "files": [
+      "src/utils/url.ts",
+      "benchmarks/routers/src/tool.mts",
+      "src/router/reg-exp-router/index.ts",
+      "src/router/trie-router/router.ts",
+      "src/router/utils.ts",
+      "src/router/reg-exp-router/router.ts",
+      "src/router/common.case.test.ts",
+      "src/router/reg-exp-router/prepared-router.ts",
+      "src/router/trie-router/node.ts",
+      "src/router/reg-exp-router/matcher.ts",
+      "src/router/pattern-router/router.ts",
+      "src/router/linear-router/router.ts",
+      "src/router/reg-exp-router/node.ts",
+      "src/router/pattern-router/index.ts",
+      "src/router/linear-router/index.ts",
+      "src/router/reg-exp-router/trie.ts",
+      "benchmarks/query-param/src/fast-querystring.mts",
+      "benchmarks/query-param/src/hono.mts",
+      "benchmarks/query-param/src/qs.mts",
+      "benchmarks/routers/src/express.mts",
+      "benchmarks/routers/src/find-my-way.mts",
+      "benchmarks/routers/src/hono.mts",
+      "benchmarks/routers/src/koa-router.mts",
+      "benchmarks/routers/src/koa-tree-router.mts",
+      "benchmarks/routers/src/medley-router.mts",
+      "benchmarks/routers/src/memoirist.mts",
+      "benchmarks/routers/src/radix3.mts",
+      "benchmarks/routers/src/rou3.mts",
+      "benchmarks/routers/src/trek-router.mts",
+      "benchmarks/query-param/src/bench.mts",
+      "benchmarks/routers/src/bench-includes-init.mts",
+      "benchmarks/routers/src/bench.mts",
+      "src/router/linear-router/router.test.ts",
+      "src/router/pattern-router/router.test.ts",
+      "src/router/reg-exp-router/prepared-router.test.ts",
+      "src/router/reg-exp-router/router.test.ts",
+      "src/router/smart-router/router.test.ts",
+      "src/router/trie-router/node.test.ts",
+      "src/router/trie-router/router.test.ts",
+      "src/utils/url.test.ts"
+    ],
+    "id": 2,
+    "top_symbols": [
+      "TrieRouter",
+      "RegExpRouter",
+      "PreparedRegExpRouter",
+      "Node",
+      "match",
+      "PatternRouter",
+      "LinearRouter",
+      "Trie"
+    ]
+  },
+  {
+    "depended_on_by": [
+      0,
+      1
+    ],
+    "depends_on": [
+      0,
+      1,
+      2
+    ],
+    "dirs": [
+      "src/helper/ssg",
+      "src/adapter/cloudflare-workers",
+      "src/adapter/bun"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "path",
+      "fs",
+      "vitest"
+    ],
+    "file_count": 35,
+    "files": [
+      "src/utils/mime.ts",
+      "src/helper/ssg/ssg.ts",
+      "src/middleware/serve-static/index.ts",
+      "src/adapter/bun/server.ts",
+      "src/helper/ssg/index.ts",
+      "src/helper/ssg/utils.ts",
+      "src/helper/ssg/middleware.ts",
+      "src/helper/ssg/plugins.ts",
+      "src/adapter/cloudflare-workers/utils.ts",
+      "src/middleware/serve-static/path.ts",
+      "src/utils/concurrent.ts",
+      "src/adapter/bun/websocket.ts",
+      "src/adapter/cloudflare-workers/conninfo.ts",
+      "src/adapter/cloudflare-workers/serve-static.ts",
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/bun/conninfo.ts",
+      "src/adapter/cloudflare-workers/serve-static-module.ts",
+      "src/adapter/cloudflare-workers/websocket.ts",
+      "src/adapter/bun/serve-static.ts",
+      "src/adapter/bun/ssg.ts",
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/conninfo.test.ts",
+      "src/adapter/bun/server.test.ts",
+      "src/adapter/bun/websocket.test.ts",
+      "src/adapter/cloudflare-workers/conninfo.test.ts",
+      "src/adapter/cloudflare-workers/serve-static.test.ts",
+      "src/adapter/cloudflare-workers/utils.test.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts",
+      "src/helper/ssg/plugins.test.tsx",
+      "src/helper/ssg/ssg.test.tsx",
+      "src/helper/ssg/utils.test.ts",
+      "src/middleware/serve-static/index.test.ts",
+      "src/middleware/serve-static/path.test.ts",
+      "src/utils/concurrent.test.ts",
+      "src/utils/mime.test.ts"
+    ],
+    "id": 3,
+    "top_symbols": [
+      "FileSystemModule",
+      "SSGPlugin",
+      "ToSSGAdaptorInterface",
+      "ToSSGInterface",
+      "ToSSGOptions",
+      "ToSSGResult",
+      "Pool",
+      "BunServerWebSocket"
+    ]
+  },
+  {
+    "depended_on_by": [
+      0,
+      5
+    ],
+    "depends_on": [
+      0
+    ],
+    "dirs": [
+      "src/utils/jwt",
+      "src/utils",
+      "src/middleware/jwk"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "msw",
+      "vitest"
+    ],
+    "file_count": 15,
+    "files": [
+      "src/utils/encode.ts",
+      "src/utils/jwt/jwa.ts",
+      "src/utils/jwt/jws.ts",
+      "src/utils/jwt/jwt.ts",
+      "src/utils/jwt/types.ts",
+      "src/utils/jwt/utf8.ts",
+      "src/utils/basic-auth.ts",
+      "src/utils/jwt/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/index.test.ts",
+      "src/utils/basic-auth.test.ts",
+      "src/utils/encode.test.ts",
+      "src/utils/jwt/jwa.test.ts",
+      "src/utils/jwt/jwt.test.ts"
+    ],
+    "id": 4,
+    "top_symbols": [
+      "signing",
+      "verifying",
+      "isTokenHeader",
+      "JwtAlgorithmMismatch",
+      "JwtAlgorithmNotAllowed",
+      "JwtAlgorithmNotImplemented",
+      "JwtAlgorithmRequired",
+      "JwtHeaderInvalid"
+    ]
+  },
+  {
+    "depended_on_by": [
+      0
+    ],
+    "depends_on": [
+      0,
+      1,
+      4
+    ],
+    "dirs": [
+      "src/helper/streaming",
+      "src/adapter/aws-lambda",
+      "runtime-tests/lambda"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "stream",
+      "vitest"
+    ],
+    "file_count": 20,
+    "files": [
+      "src/helper/streaming/index.ts",
+      "src/adapter/aws-lambda/types.ts",
+      "src/adapter/aws-lambda/handler.ts",
+      "src/utils/stream.ts",
+      "src/helper/streaming/utils.ts",
+      "src/adapter/aws-lambda/conninfo.ts",
+      "src/helper/streaming/sse.ts",
+      "src/helper/streaming/stream.ts",
+      "src/helper/streaming/text.ts",
+      "runtime-tests/lambda/stream-mock.ts",
+      "runtime-tests/lambda/mock.ts",
+      "runtime-tests/lambda/index.test.ts",
+      "runtime-tests/lambda/stream.test.ts",
+      "src/adapter/aws-lambda/conninfo.test.ts",
+      "src/adapter/aws-lambda/handler.test.ts",
+      "src/adapter/aws-lambda/index.ts",
+      "src/helper/streaming/sse.test.tsx",
+      "src/helper/streaming/stream.test.ts",
+      "src/helper/streaming/text.test.ts",
+      "src/utils/stream.test.ts"
+    ],
+    "id": 5,
+    "top_symbols": [
+      "ALBProcessor",
+      "EventProcessor",
+      "EventV1Processor",
+      "EventV2Processor",
+      "LatticeV2Processor",
+      "StreamingApi",
+      "SSEStreamingApi",
+      "ALBRequestContext"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [
+      0,
+      2
+    ],
+    "dirs": [
+      "benchmarks/routers-deno/src"
+    ],
+    "entry_points": [],
+    "external_deps": [],
+    "file_count": 8,
+    "files": [
+      "benchmarks/routers-deno/src/tool.mts",
+      "benchmarks/routers-deno/src/find-my-way.mts",
+      "benchmarks/routers-deno/src/hono.mts",
+      "benchmarks/routers-deno/src/koa-router.mts",
+      "benchmarks/routers-deno/src/koa-tree-router.mts",
+      "benchmarks/routers-deno/src/medley-router.mts",
+      "benchmarks/routers-deno/src/trek-router.mts",
+      "benchmarks/routers-deno/src/bench.mts"
+    ],
+    "id": 6,
+    "top_symbols": [
+      "RouterInterface",
+      "Route",
+      "handler",
+      "routes",
+      "findMyWayRouter",
+      "koaRouter",
+      "koaTreeRouter",
+      "medleyRouter"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "benchmarks/jsx/src/react-jsx"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "benchmark",
+      "nano-jsx",
+      "node-html-parser",
+      "preact-render-to-string",
+      "react-dom"
+    ],
+    "file_count": 9,
+    "files": [
+      "benchmarks/jsx/src/react-jsx/page-hono.tsx",
+      "benchmarks/jsx/src/react-jsx/page-nano.tsx",
+      "benchmarks/jsx/src/react-jsx/page-preact.tsx",
+      "benchmarks/jsx/src/react-jsx/page-react.tsx",
+      "benchmarks/jsx/src/react-jsx/hono.ts",
+      "benchmarks/jsx/src/react-jsx/nano.ts",
+      "benchmarks/jsx/src/react-jsx/preact.ts",
+      "benchmarks/jsx/src/react-jsx/react.ts",
+      "benchmarks/jsx/src/react-jsx/benchmark.ts"
+    ],
+    "id": 7,
+    "top_symbols": [
+      "Content",
+      "Form",
+      "buildPage",
+      "render"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [
+      1
+    ],
+    "dirs": [
+      "benchmarks/jsx/src"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "benchmark",
+      "nano-jsx",
+      "node-html-parser",
+      "preact",
+      "preact-render-to-string"
+    ],
+    "file_count": 7,
+    "files": [
+      "benchmarks/jsx/src/page.tsx",
+      "benchmarks/jsx/src/page-react.tsx",
+      "benchmarks/jsx/src/hono.ts",
+      "benchmarks/jsx/src/nano.ts",
+      "benchmarks/jsx/src/preact.ts",
+      "benchmarks/jsx/src/react.ts",
+      "benchmarks/jsx/src/benchmark.ts"
+    ],
+    "id": 8,
+    "top_symbols": [
+      "Content",
+      "Form",
+      "buildPage",
+      "render"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [
+      0
+    ],
+    "dirs": [
+      "src/middleware/etag"
+    ],
+    "entry_points": [],
+    "external_deps": [],
+    "file_count": 4,
+    "files": [
+      "src/middleware/etag/digest.ts",
+      "src/middleware/etag/index.ts",
+      "src/middleware/etag/digest.test.ts",
+      "src/middleware/etag/index.test.ts"
+    ],
+    "id": 9,
+    "top_symbols": [
+      "etagMatches",
+      "initializeGenerator",
+      "ETagOptions",
+      "chunkLength",
+      "digest",
+      "generateDigest",
+      "length",
+      "nextChunk"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "benchmarks/fetch"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "fs",
+      "mitata",
+      "module",
+      "url"
+    ],
+    "file_count": 3,
+    "files": [
+      "benchmarks/fetch/ts-resolve.mjs",
+      "benchmarks/fetch/bench.mts",
+      "benchmarks/fetch/summarize.mts"
+    ],
+    "id": 10,
+    "top_symbols": [
+      "Line",
+      "Stats",
+      "resolve",
+      "[file, baseLabel = 'base']",
+      "[verb, x]",
+      "allCases",
+      "asJson",
+      "byCase"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "src/utils"
+    ],
+    "entry_points": [],
+    "external_deps": [],
+    "file_count": 2,
+    "files": [
+      "src/utils/filepath.ts",
+      "src/utils/filepath.test.ts"
+    ],
+    "id": 11,
+    "top_symbols": [
+      "slashToBackslash",
+      "FilePathOptions",
+      "defaultDocument",
+      "filename",
+      "getFilePath",
+      "getFilePathWithoutDefaultDocument"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "benchmarks/utils/src"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "mitata"
+    ],
+    "file_count": 2,
+    "files": [
+      "benchmarks/utils/src/get-path.ts",
+      "benchmarks/utils/src/loop.js"
+    ],
+    "id": 12,
+    "top_symbols": [
+      "charCode",
+      "hasPercentEncoding",
+      "newArr",
+      "queryIndex",
+      "request"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "perf-measures/type-check/scripts"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "fs",
+      "path",
+      "readline"
+    ],
+    "file_count": 2,
+    "files": [
+      "perf-measures/type-check/scripts/generate-app.ts",
+      "perf-measures/type-check/scripts/process-results.ts"
+    ],
+    "id": 13,
+    "top_symbols": [
+      "main",
+      "[, number, , unit]",
+      "[name, value]",
+      "benchmark",
+      "generateRoutes",
+      "metrics",
+      "routes",
+      "toKebabCase"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "benchmarks/http-server"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "child_process",
+      "fs",
+      "path"
+    ],
+    "file_count": 1,
+    "files": [
+      "benchmarks/http-server/benchmark.ts"
+    ],
+    "id": 14,
+    "top_symbols": [
+      "HONO_ROOT",
+      "SCRIPT_DIR",
+      "TEMP_DIR",
+      "allRuns",
+      "appPath",
+      "average",
+      "baseline",
+      "baselinePath"
+    ]
+  },
+  {
+    "depended_on_by": [],
+    "depends_on": [],
+    "dirs": [
+      "perf-measures/bundle-check/scripts"
+    ],
+    "entry_points": [],
+    "external_deps": [
+      "esbuild",
+      "fs",
+      "os",
+      "path"
+    ],
+    "file_count": 1,
+    "files": [
+      "perf-measures/bundle-check/scripts/check-bundle-size.ts"
+    ],
+    "id": 15,
+    "top_symbols": [
+      "main",
+      "benchmark",
+      "bundleSize",
+      "metrics",
+      "tempDir",
+      "tempFilePath"
+    ]
+  }
+]

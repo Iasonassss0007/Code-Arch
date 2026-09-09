@@ -1,0 +1,362 @@
+[
+  {
+    "id": "auth-symbol",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "validateSession",
+    "expected_files": [
+      "src/auth/service.ts"
+    ]
+  },
+  {
+    "id": "auth-intent",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "Reject an expired login session",
+    "expected_files": [
+      "src/auth/service.ts"
+    ]
+  },
+  {
+    "id": "billing-symbol",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "calculateInvoice",
+    "expected_files": [
+      "src/billing/service.ts"
+    ]
+  },
+  {
+    "id": "billing-intent",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "Calculate invoice total including tax",
+    "expected_files": [
+      "src/billing/service.ts"
+    ]
+  },
+  {
+    "id": "search-symbol",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "rankResults",
+    "expected_files": [
+      "src/search/service.ts"
+    ]
+  },
+  {
+    "id": "search-intent",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "Rank search results by relevance",
+    "expected_files": [
+      "src/search/service.ts"
+    ]
+  },
+  {
+    "id": "email-symbol",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "sendMessage",
+    "expected_files": [
+      "src/email/service.ts"
+    ]
+  },
+  {
+    "id": "email-intent",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "Send an email message",
+    "expected_files": [
+      "src/email/service.ts"
+    ]
+  },
+  {
+    "id": "cache-symbol",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "evictExpired",
+    "expected_files": [
+      "src/cache/service.ts"
+    ]
+  },
+  {
+    "id": "cache-intent",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "Evict expired cache entries",
+    "expected_files": [
+      "src/cache/service.ts"
+    ]
+  },
+  {
+    "id": "storage-symbol",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "saveObject",
+    "expected_files": [
+      "src/storage/service.ts"
+    ]
+  },
+  {
+    "id": "storage-intent",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "Save an object to storage",
+    "expected_files": [
+      "src/storage/service.ts"
+    ]
+  },
+  {
+    "id": "payments-symbol",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "refundPayment",
+    "expected_files": [
+      "src/payments/service.ts"
+    ]
+  },
+  {
+    "id": "payments-intent",
+    "repo": "fixtures/tier1",
+    "tier": 1,
+    "query": "Refund a payment",
+    "expected_files": [
+      "src/payments/service.ts"
+    ]
+  },
+  {
+    "id": "catalog-symbol",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "listProducts",
+    "expected_files": [
+      "app/catalog/service.ts"
+    ]
+  },
+  {
+    "id": "catalog-intent",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "List available catalog products",
+    "expected_files": [
+      "app/catalog/service.ts"
+    ]
+  },
+  {
+    "id": "cart-symbol",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "addItem",
+    "expected_files": [
+      "app/cart/service.ts"
+    ]
+  },
+  {
+    "id": "cart-intent",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "Add an item to the shopping cart",
+    "expected_files": [
+      "app/cart/service.ts"
+    ]
+  },
+  {
+    "id": "checkout-symbol",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "submitOrder",
+    "expected_files": [
+      "app/checkout/service.ts"
+    ]
+  },
+  {
+    "id": "checkout-intent",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "Submit an order at checkout",
+    "expected_files": [
+      "app/checkout/service.ts"
+    ]
+  },
+  {
+    "id": "inventory-symbol",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "reserveStock",
+    "expected_files": [
+      "app/inventory/service.ts"
+    ]
+  },
+  {
+    "id": "inventory-intent",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "Reserve stock in inventory",
+    "expected_files": [
+      "app/inventory/service.ts"
+    ]
+  },
+  {
+    "id": "shipping-symbol",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "quoteDelivery",
+    "expected_files": [
+      "app/shipping/service.ts"
+    ]
+  },
+  {
+    "id": "shipping-intent",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "Quote shipping delivery cost",
+    "expected_files": [
+      "app/shipping/service.ts"
+    ]
+  },
+  {
+    "id": "users-symbol",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "updateProfile",
+    "expected_files": [
+      "app/users/service.ts"
+    ]
+  },
+  {
+    "id": "users-intent",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "Update a user profile",
+    "expected_files": [
+      "app/users/service.ts"
+    ]
+  },
+  {
+    "id": "reports-symbol",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "generateReport",
+    "expected_files": [
+      "app/reports/service.ts"
+    ]
+  },
+  {
+    "id": "reports-intent",
+    "repo": "fixtures/tier2",
+    "tier": 2,
+    "query": "Generate a report",
+    "expected_files": [
+      "app/reports/service.ts"
+    ]
+  },
+  {
+    "id": "queue-symbol",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "retryJob",
+    "expected_files": [
+      "src/queue/service.ts"
+    ]
+  },
+  {
+    "id": "queue-intent",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "Retry a failed queue job",
+    "expected_files": [
+      "src/queue/service.ts"
+    ]
+  },
+  {
+    "id": "events-symbol",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "publishEvent",
+    "expected_files": [
+      "src/events/service.ts"
+    ]
+  },
+  {
+    "id": "events-intent",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "Publish an event",
+    "expected_files": [
+      "src/events/service.ts"
+    ]
+  },
+  {
+    "id": "metrics-symbol",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "recordCounter",
+    "expected_files": [
+      "src/metrics/service.ts"
+    ]
+  },
+  {
+    "id": "metrics-intent",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "Record a metrics counter",
+    "expected_files": [
+      "src/metrics/service.ts"
+    ]
+  },
+  {
+    "id": "audit-symbol",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "appendRecord",
+    "expected_files": [
+      "src/audit/service.ts"
+    ]
+  },
+  {
+    "id": "audit-intent",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "Append an audit record",
+    "expected_files": [
+      "src/audit/service.ts"
+    ]
+  },
+  {
+    "id": "config-symbol",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "loadSettings",
+    "expected_files": [
+      "src/config/service.ts"
+    ]
+  },
+  {
+    "id": "config-intent",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "Load configuration settings",
+    "expected_files": [
+      "src/config/service.ts"
+    ]
+  },
+  {
+    "id": "notifications-symbol",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "notifyUser",
+    "expected_files": [
+      "src/notifications/service.ts"
+    ]
+  },
+  {
+    "id": "notifications-intent",
+    "repo": "fixtures/tier3",
+    "tier": 3,
+    "query": "Notify a user",
+    "expected_files": [
+      "src/notifications/service.ts"
+    ]
+  }
+]

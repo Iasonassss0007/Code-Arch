@@ -1,0 +1,2513 @@
+[
+  {
+    "id": "hono-impact-handler-47",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/handler.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/handler.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/ssg.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/ssg.ts",
+      "src/helper/dev/index.test.ts",
+      "src/helper/dev/index.ts",
+      "src/helper/ssg/index.ts",
+      "src/helper/ssg/middleware.ts",
+      "src/helper/ssg/plugins.test.tsx",
+      "src/helper/ssg/plugins.ts",
+      "src/helper/ssg/ssg.test.tsx",
+      "src/helper/ssg/ssg.ts",
+      "src/helper/ssg/utils.test.ts",
+      "src/helper/ssg/utils.ts",
+      "src/preset/quick.test.ts",
+      "src/preset/tiny.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 5,
+      "directories": 5
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-compress-45",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/compress.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/compress.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/serve-static.ts",
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/serve-static-module.ts",
+      "src/adapter/cloudflare-workers/serve-static.test.ts",
+      "src/adapter/cloudflare-workers/serve-static.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/serve-static.ts",
+      "src/middleware/compress/index.test.ts",
+      "src/middleware/compress/index.ts",
+      "src/middleware/serve-static/index.test.ts",
+      "src/middleware/serve-static/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 5,
+      "directories": 5
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-path-36",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/serve-static/path.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/serve-static/path.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/serve-static.ts",
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/serve-static-module.ts",
+      "src/adapter/cloudflare-workers/serve-static.test.ts",
+      "src/adapter/cloudflare-workers/serve-static.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/serve-static.ts",
+      "src/middleware/serve-static/index.test.ts",
+      "src/middleware/serve-static/index.ts",
+      "src/middleware/serve-static/path.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 5,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-11",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/adapter/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/adapter/index.ts",
+    "expected_files": [
+      "src/helper/adapter/index.test.ts",
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/middleware/jwt/jwt.ts",
+      "src/utils/jwt/index.ts",
+      "src/utils/jwt/jws.ts",
+      "src/utils/jwt/jwt.test.ts",
+      "src/utils/jwt/jwt.ts",
+      "src/utils/jwt/types.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 4,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-utf8-54",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/jwt/utf8.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/jwt/utf8.ts",
+    "expected_files": [
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/middleware/jwt/jwt.ts",
+      "src/utils/jwt/index.ts",
+      "src/utils/jwt/jws.ts",
+      "src/utils/jwt/jwt.test.ts",
+      "src/utils/jwt/jwt.ts",
+      "src/utils/jwt/types.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 4,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-utils-19",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/ssg/utils.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/ssg/utils.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/ssg.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/ssg.ts",
+      "src/helper/ssg/index.ts",
+      "src/helper/ssg/middleware.ts",
+      "src/helper/ssg/plugins.test.tsx",
+      "src/helper/ssg/plugins.ts",
+      "src/helper/ssg/ssg.test.tsx",
+      "src/helper/ssg/ssg.ts",
+      "src/helper/ssg/utils.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 4,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-concurrent-46",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/concurrent.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/concurrent.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/ssg.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/ssg.ts",
+      "src/helper/ssg/index.ts",
+      "src/helper/ssg/plugins.test.tsx",
+      "src/helper/ssg/plugins.ts",
+      "src/helper/ssg/ssg.test.tsx",
+      "src/helper/ssg/ssg.ts",
+      "src/utils/concurrent.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 4,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-35",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/serve-static/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/serve-static/index.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/serve-static.ts",
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/serve-static-module.ts",
+      "src/adapter/cloudflare-workers/serve-static.test.ts",
+      "src/adapter/cloudflare-workers/serve-static.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/serve-static.ts",
+      "src/middleware/serve-static/index.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 4,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-types-53",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/jwt/types.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/jwt/types.ts",
+    "expected_files": [
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/middleware/jwt/jwt.ts",
+      "src/utils/jwt/index.ts",
+      "src/utils/jwt/jws.ts",
+      "src/utils/jwt/jwt.test.ts",
+      "src/utils/jwt/jwt.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 4,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-utils-5",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/cloudflare-workers/utils.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/cloudflare-workers/utils.ts",
+    "expected_files": [
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/serve-static-module.ts",
+      "src/adapter/cloudflare-workers/serve-static.test.ts",
+      "src/adapter/cloudflare-workers/serve-static.ts",
+      "src/adapter/cloudflare-workers/utils.test.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 4,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-12",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/cookie/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/cookie/index.ts",
+    "expected_files": [
+      "src/adapter/aws-lambda/handler.test.ts",
+      "src/adapter/cloudflare-pages/handler.test.ts",
+      "src/adapter/lambda-edge/handler.test.ts",
+      "src/client/client.test.ts",
+      "src/context.test.ts",
+      "src/helper/cookie/index.test.ts",
+      "src/helper/factory/index.test.ts",
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/middleware/jwt/jwt.ts",
+      "src/middleware/language/index.test.ts",
+      "src/middleware/language/index.ts",
+      "src/middleware/language/language.ts",
+      "src/types.test.ts",
+      "src/validator/index.ts",
+      "src/validator/validator.test.ts",
+      "src/validator/validator.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 11
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-10",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/client/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/client/index.ts",
+    "expected_files": [
+      "src/adapter/bun/conninfo.test.ts",
+      "src/adapter/bun/conninfo.ts",
+      "src/adapter/bun/index.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts",
+      "src/adapter/deno/websocket.test.ts",
+      "src/client/types.test.ts",
+      "src/helper/accepts/accepts.test.ts",
+      "src/helper/css/index.test.tsx",
+      "src/helper/factory/index.test.ts",
+      "src/helper/testing/index.test.ts",
+      "src/helper/testing/index.ts",
+      "src/hono.test.ts",
+      "src/index.ts",
+      "src/middleware/bearer-auth/index.test.ts",
+      "src/middleware/ip-restriction/index.test.ts",
+      "src/middleware/ip-restriction/index.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/types.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 12
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-24",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/websocket/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/websocket/index.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/websocket.test.ts",
+      "src/adapter/bun/websocket.ts",
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts",
+      "src/adapter/cloudflare-workers/websocket.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/websocket.test.ts",
+      "src/adapter/deno/websocket.ts",
+      "src/client/client.test.ts",
+      "src/client/types.test.ts",
+      "src/helper/websocket/index.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 5
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-jws-51",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/jwt/jws.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/jwt/jws.ts",
+    "expected_files": [
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/middleware/jwt/jwt.ts",
+      "src/utils/jwt/index.ts",
+      "src/utils/jwt/jwt.test.ts",
+      "src/utils/jwt/jwt.ts",
+      "src/utils/jwt/types.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-middleware-16",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/ssg/middleware.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/ssg/middleware.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/ssg.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/ssg.ts",
+      "src/helper/ssg/index.ts",
+      "src/helper/ssg/plugins.test.tsx",
+      "src/helper/ssg/plugins.ts",
+      "src/helper/ssg/ssg.test.tsx",
+      "src/helper/ssg/ssg.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-stream-55",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/stream.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/stream.ts",
+    "expected_files": [
+      "src/helper/streaming/index.ts",
+      "src/helper/streaming/sse.test.tsx",
+      "src/helper/streaming/sse.ts",
+      "src/helper/streaming/stream.test.ts",
+      "src/helper/streaming/stream.ts",
+      "src/helper/streaming/text.test.ts",
+      "src/helper/streaming/text.ts",
+      "src/middleware/compress/index.test.ts",
+      "src/utils/stream.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-jwt-52",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/jwt/jwt.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/jwt/jwt.ts",
+    "expected_files": [
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/middleware/jwt/jwt.ts",
+      "src/utils/jwt/index.ts",
+      "src/utils/jwt/jwt.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-plugins-17",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/ssg/plugins.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/ssg/plugins.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/ssg.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/ssg.ts",
+      "src/helper/ssg/index.ts",
+      "src/helper/ssg/plugins.test.tsx",
+      "src/helper/ssg/ssg.test.tsx",
+      "src/helper/ssg/ssg.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-ssg-18",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/ssg/ssg.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/ssg/ssg.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/ssg.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/ssg.ts",
+      "src/helper/ssg/index.ts",
+      "src/helper/ssg/plugins.test.tsx",
+      "src/helper/ssg/plugins.ts",
+      "src/helper/ssg/ssg.test.tsx"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-utils-23",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/streaming/utils.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/streaming/utils.ts",
+    "expected_files": [
+      "src/helper/streaming/index.ts",
+      "src/helper/streaming/sse.test.tsx",
+      "src/helper/streaming/sse.ts",
+      "src/helper/streaming/stream.test.ts",
+      "src/helper/streaming/stream.ts",
+      "src/helper/streaming/text.test.ts",
+      "src/helper/streaming/text.ts",
+      "src/middleware/compress/index.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-49",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/jwt/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/jwt/index.ts",
+    "expected_files": [
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/middleware/jwt/jwt.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-router-39",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/router/linear-router/router.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/router/linear-router/router.ts",
+    "expected_files": [
+      "src/preset/quick.test.ts",
+      "src/preset/quick.ts",
+      "src/router/linear-router/index.ts",
+      "src/router/linear-router/router.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-router-41",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/router/pattern-router/router.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/router/pattern-router/router.ts",
+    "expected_files": [
+      "src/preset/tiny.test.ts",
+      "src/preset/tiny.ts",
+      "src/router/pattern-router/index.ts",
+      "src/router/pattern-router/router.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-serve-static-4",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/cloudflare-workers/serve-static.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/cloudflare-workers/serve-static.ts",
+    "expected_files": [
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/serve-static-module.ts",
+      "src/adapter/cloudflare-workers/serve-static.test.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-permissions-policy-33",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/secure-headers/permissions-policy.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/secure-headers/permissions-policy.ts",
+    "expected_files": [
+      "src/middleware/secure-headers/index.test.ts",
+      "src/middleware/secure-headers/index.ts",
+      "src/middleware/secure-headers/secure-headers.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-25",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/index.ts",
+    "expected_files": [
+      "src/adapter/bun/conninfo.test.ts",
+      "src/adapter/bun/conninfo.ts",
+      "src/adapter/bun/index.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts",
+      "src/adapter/deno/websocket.test.ts",
+      "src/client/types.test.ts",
+      "src/helper/accepts/accepts.test.ts",
+      "src/helper/css/index.test.tsx",
+      "src/helper/factory/index.test.ts",
+      "src/middleware/bearer-auth/index.test.ts",
+      "src/middleware/ip-restriction/index.test.ts",
+      "src/middleware/ip-restriction/index.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 10
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-jwa-50",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/jwt/jwa.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/jwt/jwa.ts",
+    "expected_files": [
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts",
+      "src/middleware/jwk/jwk.ts",
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts",
+      "src/middleware/jwt/jwt.ts",
+      "src/utils/jwt/index.ts",
+      "src/utils/jwt/jwa.test.ts",
+      "src/utils/jwt/jws.ts",
+      "src/utils/jwt/jwt.test.ts",
+      "src/utils/jwt/jwt.ts",
+      "src/utils/jwt/types.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-27",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/jsx/dom/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/jsx/dom/index.ts",
+    "expected_files": [
+      "src/jsx/dom/client.test.tsx",
+      "src/jsx/dom/components.test.tsx",
+      "src/jsx/dom/context.test.tsx",
+      "src/jsx/dom/css.test.tsx",
+      "src/jsx/dom/hooks/index.test.tsx",
+      "src/jsx/dom/index.test.tsx",
+      "src/jsx/dom/intrinsic-element/components.test.tsx",
+      "src/jsx/dom/server.test.tsx",
+      "src/jsx/dom/server.ts",
+      "src/jsx/hooks/dom.test.tsx"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-accept-42",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/accept.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/accept.ts",
+    "expected_files": [
+      "src/helper/accepts/accepts.test.ts",
+      "src/helper/accepts/accepts.ts",
+      "src/helper/accepts/index.ts",
+      "src/middleware/compress/index.test.ts",
+      "src/middleware/compress/index.ts",
+      "src/middleware/language/index.test.ts",
+      "src/middleware/language/index.ts",
+      "src/middleware/language/language.ts",
+      "src/utils/accept.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-color-44",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/color.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/color.ts",
+    "expected_files": [
+      "src/helper/dev/index.test.ts",
+      "src/helper/dev/index.ts",
+      "src/hono.test.ts",
+      "src/middleware/logger/index.test.ts",
+      "src/middleware/logger/index.ts",
+      "src/preset/quick.test.ts",
+      "src/preset/tiny.test.ts",
+      "src/utils/color.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 5
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-utils-56",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/validator/utils.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/validator/utils.ts",
+    "expected_files": [
+      "src/client/client.test.ts",
+      "src/helper/factory/index.test.ts",
+      "src/types.test.ts",
+      "src/validator/index.ts",
+      "src/validator/utils.test.ts",
+      "src/validator/validator.test.ts",
+      "src/validator/validator.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-server-1",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/bun/server.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/bun/server.ts",
+    "expected_files": [
+      "src/adapter/bun/conninfo.test.ts",
+      "src/adapter/bun/conninfo.ts",
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/server.test.ts",
+      "src/adapter/bun/websocket.test.ts",
+      "src/adapter/bun/websocket.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-sse-20",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/streaming/sse.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/streaming/sse.ts",
+    "expected_files": [
+      "src/helper/streaming/index.ts",
+      "src/helper/streaming/sse.test.tsx",
+      "src/helper/streaming/stream.test.ts",
+      "src/helper/streaming/text.test.ts",
+      "src/helper/streaming/text.ts",
+      "src/middleware/compress/index.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-stream-21",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/streaming/stream.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/streaming/stream.ts",
+    "expected_files": [
+      "src/helper/streaming/index.ts",
+      "src/helper/streaming/sse.test.tsx",
+      "src/helper/streaming/stream.test.ts",
+      "src/helper/streaming/text.test.ts",
+      "src/helper/streaming/text.ts",
+      "src/middleware/compress/index.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-common-13",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/css/common.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/css/common.ts",
+    "expected_files": [
+      "src/helper/css/common.case.test.tsx",
+      "src/helper/css/index.test.tsx",
+      "src/helper/css/index.ts",
+      "src/jsx/dom/css.test.tsx",
+      "src/jsx/dom/css.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-text-22",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/streaming/text.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/streaming/text.ts",
+    "expected_files": [
+      "src/helper/streaming/index.ts",
+      "src/helper/streaming/sse.test.tsx",
+      "src/helper/streaming/stream.test.ts",
+      "src/helper/streaming/text.test.ts",
+      "src/middleware/compress/index.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-types-0",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/aws-lambda/types.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/aws-lambda/types.ts",
+    "expected_files": [
+      "src/adapter/aws-lambda/conninfo.test.ts",
+      "src/adapter/aws-lambda/conninfo.ts",
+      "src/adapter/aws-lambda/handler.test.ts",
+      "src/adapter/aws-lambda/handler.ts",
+      "src/adapter/aws-lambda/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-validator-57",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/validator/validator.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/validator/validator.ts",
+    "expected_files": [
+      "src/client/client.test.ts",
+      "src/helper/factory/index.test.ts",
+      "src/types.test.ts",
+      "src/validator/index.ts",
+      "src/validator/validator.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-css-26",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/jsx/dom/css.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/jsx/dom/css.ts",
+    "expected_files": [
+      "src/helper/css/common.case.test.tsx",
+      "src/helper/css/index.test.tsx",
+      "src/helper/css/index.ts",
+      "src/jsx/dom/css.test.tsx"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-15",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/ssg/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/ssg/index.ts",
+    "expected_files": [
+      "src/adapter/bun/index.ts",
+      "src/adapter/bun/ssg.ts",
+      "src/adapter/deno/index.ts",
+      "src/adapter/deno/ssg.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-basic-auth-43",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/basic-auth.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/basic-auth.ts",
+    "expected_files": [
+      "src/middleware/basic-auth/index.test.ts",
+      "src/middleware/basic-auth/index.ts",
+      "src/utils/basic-auth.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-conninfo-2",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/cloudflare-workers/conninfo.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/cloudflare-workers/conninfo.ts",
+    "expected_files": [
+      "src/adapter/cloudflare-workers/conninfo.test.ts",
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-conninfo-7",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/netlify/conninfo.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/netlify/conninfo.ts",
+    "expected_files": [
+      "src/adapter/netlify/conninfo.test.ts",
+      "src/adapter/netlify/index.ts",
+      "src/adapter/netlify/mod.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-digest-29",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/etag/digest.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/etag/digest.ts",
+    "expected_files": [
+      "src/middleware/etag/digest.test.ts",
+      "src/middleware/etag/index.test.ts",
+      "src/middleware/etag/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-14",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/helper/route/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/helper/route/index.ts",
+    "expected_files": [
+      "src/helper/route/index.test.ts",
+      "src/middleware/method-not-allowed/index.test.ts",
+      "src/middleware/method-not-allowed/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-ipaddr-48",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/ipaddr.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/ipaddr.ts",
+    "expected_files": [
+      "src/middleware/ip-restriction/index.test.ts",
+      "src/middleware/ip-restriction/index.ts",
+      "src/utils/ipaddr.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-types-9",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/service-worker/types.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/service-worker/types.ts",
+    "expected_files": [
+      "src/adapter/service-worker/handler.test.ts",
+      "src/adapter/service-worker/handler.ts",
+      "src/adapter/service-worker/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-handler-8",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/netlify/handler.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/netlify/handler.ts",
+    "expected_files": [
+      "src/adapter/netlify/index.ts",
+      "src/adapter/netlify/mod.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-38",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/router/linear-router/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/router/linear-router/index.ts",
+    "expected_files": [
+      "src/preset/quick.test.ts",
+      "src/preset/quick.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-index-40",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/router/pattern-router/index.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/router/pattern-router/index.ts",
+    "expected_files": [
+      "src/preset/tiny.test.ts",
+      "src/preset/tiny.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-jsx-dev-runtime-28",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/jsx/jsx-dev-runtime.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/jsx/jsx-dev-runtime.ts",
+    "expected_files": [
+      "src/jsx/jsx-runtime.test.tsx",
+      "src/jsx/jsx-runtime.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-jwk-30",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/jwk/jwk.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/jwk/jwk.ts",
+    "expected_files": [
+      "src/middleware/jwk/index.test.ts",
+      "src/middleware/jwk/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-jwt-31",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/jwt/jwt.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/jwt/jwt.ts",
+    "expected_files": [
+      "src/middleware/jwt/index.test.ts",
+      "src/middleware/jwt/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-request-id-32",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/request-id/request-id.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/request-id/request-id.ts",
+    "expected_files": [
+      "src/middleware/request-id/index.test.ts",
+      "src/middleware/request-id/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-secure-headers-34",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/secure-headers/secure-headers.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/secure-headers/secure-headers.ts",
+    "expected_files": [
+      "src/middleware/secure-headers/index.test.ts",
+      "src/middleware/secure-headers/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-serve-static-module-3",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/cloudflare-workers/serve-static-module.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/cloudflare-workers/serve-static-module.ts",
+    "expected_files": [
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-timing-37",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/middleware/timing/timing.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/middleware/timing/timing.ts",
+    "expected_files": [
+      "src/middleware/timing/index.test.ts",
+      "src/middleware/timing/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "hono-impact-websocket-6",
+    "repo": "repos/hono",
+    "tier": 1,
+    "kind": "impact",
+    "query": "The exported behavior of `src/adapter/cloudflare-workers/websocket.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/adapter/cloudflare-workers/websocket.ts",
+    "expected_files": [
+      "src/adapter/cloudflare-workers/index.ts",
+      "src/adapter/cloudflare-workers/websocket.test.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 1
+    },
+    "provenance": {
+      "url": "https://github.com/honojs/hono.git",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "commerce-impact-seo-7",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "kind": "impact",
+    "query": "The exported behavior of `lib/shopify/fragments/seo.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "lib/shopify/fragments/seo.ts",
+    "expected_files": [
+      "lib/shopify/fragments/cart.ts",
+      "lib/shopify/fragments/product.ts",
+      "lib/shopify/index.ts",
+      "lib/shopify/mutations/cart.ts",
+      "lib/shopify/queries/cart.ts",
+      "lib/shopify/queries/collection.ts",
+      "lib/shopify/queries/page.ts",
+      "lib/shopify/queries/product.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "commerce-impact-image-5",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "kind": "impact",
+    "query": "The exported behavior of `lib/shopify/fragments/image.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "lib/shopify/fragments/image.ts",
+    "expected_files": [
+      "lib/shopify/fragments/cart.ts",
+      "lib/shopify/fragments/product.ts",
+      "lib/shopify/index.ts",
+      "lib/shopify/mutations/cart.ts",
+      "lib/shopify/queries/cart.ts",
+      "lib/shopify/queries/collection.ts",
+      "lib/shopify/queries/product.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "commerce-impact-price-3",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "kind": "impact",
+    "query": "The exported behavior of `components/price.tsx` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "components/price.tsx",
+    "expected_files": [
+      "components/carousel.tsx",
+      "components/grid/tile.tsx",
+      "components/label.tsx"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "commerce-impact-product-6",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "kind": "impact",
+    "query": "The exported behavior of `lib/shopify/fragments/product.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "lib/shopify/fragments/product.ts",
+    "expected_files": [
+      "lib/shopify/fragments/cart.ts",
+      "lib/shopify/index.ts",
+      "lib/shopify/mutations/cart.ts",
+      "lib/shopify/queries/cart.ts",
+      "lib/shopify/queries/collection.ts",
+      "lib/shopify/queries/product.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 4
+    },
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "commerce-impact-cart-4",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "kind": "impact",
+    "query": "The exported behavior of `lib/shopify/fragments/cart.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "lib/shopify/fragments/cart.ts",
+    "expected_files": [
+      "lib/shopify/index.ts",
+      "lib/shopify/mutations/cart.ts",
+      "lib/shopify/queries/cart.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "commerce-impact-dropdown-1",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "kind": "impact",
+    "query": "The exported behavior of `components/layout/search/filter/dropdown.tsx` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "components/layout/search/filter/dropdown.tsx",
+    "expected_files": [
+      "components/layout/search/collections.tsx",
+      "components/layout/search/filter/index.tsx",
+      "components/layout/search/filter/item.tsx"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "commerce-impact-item-2",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "kind": "impact",
+    "query": "The exported behavior of `components/layout/search/filter/item.tsx` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "components/layout/search/filter/item.tsx",
+    "expected_files": [
+      "components/layout/search/collections.tsx",
+      "components/layout/search/filter/dropdown.tsx",
+      "components/layout/search/filter/index.tsx"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "commerce-impact-label-0",
+    "repo": "repos/commerce",
+    "tier": 2,
+    "kind": "impact",
+    "query": "The exported behavior of `components/label.tsx` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "components/label.tsx",
+    "expected_files": [
+      "components/carousel.tsx",
+      "components/grid/tile.tsx"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/vercel/commerce.git",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-abstract-constructable-9",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/types/abstract-constructable.type.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/types/abstract-constructable.type.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/error/cannot-instantiate-value.error.ts",
+      "src/error/service-not-found.error.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts",
+      "src/types/service-identifier.type.ts",
+      "src/utils/resolve-to-type-wrapper.util.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 6
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-token-8",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/token.class.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/token.class.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/error/cannot-instantiate-value.error.ts",
+      "src/error/service-not-found.error.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts",
+      "src/types/service-identifier.type.ts",
+      "src/utils/resolve-to-type-wrapper.util.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 6
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-cannot-instantiate-value-3",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/error/cannot-instantiate-value.error.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/error/cannot-instantiate-value.error.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-container-scope-12",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/types/container-scope.type.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/types/container-scope.type.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-empty-2",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/empty.const.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/empty.const.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-service-not-found-4",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/error/service-not-found.error.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/error/service-not-found.error.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-container-registry-1",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/container-registry.class.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/container-registry.class.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-handler-5",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/interfaces/handler.interface.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/interfaces/handler.interface.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-service-metadata-6",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/interfaces/service-metadata.interface.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/interfaces/service-metadata.interface.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-service-options-7",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/interfaces/service-options.interface.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/interfaces/service-options.interface.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 3,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-constructable-10",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/types/constructable.type.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/types/constructable.type.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/error/cannot-inject-value.error.ts",
+      "src/error/cannot-instantiate-value.error.ts",
+      "src/error/service-not-found.error.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts",
+      "src/types/service-identifier.type.ts",
+      "src/utils/resolve-to-type-wrapper.util.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 6
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-service-identifier-13",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/types/service-identifier.type.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/types/service-identifier.type.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/error/cannot-instantiate-value.error.ts",
+      "src/error/service-not-found.error.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts",
+      "src/utils/resolve-to-type-wrapper.util.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 5
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-container-identifier-11",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/types/container-identifier.type.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/types/container-identifier.type.ts",
+    "expected_files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-container-instance-0",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/container-instance.class.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/container-instance.class.ts",
+    "expected_files": [
+      "src/container-registry.class.ts",
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/decorators/service.decorator.ts",
+      "src/index.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 3
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  },
+  {
+    "id": "typedi-impact-resolve-to-type-wrapper-14",
+    "repo": "repos/typedi",
+    "tier": 3,
+    "kind": "impact",
+    "query": "The exported behavior of `src/utils/resolve-to-type-wrapper.util.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
+    "target": "src/utils/resolve-to-type-wrapper.util.ts",
+    "expected_files": [
+      "src/decorators/inject-many.decorator.ts",
+      "src/decorators/inject.decorator.ts",
+      "src/index.ts"
+    ],
+    "oracle": {
+      "tool": "madge",
+      "version": "8",
+      "relation": "transitive_importers"
+    },
+    "gates": {
+      "max_depth": 2,
+      "directories": 2
+    },
+    "provenance": {
+      "url": "https://github.com/typestack/typedi.git",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+    }
+  }
+]

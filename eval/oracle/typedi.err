@@ -1,0 +1,2 @@
+npm notice run npx
+npm notice run madge --json --extensions ts,tsx,js,jsx repos/typedi/src

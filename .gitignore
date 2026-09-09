@@ -1,0 +1,6 @@
+/target
+/eval/repos/
+__pycache__/
+/eval/.pytest_cache/
+*.gguf
+/models/
