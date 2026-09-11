@@ -1,6 +1,10 @@
-/target
+# Unanchored: llama-cpp-sys-2's cmake install step writes headers and libs
+# to codearch/target/ (a path derived from the crate name), not just ./target.
+target/
 /eval/repos/
 __pycache__/
 /eval/.pytest_cache/
 *.gguf
 /models/
+research/codearch-representation/experiments/repos/
+research/codearch-representation/experiments/incr_work/

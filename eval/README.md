@@ -173,6 +173,45 @@ only when explicitly run. It is not needed to reproduce the fallback scores.
 The lexical groundedness metric treats untraceable generic "Core" as a failure;
 this flags lack of traceability, not a claim that the model hallucinated code.
 
+## Head-to-head: local model vs derived labeler
+
+`score_llm_labels.py` scores both labelers over the same frozen references in a
+single invocation, so neither arm can be advantaged by a code change made
+between runs. It re-runs the derived baseline rather than reading
+`labels-real-report.json`, and never overwrites that frozen derived record.
+
+```powershell
+cargo build --features llm
+python eval/score_llm_labels.py [path\to\model.gguf]
+```
+
+The model defaults to `models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`. Writes
+`labels-llm-report.md` and `.json`. Takes about two minutes on CPU for 20
+clusters. Measured result: the derived labeler wins on name specificity, 75% to
+55%; see the M0.5 section of `code_arch_architecture.md`.
+
+`labels-llm-report-prompt-v1.md` and `.json` are the superseded first run, kept
+deliberately. The only difference between the two is the wording of
+`build_prompt` in `src/label/validate.rs`: v1 asked for "a word shown above" and
+scored 40%, v2 asks for the most specific word and scores 55%. Fifteen points of
+the original gap were prompt design, not model capability. Re-running the scorer
+overwrites `labels-llm-report.*` but never the `-prompt-v1` copies.
+
+Read the two groundedness figures carefully. The reported `groundedness` covers
+**name and summary together** and requires every word to trace to an input
+token, while the in-product guard in `src/label/validate.rs` checks **only the
+name** and accepts it if **any** word traces. The generated summary is therefore
+unvalidated in the product, and every one of the model's groundedness failures
+under prompt v2 comes from summary prose rather than from the name — name-only
+groundedness is 100%. `unsupported_tokens` in the JSON attributes each failure
+token by token.
+
+Treat the name+summary figure with care when comparing a generator against the
+derived template. `BOILERPLATE` in `run.py:14` is the derived template's own
+connective vocabulary, so the derived arm cannot fail the metric on prose while
+any free-text sentence must. It measures conformity to that template, not
+accuracy.
+
 ## Exit status
 
 Actual paired LLM runs and a measured real-cluster labeling baseline now exist.

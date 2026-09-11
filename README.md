@@ -83,19 +83,37 @@ deterministic stage produced — directory names, top symbols, entry points,
 external dependencies — and returns a name and one sentence, constrained by a
 GBNF grammar.
 
-Every generated name is then checked against that same evidence. A name whose
+Every generated *name* is then checked against that same evidence. A name whose
 words trace to nothing in the cluster is discarded and the derived name used
 instead, as are names that collide with a sibling or exceed the length cap. A
 confident but wrong name is worse than a plain one, because the agent will trust
 it. The run reports how many domains fell back.
 
-Two consequences worth knowing before enabling it:
+The generated *summary* is not checked. This is a known gap, not a design
+choice: the guard validates the name and lets the sentence underneath it through
+unvalidated. Measurement shows that is where the model's untraceable vocabulary
+actually appears.
+
+Three consequences worth knowing before enabling it:
 
 - **It is slower.** Inference is CPU-bound. Expect minutes per repository rather
   than seconds. It is a one-time cost — the map persists.
 - **Determinism becomes conditional.** Output is reproducible for a given model
   file and llama.cpp version, rather than unconditionally. `--labeler derived`
   keeps the stronger guarantee.
+- **It currently produces worse names.** Measured head-to-head against the
+  derived labeler on 20 frozen production clusters, Qwen2.5-Coder-1.5B scores
+  55% name specificity against the derived path's 75%. Its remaining failures
+  are naming a cluster after one of its symbols (`Benchmarks Jsx` becomes
+  `Content`) and, in one case, still preferring the parent directory to the leaf
+  (`Etag` becomes `Middleware`). Every name it produces does trace back to the
+  cluster's own evidence, at a rate slightly better than the derived path's.
+  Full result in `code_arch_architecture.md`; reproduce with
+  `python eval/score_llm_labels.py`.
+
+The feature ships default-off, and `derived` stays the recommendation. It is
+kept because the finding is worth reproducing on other models and corpora, not
+because it currently wins.
 
 ## Status
 

@@ -1,0 +1,21 @@
+# codearch --labeler llm, qwen2.5-coder-1.5b-instruct-q4_k_m.gguf, CPU (i7-13620H).
+# Prompt v2 (the shipped prompt). No "Derived fallbacks:" line in either run:
+# the guard rejected 0 of 16 and 0 of 14.
+
+=== HONO ===
+Source files:        377
+Lines:               85310
+Import resolution:   98% (19 unresolved)
+Domains:             16
+Generated context:   3051 tokens
+Note: 16 domains exceeds the cap of 12. The remaining groups share no imports, so merging them further would assert a relationship the code does not have.
+real	1m46.890s
+=== COMMERCE ===
+Source files:        64
+Lines:               3879
+Import resolution:   76% (12 unresolved)
+Domains:             14
+Generated context:   2028 tokens
+Note: 14 domains exceeds the cap of 12. The remaining groups share no imports, so merging them further would assert a relationship the code does not have.
+real	1m8.512s
+=== DONE ===
