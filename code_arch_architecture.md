@@ -641,7 +641,7 @@ Co-change catches some of it. Nothing catches the rest yet.
 
 ## Initial M1 proxy status — superseded by the real-agent run below
 
-The evaluation harness lives in `codearch/eval/README.md`. It runs paired
+The evaluation harness lives in `eval/README.md`. It runs paired
 with-map/without-map file-location tasks and records cl100k_base context volume,
 distinct files opened, searches, exact-answer correctness, and full traces.
 It includes 40 synthetic tasks across all three visibility patterns, 12 pinned
@@ -656,8 +656,8 @@ LLM coding-agent results or provider-billed token measurements.
 
 No M2+ breadth was added. The runnable numeric baseline exists, but the stronger
 M1 efficacy gate remains open pending representative real-agent runs and
-independent labeling review. Full reports are under `codearch/eval/results/`
-and `codearch/eval/results-hono/`.
+independent labeling review. Full reports are under `eval/results/`
+and `eval/results-hono/`.
 
 
 ## M1 real-agent result — measured, negative on this navigation suite
@@ -692,8 +692,125 @@ model-reviewed, not human-reviewed ground truth. DerivedLabeler scores 75% name
 specificity, 90% lexical groundedness, and 0% sibling collisions. Generic Core,
 Components, Fragments and [page] names account for specificity failures.
 
-Reproduction instructions: `codearch/eval/README.md`. Auditable artifacts:
-`codearch/eval/results-agent/report.json`, its `report.md`, and
-`codearch/eval/labels-real-report.md`. The runnable M1 numeric exit exists; the
+Reproduction instructions: `eval/README.md`. Auditable artifacts:
+`eval/results-agent/report.json`, its `report.md`, and
+`eval/labels-real-report.md`. The runnable M1 numeric exit exists; the
 result does not support automatically loading the full map for simple file lookup.
 No M2+ production features were added. 44 Rust tests and 10 harness tests pass.
+
+
+## M0.5 local-model labeling result — the model loses, but by less than the first measurement said
+
+`LlmLabeler` is implemented behind the default-off `llm` feature and has been run
+end to end. Qwen2.5-Coder-1.5B-Instruct Q4_K_M, in-process through llama-cpp-2,
+CPU-only on an i7-13620H, grammar-constrained output, greedy decoding at
+temperature zero, no network. The guard rejected nothing in any run: 0 fallbacks
+across both repositories and all 20 reference clusters.
+
+Two prompts were measured against the same frozen 20-cluster references, scored
+by identical code in a single invocation (`eval/score_llm_labels.py`). The second
+exists because the first result turned out to be an artifact of how the model was
+asked, not of what it can do.
+
+| Metric | Derived | Model, prompt v1 | Model, prompt v2 |
+|---|---:|---:|---:|
+| Name specificity | **75%** | 40% | 55% |
+| Groundedness, name only | 90% | 90% | **100%** |
+| Groundedness, name + summary | **90%** | 40% | 25% |
+| Sibling collisions | 0% | 0% | 0% |
+
+### Why the first number was wrong to publish as-is
+
+Prompt v1 said: *"The name is at most three words and must use a word shown
+above."* For the cluster whose evidence is `src/middleware/etag`, the model
+answered `Middleware`. That is a word shown above. It obeyed the instruction
+exactly and scored zero, because the reference allowlist accepts only `ETag` or
+`ETag Middleware`. The same pattern produced `utils` from `src/utils/jwt`, `API`
+from `app/api/revalidate`, and `Router` from `benchmarks/routers-deno`.
+
+The prompt asked for *a* word from the evidence. The metric rewards the *most
+specific* word. That gap was never written down, so v1 measured an
+under-specified prompt rather than a model.
+
+Prompt v2 states the missing rule — in a path the final segment identifies the
+subsystem and earlier segments name the category it sits in; keep the word that
+separates this cluster from its siblings — using synthetic path examples that
+appear nowhere in the reference set. It fixed exactly the four clusters the
+diagnosis predicted:
+
+| Cluster | Evidence | v1 | v2 |
+|---|---|---|---|
+| hono-4 | `src/utils/jwt` | `utils` ✗ | `Jwt` ✓ |
+| hono-3 | `src/helper/ssg` | `Adapter` ✗ | `SSG` ✓ |
+| commerce-9 | `app/api/revalidate` | `API` ✗ | `Revalidate` ✓ |
+| hono-6 | `benchmarks/routers-deno/src` | `Router` ✗ | `Routers Deno` ✓ |
+
+One regressed: hono-8 went from `Benchmarks Jsx` to `Content`, a symbol name.
+Net +3 clusters, 40% to 55%.
+
+### What still separates the two labelers
+
+Derived gets 15 of 20, the model 11. Five of the nine the model misses are
+clusters derived also misses, so the real deficit is four:
+
+- **hono-2** is a scoring artifact. The model said `Router`; the allowlist has
+  `Routers`. `words()` does not stem, so a plural costs a full point. Stemmed,
+  the model would score 60%.
+- **hono-7** (`buildPage`) and **hono-8** (`Content`) name the cluster after a
+  single symbol instead of the kind. The v2 rule against this exists and did not
+  take.
+- **hono-9** still answers `Middleware` for `src/middleware/etag`. The leaf-over-
+  parent rule fixed three other clusters and not this one.
+
+### The groundedness rows do not mean what they appear to mean
+
+Name-only groundedness went to **100%** under v2 — every name traces to the
+cluster's own evidence, better than derived's 90%. The headline groundedness
+figure fell to 25% over the same run, and the reason is that it scores the
+summary too, against this allowlist:
+
+```python
+BOILERPLATE = set('file files under at the repository root key symbols uses'.split())
+```
+
+That is the derived labeler's own template vocabulary — `N files under X; key
+symbols A, B, C; uses D, E`. Derived cannot fail the metric except by emitting a
+bare generic name, because every word it writes is either a literal evidence
+token or one of those ten. Any free-text sentence must use connective words
+(*handles*, *responsible*, *subsystem*) that no list of directories and symbols
+contains.
+
+The v2 summary for hono-4 reads: *"A subsystem responsible for handling JSON Web
+Tokens (JWTs), including signing, verifying, and validating token headers and
+algorithms."* It is accurate, it is more useful than `15 files under
+src/utils/jwt`, and it scores as ungrounded. **A better summary scores worse.**
+The name+summary groundedness row should be read as a conformity measure against
+the derived template, not as a hallucination rate, and it should not be used to
+compare a generator against a template.
+
+### Known defect, unfixed
+
+`validate.rs` checks only the name, and accepts it if *any* token traces to
+evidence. The metric checks *every* token of name and summary. So the generated
+summary reaches `CODEBASE.md` with no grounding check applied to it at all, and
+the fallback counter cannot see it. `core_idea.md:445` argues a confident wrong
+name is worse than no name; the same holds for the sentence under it. Open.
+
+### Conclusion
+
+On this corpus, deterministic string manipulation still produces better domain
+names than a local 1.5B model — 75% against 55% — so `--labeler derived` remains
+the default and the recommendation. But the honest version of the finding is
+narrower than the first measurement suggested: **a third of the original gap was
+prompt design, closed in one revision, and the remaining failures are specific
+and addressable rather than evidence of a capability ceiling.** Nothing here
+establishes that a model this size cannot win; it establishes that it has not won
+yet, with two prompts tried.
+
+Auditable artifacts: `eval/labels-llm-report.md` and `.json` (prompt v2, current)
+and `eval/labels-llm-report-prompt-v1.md` and `.json` (the superseded baseline,
+kept so the prompt effect stays reproducible). Both carry per-cluster names and
+the unsupported-token list behind every groundedness failure. Generated maps are
+in `eval/results-llm/`. Reproduce with `python eval/score_llm_labels.py` against
+a binary built `--features llm`. 63 Rust tests pass on the default feature set,
+up from 44 at M1.

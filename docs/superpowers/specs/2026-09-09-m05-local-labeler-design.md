@@ -1,7 +1,9 @@
 # M0.5 — Local Model Labeler
 
 Date: 2026-09-09
-Status: approved design, not yet implemented
+Status: implemented and measured. All five exit criteria met; the measured
+outcome is a loss for the model — see the M0.5 section of
+`code_arch_architecture.md` and `eval/labels-llm-report.md`.
 Extends: `code_arch_architecture.md` stage 9
 
 ## Problem

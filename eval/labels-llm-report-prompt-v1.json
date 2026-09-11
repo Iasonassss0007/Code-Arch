@@ -1,0 +1,448 @@
+{
+  "model": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "reference_sha256": "b0c3e8ddbaafb28f7acec93e872273c7d71e917ea51095acd182f01f5b458f6d",
+  "human_reviewed": false,
+  "blind_model_review": "labels-reference-review.json",
+  "clusters": 20,
+  "fell_back": 0,
+  "derived": {
+    "name_specificity": 0.75,
+    "groundedness": 0.9,
+    "sibling_collision_rate": 0.0
+  },
+  "llm": {
+    "name_specificity": 0.4,
+    "groundedness": 0.4,
+    "sibling_collision_rate": 0.0
+  },
+  "derived_rows": [
+    {
+      "id": "hono-0",
+      "name": "Core",
+      "summary": "171 files under `src`; key symbols Context, Hono, UnsupportedPathError; uses vitest, crypto.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "core"
+      ]
+    },
+    {
+      "id": "hono-1",
+      "name": "Jsx",
+      "summary": "57 files under `src/jsx`; key symbols JSXFragmentNode, JSXNode, useRef; uses jsdom, vitest.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-2",
+      "name": "Routers",
+      "summary": "40 files under `benchmarks/routers/src`; key symbols TrieRouter, RegExpRouter, PreparedRegExpRouter; uses mitata, find-my-way.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-3",
+      "name": "Ssg",
+      "summary": "35 files under `src/helper/ssg`; key symbols FileSystemModule, SSGPlugin, ToSSGAdaptorInterface; uses path, fs.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-4",
+      "name": "Jwt",
+      "summary": "15 files under `src/utils/jwt`; key symbols signing, verifying, isTokenHeader; uses msw, vitest.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-5",
+      "name": "Streaming",
+      "summary": "20 files under `src/helper/streaming`; key symbols ALBProcessor, EventProcessor, EventV1Processor; uses stream, vitest.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-6",
+      "name": "Routers Deno",
+      "summary": "8 files under `benchmarks/routers-deno/src`; key symbols RouterInterface, Route, handler.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-7",
+      "name": "React Jsx",
+      "summary": "9 files under `benchmarks/jsx/src/react-jsx`; key symbols Content, Form, buildPage; uses benchmark, nano-jsx.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-8",
+      "name": "Benchmarks Jsx",
+      "summary": "7 files under `benchmarks/jsx/src`; key symbols Content, Form, buildPage; uses benchmark, nano-jsx.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-9",
+      "name": "Etag",
+      "summary": "4 files under `src/middleware/etag`; key symbols etagMatches, initializeGenerator, ETagOptions.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-0",
+      "name": "Fragments",
+      "summary": "12 files under `lib/shopify/fragments`; key symbols addToCart, createCart, getCart; uses lib, next.",
+      "specific": false,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-1",
+      "name": "Filter",
+      "summary": "4 files under `components/layout/search/filter`; key symbols FilterList, FilterItem, FilterItemDropdown; uses lib, react.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-2",
+      "name": "Components",
+      "summary": "12 files under `components`; key symbols LogoIcon, GridTileImage, Carousel; uses clsx, next.",
+      "specific": false,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-3",
+      "name": "Search",
+      "summary": "4 files under `app/search`; key symbols SearchLayout, SearchPage, ChildrenWrapper; uses components, lib.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-4",
+      "name": "Core",
+      "summary": "6 files under `app`; key symbols HomePage, RootLayout, Error; uses components, lib.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "core"
+      ]
+    },
+    {
+      "id": "commerce-5",
+      "name": "Cart",
+      "summary": "7 files under `components/cart`; key symbols CartProvider, useCart, DeleteItemButton; uses lib, react.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-6",
+      "name": "[page]",
+      "summary": "3 files under `app/[page]`; key symbols Layout, Page, generateMetadata; uses components, lib.",
+      "specific": false,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-7",
+      "name": "Navbar",
+      "summary": "3 files under `components/layout/navbar`; key symbols Search, SearchSkeleton, MobileMenu; uses next, lib.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-8",
+      "name": "[collection]",
+      "summary": "2 files under `app/search/[collection]`; key symbols CategoryPage, generateMetadata, Image; uses components, lib.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-9",
+      "name": "Revalidate",
+      "summary": "1 file under `app/api/revalidate`; key symbols POST; uses lib, next.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    }
+  ],
+  "llm_rows": [
+    {
+      "id": "hono-0",
+      "name": "src",
+      "summary": "Directory containing the main source code of the software repository.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "code",
+        "containing",
+        "directory",
+        "main",
+        "software",
+        "source"
+      ]
+    },
+    {
+      "id": "hono-1",
+      "name": "Jsx",
+      "summary": "57 files under `src/jsx`; key symbols JSXFragmentNode, JSXNode, useRef; uses jsdom, vitest.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-2",
+      "name": "PatternRouter",
+      "summary": "A pattern-based router for JavaScript applications.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "applications",
+        "based",
+        "java",
+        "script"
+      ]
+    },
+    {
+      "id": "hono-3",
+      "name": "Adapter",
+      "summary": "Subsystem for handling different web server adapters.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "adapters",
+        "different",
+        "handling",
+        "subsystem"
+      ]
+    },
+    {
+      "id": "hono-4",
+      "name": "utils",
+      "summary": "Contains utility functions for JWT handling.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "contains",
+        "functions",
+        "handling",
+        "utility"
+      ]
+    },
+    {
+      "id": "hono-5",
+      "name": "Streaming",
+      "summary": "20 files under `src/helper/streaming`; key symbols ALBProcessor, EventProcessor, EventV1Processor; uses stream, vitest.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-6",
+      "name": "Router",
+      "summary": "Subsystem for managing routes in a software repository.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "managing",
+        "software",
+        "subsystem"
+      ]
+    },
+    {
+      "id": "hono-7",
+      "name": "BuildSystem",
+      "summary": "A subsystem responsible for building and packaging software.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "building",
+        "packaging",
+        "responsible",
+        "software",
+        "subsystem",
+        "system"
+      ]
+    },
+    {
+      "id": "hono-8",
+      "name": "Benchmarks Jsx",
+      "summary": "7 files under `benchmarks/jsx/src`; key symbols Content, Form, buildPage; uses benchmark, nano-jsx.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "hono-9",
+      "name": "Middleware",
+      "summary": "A subsystem responsible for managing HTTP headers in middleware.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "headers",
+        "http",
+        "managing",
+        "responsible",
+        "subsystem"
+      ]
+    },
+    {
+      "id": "commerce-0",
+      "name": "Fragments",
+      "summary": "12 files under `lib/shopify/fragments`; key symbols addToCart, createCart, getCart; uses lib, next.",
+      "specific": false,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-1",
+      "name": "Filter",
+      "summary": "A component for filtering items in a software repository.",
+      "specific": true,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "component",
+        "filtering",
+        "items",
+        "software"
+      ]
+    },
+    {
+      "id": "commerce-2",
+      "name": "Components",
+      "summary": "A directory containing various UI components used in the software repository.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "containing",
+        "directory",
+        "software",
+        "ui",
+        "used",
+        "various"
+      ]
+    },
+    {
+      "id": "commerce-3",
+      "name": "Search",
+      "summary": "Subsystem for searching products within an application.",
+      "specific": true,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "application",
+        "searching",
+        "subsystem",
+        "within"
+      ]
+    },
+    {
+      "id": "commerce-4",
+      "name": "Core",
+      "summary": "6 files under `app`; key symbols HomePage, RootLayout, Error; uses components, lib.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "core"
+      ]
+    },
+    {
+      "id": "commerce-5",
+      "name": "Cart",
+      "summary": "7 files under `components/cart`; key symbols CartProvider, useCart, DeleteItemButton; uses lib, react.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-6",
+      "name": "[page]",
+      "summary": "3 files under `app/[page]`; key symbols Layout, Page, generateMetadata; uses components, lib.",
+      "specific": false,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-7",
+      "name": "Navbar",
+      "summary": "3 files under `components/layout/navbar`; key symbols Search, SearchSkeleton, MobileMenu; uses next, lib.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-8",
+      "name": "[collection]",
+      "summary": "2 files under `app/search/[collection]`; key symbols CategoryPage, generateMetadata, Image; uses components, lib.",
+      "specific": true,
+      "collision": false,
+      "grounded": true,
+      "unsupported_tokens": []
+    },
+    {
+      "id": "commerce-9",
+      "name": "API",
+      "summary": "API endpoint for revalidation requests.",
+      "specific": false,
+      "collision": false,
+      "grounded": false,
+      "unsupported_tokens": [
+        "endpoint",
+        "requests",
+        "revalidation"
+      ]
+    }
+  ]
+}

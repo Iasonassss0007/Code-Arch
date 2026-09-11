@@ -131,15 +131,25 @@ pub fn build_prompt(s: &ClusterSummary, siblings: &[String]) -> String {
     }
 
     format!(
-        "Name one subsystem of a software repository.\n\n\
+        "Name one subsystem of a software repository.\n\
+         \n\
          Directories: {}\n\
          Key symbols: {}\n\
          Entry points: {}\n\
          External dependencies: {}\n\
-         Names already used: {}\n\n\
+         Names already used: {}\n\
+         \n\
          Reply with JSON: {{\"name\": ..., \"summary\": ...}}\n\
-         The name is at most three words and must use a word shown above. \
-         The summary is one sentence. Do not invent components that are not listed.",
+         \n\
+         Name rules:\n\
+         - At most three words. Every word must appear in the evidence above.\n\
+         - Choose the most specific evidence, not the most general. In a directory path the final segment identifies this subsystem; the segments before it only name the broader category it sits in. For app/service/scheduler the name is Scheduler, not Service.\n\
+         - Keep the word that separates this subsystem from the names already used. Drop that word and the name stops distinguishing anything.\n\
+         - If the evidence lists several items of one kind, name the kind rather than picking one member of it.\n\
+         \n\
+         Summary rules:\n\
+         - One sentence, built from words that appear in the evidence above.\n\
+         - Do not mention components, technologies or behaviour that is not listed.",
         list(&s.dirs, 5),
         list(&s.top_symbols, 8),
         list(&s.entry_points, 4),
