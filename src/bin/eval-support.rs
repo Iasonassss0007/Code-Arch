@@ -89,8 +89,13 @@ Rebuild with: cargo build --features llm"
                     top_symbols: strings(&c["top_symbols"]),
                     // Present in the frozen set and used by both the prompt and
                     // the grounding guard. `derive_name` reads only `dirs`, so
-                    // passing it does not move the derived baseline.
-                    entry_points: strings(&c["entry_points"]),
+                    // passing it does not move the derived baseline. Absent in
+                    // older frozen sets (clusters.json), where it defaults to
+                    // empty rather than failing the whole benchmark run.
+                    entry_points: c
+                        .get("entry_points")
+                        .map(strings)
+                        .unwrap_or_default(),
                     external_deps: strings(&c["external_deps"]),
                     files: (0..c["file_count"].as_u64().unwrap() as usize).collect(),
                     ..Default::default()

@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -121,6 +122,9 @@ def main():
         lines.append(f"| {r['id']} | {r['expected']} | {len(r['predicted'])} | {r['recall']:.3f} | "
                      f"{r['f1']:.3f} | {r['f1_scoped']:.3f} | {r['adversary_f1']:.3f} | {missing} |")
     (args.out / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # The report is UTF-8; a Windows console defaulting to cp1252 must not be
+    # the reason a measurement run fails after it has already written its files.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print("\n".join(lines[:7]))
 
 

@@ -14,6 +14,7 @@
 //! mandatory: the honest boundary of the map is part of the map.
 
 use crate::confidence::{self, Band, ClusterConfidence};
+use crate::flows::Flow;
 use crate::inventory::Inventory;
 use crate::label::{ClusterSummary, Label};
 use crate::parse::FileParse;
@@ -21,9 +22,6 @@ use crate::profile::Profile;
 use crate::resolve::Resolution;
 use std::collections::HashMap;
 use std::sync::OnceLock;
-
-/// Files listed per domain, tried largest-first until the budget is met.
-const FILE_BUDGET_STEPS: &[usize] = &[8, 6, 5, 4, 3, 2, 1];
 
 /// Most-imported files named in the root map.
 pub const IMPORT_HUBS: usize = 8;
@@ -42,6 +40,9 @@ pub struct MapInput<'a> {
     pub hubs: &'a [(String, usize)],
     /// One entry per summary, in the same order.
     pub confidence: &'a [ClusterConfidence],
+    /// Stage-8 flows per summary, same order. Empty where the band or the
+    /// entries gave nothing; the ladder may additionally drop them all.
+    pub flows: &'a [Vec<Flow>],
     /// Co-change pairs stage 4 contributed. `None` means there was no usable
     /// git history, which the map states rather than hides.
     pub cochange_pairs: Option<usize>,
@@ -53,31 +54,50 @@ pub struct RenderedMap {
     pub tokens: usize,
     /// True when the budget forced a smaller per-domain file list.
     pub truncated: bool,
+    /// True when the budget forced flows off before file lists shrank.
+    pub flows_dropped: bool,
 }
+
+/// (per-domain file count, flows on). Flows are enhancement: they go before
+/// file lists shrink, never after.
+const LADDER: &[(usize, bool)] = &[
+    (8, true),
+    (8, false),
+    (6, false),
+    (5, false),
+    (4, false),
+    (3, false),
+    (2, false),
+    (1, false),
+];
 
 pub fn render_map(input: &MapInput) -> RenderedMap {
     let mut last = String::new();
-    for (i, &per_domain) in FILE_BUDGET_STEPS.iter().enumerate() {
-        let md = build(input, per_domain);
+    let mut last_flows = false;
+    for (i, &(per_domain, with_flows)) in LADDER.iter().enumerate() {
+        let md = build(input, per_domain, with_flows);
         let tokens = count_tokens(&md);
-        if tokens <= input.budget || i == FILE_BUDGET_STEPS.len() - 1 {
+        if tokens <= input.budget || i == LADDER.len() - 1 {
             return RenderedMap {
                 markdown: md,
                 tokens,
                 truncated: i > 0,
+                flows_dropped: !with_flows,
             };
         }
         last = md;
+        last_flows = !with_flows;
     }
     let tokens = count_tokens(&last);
     RenderedMap {
         markdown: last,
         tokens,
         truncated: true,
+        flows_dropped: last_flows,
     }
 }
 
-fn build(input: &MapInput, per_domain: usize) -> String {
+fn build(input: &MapInput, per_domain: usize, with_flows: bool) -> String {
     let inv = input.inv;
     let mut s = String::new();
 
@@ -184,6 +204,28 @@ Files are listed by directory, with no claimed relationships.\n\n",
         }
         s.push('\n');
 
+        if with_flows {
+            if let Some(domain_flows) = input.flows.get(i) {
+                if !domain_flows.is_empty() {
+                    s.push_str("Flows:\n\n");
+                    for f in domain_flows {
+                        let chain: Vec<String> = f
+                            .path
+                            .iter()
+                            .map(|&id| format!("`{}`", inv.get(id).rel))
+                            .collect();
+                        let mut line = format!("- {}: {}", f.entry_label, chain.join(" → "));
+                        if f.leaves > 0 {
+                            line.push_str(&format!(" → … (+{} leaves)", f.leaves));
+                        }
+                        line.push('\n');
+                        s.push_str(&line);
+                    }
+                    s.push('\n');
+                }
+            }
+        }
+
         let dep_names = |ids: &[usize]| -> String {
             ids.iter()
                 .filter_map(|&c| input.labels.get(c).map(|l| l.name.clone()))
@@ -241,15 +283,21 @@ Files are listed by directory, with no claimed relationships.\n\n",
             input.res.unresolved.len()
         ));
     }
-    match input.cochange_pairs {
-        Some(pairs) => s.push_str(&format!(
-            "- This map contains no execution flows; relationships come from resolved imports, \
-{pairs} git co-change pairs and directory structure\n"
-        )),
-        None => s.push_str(
-            "- This map contains no execution flows and no git co-change signal; \
-relationships come from resolved imports and directory structure only\n",
+    let flows_shown = with_flows && input.flows.iter().any(|f| !f.is_empty());
+    let relations = match input.cochange_pairs {
+        Some(pairs) => format!(
+            "relationships come from resolved imports, \
+             {pairs} git co-change pairs and directory structure"
         ),
+        None => "relationships come from resolved imports and directory structure only".to_string(),
+    };
+    if flows_shown {
+        s.push_str(&format!(
+            "- Execution flows below are import-chain traversals from entry points \
+             (depth ≤ 4), not model output; {relations}\n"
+        ));
+    } else {
+        s.push_str(&format!("- This map contains no execution flows; {relations}\n"));
     }
 
     s
@@ -423,12 +471,26 @@ pub fn index_json(
     summaries: &[ClusterSummary],
     labels: &[Label],
     conf: &[ClusterConfidence],
+    flows: &[Vec<Flow>],
     map_tokens: usize,
 ) -> String {
     let clusters: Vec<serde_json::Value> = summaries
         .iter()
         .enumerate()
         .map(|(i, s)| {
+            let domain_flows: Vec<serde_json::Value> = flows
+                .get(i)
+                .map(|fs| {
+                    fs.iter()
+                        .map(|f| {
+                            serde_json::json!({
+                                "entry": f.entry_label,
+                                "path": f.path.iter().map(|&id| inv.get(id).rel.clone()).collect::<Vec<_>>(),
+                            })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
             serde_json::json!({
                 "id": s.id,
                 "name": labels[i].name,
@@ -443,6 +505,7 @@ pub fn index_json(
                     "stability": c.stability,
                     "agreement": c.agreement,
                 })),
+                "flows": domain_flows,
             })
         })
         .collect();

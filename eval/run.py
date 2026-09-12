@@ -216,7 +216,12 @@ def main():
                 if pinned != {actual} or subprocess.check_output(['git','status','--porcelain'],cwd=source,text=True).strip():
                     raise ValueError('Benchmark repository must be clean and at its pinned revision')
             target = Path(tmp)/(source.name+'.md')
-            subprocess.run([str(binary),str(source),'--out',str(target),'--no-index'],check=True,capture_output=True)
+            state = Path(tmp)/(source.name+'-codearch')
+            # --codearch-dir keeps imports.md out of the corpus checkout, same
+            # pattern as run_agent.py. The map text is unchanged: it always
+            # names the canonical .codearch/imports.md.
+            subprocess.run([str(binary),str(source),'--out',str(target),'--no-index',
+                            '--codearch-dir',str(state)],capture_output=True,check=True)
             maps[repo] = target.read_text(encoding='utf-8')
         for i, task in enumerate(tasks):
             source = (ROOT/task['repo']).resolve()
@@ -240,6 +245,10 @@ def main():
     for row in rows:
         row['tokens'] = sum(next(counts) for _ in row['trace'])
     predictions = json.loads(args.label_predictions.read_text()) if args.label_predictions else bridge(helper,{'op':'labels','clusters':clusters})
+    # eval-support wraps its answer with metadata (fell_back since M0.5);
+    # --label-predictions files stay bare arrays. Both feed the same scorer.
+    if isinstance(predictions, dict):
+        predictions = predictions['labels']
     corpus = sorted({p for t in tasks for p in (ROOT/t['repo']).rglob('*') if '.git' not in p.parts})+[args.tasks,ROOT/'clusters.json']
     hashes = {p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in corpus if p.is_file()}
     report = {'schema':1,'policy':'external adapter' if command else 'lexical navigation proxy v1',

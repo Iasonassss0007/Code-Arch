@@ -941,3 +941,82 @@ met as a pipeline, not as a finding. The live run waits on provider credit,
 same gate as M1v2 criterion 4.
 
 102 Rust tests and 44 Python tests pass.
+
+
+## M3 resolver shadow fix, Next.js priors, stage-8 flows — implemented, mixed measurement
+
+Spec: `docs/superpowers/specs/2026-09-12-m3-flows-nextjs-design.md`. Django
+waits on the M4 Python resolver — no parser, no traversal, no honest priors;
+recorded, not silently dropped. Embeddings stay out: the measured Tier-2 gap
+was a resolver bug, not a missing signal (the M2-era `graph.rs` note saying
+otherwise is superseded).
+
+**The gap.** All 9 commerce route files had ~zero resolved out-edges. They
+import bare specifiers (`components/grid`, `lib/shopify`) via tsconfig
+`baseUrl: "."`. `resolve_one` handled baseUrl, but `resolve_all` never
+called it for these: `is_external_specifier` classified any lowercase bare
+path as a package first. Flows traversed on that graph would have been empty
+lines on exactly the repo M3 must improve, so the shadow fix is phase 1, not
+a separate bugfix. For bare specs the alias/baseUrl table is now consulted
+before the package heuristic; a miss still falls through to external, then
+unresolved. Accepted collision (npm name matching a repo file resolves to
+the repo file) is documented at the call site; `node_modules` is excluded,
+so the repo file is the saner reading.
+
+**Priors.** `next_app_kind` gains the route-adjacent conventions as entries
+of their route: `loading`, `error`, `not-found`, `opengraph-image`,
+`twitter-image`, `sitemap`, `robots`, `manifest`, `favicon`, `icon`,
+`apple-icon`. Path-only, no parser change.
+
+**Flows** (`src/flows.rs`). One chain per entry in high-band domains only:
+greedy highest-importance walk along member-internal import out-edges, depth
+≤ 4, bottom-quartile floor (entry exempt as a start, never as a step),
+single candidates stepped onto as chain links, multi-terminal fan-out
+collapsed to `→ … (+n leaves)`, cycles terminated by the visited set,
+cross-cluster edges stop the path, one node is not a flow. Rendered as
+`label: path → path` lines in a `Flows:` subsection; `index.json` clusters
+gain the same paths as data. The budget ladder tries flows first and drops
+them before shrinking file lists. The caveat line states flows or their
+absence in both arms.
+
+**Measured** (same checkouts, same commands, before → after):
+
+```text
+            resolution   imports   domains   confidence   flows   map tokens
+Commerce    76% → 91%    38 → 120  10 → 11   0.79 → 0.88  0 → 13  1963 → 2866
+Hono        98% → 98%    960       16 → 16   0.88 → 0.88  0 → 1   3409 → 3464
+TypeDI      100% → 100%  111       6 → 6     0.97 → 0.97  0 → 1   1647 → 1686
+```
+
+Commerce flows include `page /search → grid → shopify`, the new
+`loading /search` and `opengraph-image` entries firing, and leaf collapse on
+the revalidate route. Hono's single flow is its spine:
+`index → context → types → hono-base`. All three maps byte-identical ×2,
+all inside 4,000 tokens, flows kept (ladder drop path covered by test).
+
+**M1 harness** (`python eval/run.py`, repaired — see below): 32/40 → 40/40,
+same as the recorded M1-proxy baseline; Tier-2 fixtures 14/14 in both arms.
+No headroom: the synthetic Tier-2 fixtures are import-free convention
+layouts at ceiling in both arms, so this suite cannot separate M3 arms. The
+same ceiling logic that built the M1v2 gate applies — recorded, not hidden.
+
+**Ceiling re-run: recall 1.000 (gate pass), mean F1 0.981 → 0.890, commerce
+tasks only.** This is the src-only-oracle saga repeating, and it is oracle
+incompleteness, proven on disk: `app/search/page.tsx` imports `lib/shopify`
+(baseUrl bare), reaching `fragments/cart.ts` transitively, while madge
+records `page.tsx → []` — madge does not resolve baseUrl bare imports
+(`--ts-config` crashes on a TS-version incompatibility), so the frozen
+expected sets are missing true dependents. Nothing true was lost (recall
+1.000 throughout); precision fell against incomplete truth.
+`tasks-nav-gated.json` needs a rebuild against a baseUrl-aware oracle that
+no available tool produces; recorded as a known gap, not a regression.
+
+**Incidental repairs** (both pre-existing, both blocking the M3 exit
+measurements, neither caused by M3): `eval-support`'s `labels` op panicked
+on `clusters.json` (no `entry_points` key) — now defaults to empty; `run.py`
+expected a bare prediction array while eval-support returns the M0.5
+`{labels, fell_back}` wrapper — now unwrapped. Also fixed the cp1252
+console crash in `check_import_index.py` with the established reconfigure
+pattern.
+
+118 Rust tests (102 before) and 44 Python tests pass.
