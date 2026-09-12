@@ -10,6 +10,7 @@ pub enum Language {
     Tsx,
     Js,
     Jsx,
+    Python,
 }
 
 impl Language {
@@ -19,6 +20,7 @@ impl Language {
             "tsx" => Some(Language::Tsx),
             "js" | "mjs" | "cjs" => Some(Language::Js),
             "jsx" => Some(Language::Jsx),
+            "py" => Some(Language::Python),
             _ => None,
         }
     }
@@ -29,7 +31,16 @@ impl Language {
             Language::Tsx => "TSX",
             Language::Js => "JavaScript",
             Language::Jsx => "JSX",
+            Language::Python => "Python",
         }
+    }
+
+    /// Whether this language emits dotted/relative Python specifiers rather
+    /// than TS-style bare/aliased ones. Keeps the two resolver halves
+    /// disjoint: a dotted spec never reaches the package heuristic that ate
+    /// baseUrl imports in M3, and vice versa.
+    pub fn is_python(&self) -> bool {
+        matches!(self, Language::Python)
     }
 }
 

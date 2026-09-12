@@ -11,13 +11,16 @@
 //! for five.
 
 use crate::inventory::Inventory;
-use crate::parse::FileParse;
+use crate::parse::{DJANGO_INCLUDE_MARKER, FileParse};
 use crate::profile::PathMappings;
 use crate::types::FileId;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 /// Extension preference when several files share an extensionless path.
-const EXT_PRECEDENCE: &[&str] = &["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
+/// `py` rides last: it only decides same-stem ties, and TS behavior is
+/// exactly what it was before M4 added it here (it must be listed at all so
+/// `strip_extension` stems `.py` files for the index).
+const EXT_PRECEDENCE: &[&str] = &["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "py"];
 
 /// Node builtins that carry no `node:` prefix.
 const NODE_BUILTINS: &[&str] = &[
@@ -86,6 +89,19 @@ impl FileIndex {
             } else if stemmed == "index" {
                 insert_ranked(&mut by_key, &mut rank, String::new(), f.id, ext_rank(rel));
             }
+
+            // `pkg/__init__.py` also answers to `pkg`: `from . import x` and
+            // `import pkg` both target the package itself. Worst rank, so a
+            // same-stem module file always wins the key.
+            if let Some(dir) = stemmed.strip_suffix("/__init__") {
+                insert_ranked(
+                    &mut by_key,
+                    &mut rank,
+                    dir.to_string(),
+                    f.id,
+                    EXT_PRECEDENCE.len(),
+                );
+            }
         }
 
         FileIndex { by_key }
@@ -121,13 +137,32 @@ pub fn resolve_all(inv: &Inventory, parsed: &[FileParse], mappings: &PathMapping
     let mut seen: HashSet<(FileId, FileId)> = HashSet::new();
     let mut internal_attempts = 0usize;
     let mut internal_hits = 0usize;
+    let py_roots = python_roots(inv);
 
     for p in parsed {
         let from = p.file;
         let from_dir = inv.get(from).dir().to_string();
+        // TS and Python resolution are disjoint halves: dotted specs never
+        // reach the bare-specifier probe and vice versa.
+        let is_py = inv.get(from).language.is_python();
 
         for r in &p.refs {
             let spec = r.specifier.as_str();
+
+            if is_py {
+                resolve_py(
+                    spec,
+                    from,
+                    &from_dir,
+                    &py_roots,
+                    &index,
+                    &mut out,
+                    &mut seen,
+                    &mut internal_attempts,
+                    &mut internal_hits,
+                );
+                continue;
+            }
 
             // Relative specifiers are always internal attempts. Bare
             // specifiers first try the alias/baseUrl table: a hit means the
@@ -223,6 +258,145 @@ fn resolve_bare(spec: &str, mappings: &PathMappings, index: &FileIndex) -> Optio
     None
 }
 
+/// Import roots for absolute dotted specs: always the project root, plus
+/// `src/` when a src-layout package is detected (`src/*/__init__.py`
+/// exists). A stray `src/` dir with no packages adds a harmless extra root:
+/// lookups miss and fall through to external.
+fn python_roots(inv: &Inventory) -> Vec<String> {
+    let mut roots = vec![String::new()];
+    if inv
+        .files
+        .iter()
+        .any(|f| f.rel.starts_with("src/") && f.rel.ends_with("/__init__.py"))
+    {
+        roots.push("src".to_string());
+    }
+    roots
+}
+
+/// One Python ref, dispatched by shape. Attempt counting is asymmetric on
+/// purpose: an absolute miss is indistinguishable from third-party and goes
+/// external without touching the rate, while a relative miss is always the
+/// tool's failure and counts. `__future__` is external by definition.
+#[allow(clippy::too_many_arguments)]
+fn resolve_py(
+    spec: &str,
+    from: FileId,
+    from_dir: &str,
+    roots: &[String],
+    index: &FileIndex,
+    out: &mut Resolution,
+    seen: &mut HashSet<(FileId, FileId)>,
+    attempts: &mut usize,
+    hits: &mut usize,
+) {
+    if let Some(dotted) = spec.strip_prefix(DJANGO_INCLUDE_MARKER) {
+        // URL wiring names an in-project module; a miss is a root gap, not a
+        // package, so it stays unresolved and visible.
+        *attempts += 1;
+        match resolve_dotted(dotted, roots, index) {
+            Some(to) => {
+                *hits += 1;
+                push_edge(out, seen, from, to);
+            }
+            None => out.unresolved.push((from, spec.to_string())),
+        }
+        return;
+    }
+
+    if spec == "__future__" {
+        // A compiler directive, not a dependency: neither an edge nor an
+        // external. Recording it would put `__future__` in the Stack section
+        // next to real packages.
+        return;
+    }
+
+    if spec.starts_with('.') {
+        *attempts += 1;
+        match resolve_py_relative(spec, from_dir, index) {
+            Some(to) => {
+                *hits += 1;
+                push_edge(out, seen, from, to);
+            }
+            None => out.unresolved.push((from, spec.to_string())),
+        }
+        return;
+    }
+
+    match resolve_dotted(spec, roots, index) {
+        Some(to) => {
+            *attempts += 1;
+            *hits += 1;
+            push_edge(out, seen, from, to);
+        }
+        None => push_external(out, from, spec.split('.').next().unwrap_or(spec)),
+    }
+}
+
+fn push_edge(out: &mut Resolution, seen: &mut HashSet<(FileId, FileId)>, from: FileId, to: FileId) {
+    if to != from && seen.insert((from, to)) {
+        out.edges.push((from, to));
+    }
+}
+
+fn push_external(out: &mut Resolution, from: FileId, pkg: &str) {
+    let pkg = pkg.to_string();
+    if from < out.file_externals.len() && !out.file_externals[from].contains(&pkg) {
+        out.file_externals[from].push(pkg.clone());
+    }
+    *out.externals.entry(pkg).or_insert(0) += 1;
+}
+
+/// `a.b.c` → `<root>/a/b/c` through the stemmed/dir keys (`a/b/c.py`,
+/// `a/b/c/__init__.py`). First root wins; inside a root the index's
+/// extension ranking breaks same-stem ties.
+fn resolve_dotted(dotted: &str, roots: &[String], index: &FileIndex) -> Option<FileId> {
+    if dotted.is_empty() || dotted.starts_with('.') {
+        return None;
+    }
+    let path = dotted.replace('.', "/");
+    for root in roots {
+        let candidate = if root.is_empty() {
+            path.clone()
+        } else {
+            format!("{root}/{path}")
+        };
+        if let Some(id) = lookup(&candidate, index) {
+            return Some(id);
+        }
+    }
+    None
+}
+
+/// `.x` / `..pkg` / `.` against the importer's directory, walked up one
+/// level per extra dot. No `__init__.py` requirement (namespace packages
+/// resolve by path existence); walking past the root is unresolved.
+fn resolve_py_relative(spec: &str, from_dir: &str, index: &FileIndex) -> Option<FileId> {
+    let dots = spec.len() - spec.trim_start_matches('.').len();
+    if dots == 0 {
+        return None;
+    }
+    let mut segs: Vec<&str> = if from_dir.is_empty() {
+        Vec::new()
+    } else {
+        from_dir.split('/').collect()
+    };
+    for _ in 1..dots {
+        segs.pop()?;
+    }
+    let rest = &spec[dots..];
+    let candidate = if rest.is_empty() {
+        segs.join("/")
+    } else {
+        let mut all = segs;
+        all.extend(rest.split('.'));
+        all.join("/")
+    };
+    if candidate.is_empty() {
+        return None;
+    }
+    lookup(&candidate, index)
+}
 /// Try a path key, then the TypeScript-ESM habit of importing `./foo.js`
 /// when the file on disk is `./foo.ts`.
 fn lookup(path: &str, index: &FileIndex) -> Option<FileId> {
@@ -379,7 +553,8 @@ mod tests {
                     id,
                     rel: (*rel).into(),
                     abs: std::path::PathBuf::from(rel),
-                    language: Language::Ts,
+                    language: Language::from_path(std::path::Path::new(rel))
+                        .unwrap_or(Language::Ts),
                     bytes: 100,
                     loc: 10,
                     class: FileClass::Source,
@@ -392,7 +567,7 @@ mod tests {
                 declarations: 0,
                 too_large: 0,
                 unreadable: 0,
-                non_js_ts: 0,
+                non_supported: 0,
             },
         }
     }
@@ -461,5 +636,121 @@ mod tests {
             &PathMappings::default(),
         );
         assert_eq!(res.edges, vec![(0, 1)]);
+    }
+
+    #[test]
+    fn python_relative_import_resolves_within_package() {
+        let inv = inventory(&["pkg/__init__.py", "pkg/models.py", "pkg/views.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(2, &[".models"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.edges, vec![(2, 1)]);
+        assert!((res.resolution_rate - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn python_bare_from_dot_import_targets_the_package_init() {
+        let inv = inventory(&["pkg/__init__.py", "pkg/views.py"]);
+        let res = resolve_all(&inv, &[parsed(1, &["."])], &PathMappings::default());
+        assert_eq!(res.edges, vec![(1, 0)]);
+    }
+
+    #[test]
+    fn python_parent_level_walks_up() {
+        let inv = inventory(&["pkg/__init__.py", "pkg/sub/views.py", "pkg/shared.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(1, &["..shared"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.edges, vec![(1, 2)]);
+    }
+
+    #[test]
+    fn python_absolute_internal_beats_third_party_shape() {
+        // `flask_sqlalchemy.model` is lowercase-dotted like a deep package
+        // import; the repo file wins over the external reading.
+        let inv = inventory(&["pkg/__init__.py", "pkg/mod.py", "pkg/other.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(2, &["pkg.mod"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.edges, vec![(2, 1)]);
+    }
+
+    #[test]
+    fn python_src_layout_roots() {
+        let inv = inventory(&["src/pkg/__init__.py", "src/pkg/mod.py", "src/pkg/main.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(2, &["pkg.mod"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.edges, vec![(2, 1)]);
+    }
+
+    #[test]
+    fn python_namespace_package_needs_no_init() {
+        let inv = inventory(&["pkg/mod.py", "pkg/other.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(1, &[".mod"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.edges, vec![(1, 0)]);
+    }
+
+    #[test]
+    fn python_stdlib_is_external_and_future_is_neither() {
+        let inv = inventory(&["pkg/mod.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["os", "sqlalchemy.orm", "__future__"])],
+            &PathMappings::default(),
+        );
+        assert!(res.edges.is_empty());
+        assert!(res.unresolved.is_empty());
+        assert_eq!(res.externals.get("os"), Some(&1));
+        // Dotted externals file under their head segment.
+        assert_eq!(res.externals.get("sqlalchemy"), Some(&1));
+        // A compiler directive, not a dependency: recorded nowhere.
+        assert!(!res.externals.contains_key("__future__"));
+    }
+
+    #[test]
+    fn python_relative_miss_stays_unresolved() {
+        let inv = inventory(&["pkg/mod.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &[".missing"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.unresolved.len(), 1);
+        assert!(res.resolution_rate < 1.0);
+    }
+
+    #[test]
+    fn python_django_include_marker_resolves() {
+        let inv = inventory(&["proj/urls.py", "app/urls.py", "app/views.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["django-include:app.urls"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.edges, vec![(0, 1)]);
+    }
+
+    #[test]
+    fn python_django_include_miss_stays_unresolved() {
+        let inv = inventory(&["proj/urls.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["django-include:blog.urls"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.unresolved.len(), 1);
     }
 }

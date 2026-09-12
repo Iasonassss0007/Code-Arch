@@ -38,7 +38,7 @@ ROOT = Path(__file__).resolve().parent
 # Path segments too common to carry information about which files relate.
 STOPWORDS = {
     "src", "lib", "index", "test", "tests", "spec", "ts", "tsx", "js", "jsx",
-    "app", "packages", "components", "utils", "types", "d",
+    "py", "app", "packages", "components", "utils", "types", "d",
 }
 
 

@@ -14,7 +14,7 @@ STOP = set('a an the to of in at by and or for with from is this that'.split())
 BOILERPLATE = set('file files under at the repository root key symbols uses'.split())
 # Every module extension codearch analyzes. The agent, the task builder and the
 # gate must agree, or the index can list a dependent the agent may not answer.
-SOURCE_SUFFIXES = frozenset({'.ts','.tsx','.js','.jsx','.mts','.cts','.mjs','.cjs'})
+SOURCE_SUFFIXES = frozenset({'.ts','.tsx','.js','.jsx','.mts','.cts','.mjs','.cjs','.py'})
 
 
 @lru_cache(maxsize=100000)

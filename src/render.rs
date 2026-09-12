@@ -274,8 +274,8 @@ Files are listed by directory, with no claimed relationships.\n\n",
         e.generated, e.declarations, e.config, e.too_large, e.unreadable
     ));
     s.push_str(&format!(
-        "- Vendor and build directories were not walked; {} non-JS/TS files were ignored\n",
-        e.non_js_ts
+        "- Vendor and build directories were not walked; {} files in unsupported languages were ignored\n",
+        e.non_supported
     ));
     if !input.res.unresolved.is_empty() {
         s.push_str(&format!(

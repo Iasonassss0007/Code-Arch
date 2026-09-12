@@ -34,7 +34,7 @@ outside the map budget), and `.codearch/index.json` unless `--no-index` is passe
 --codearch-dir <path> write index.json and imports.md here (default: <repo>/.codearch)
 ```
 
-Currently parses TypeScript and JavaScript.
+Currently parses TypeScript, JavaScript and Python.
 
 ## Optional: local model labeling
 

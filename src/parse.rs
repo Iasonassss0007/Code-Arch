@@ -39,7 +39,20 @@ const SYMBOL_NODES: &[(&str, SymbolKind)] = &[
     ("method_definition", SymbolKind::Method),
     ("method_signature", SymbolKind::Method),
     ("variable_declarator", SymbolKind::Const),
+    // Python. Methods are `function_definition` nested in a class body; the
+    // walker does not track nesting, so all read as Function.
+    ("function_definition", SymbolKind::Function),
+    ("class_definition", SymbolKind::Class),
 ];
+
+/// Python constructors, filtered like TS `constructor`: a key-symbols list
+/// full of `__init__` says nothing about any subsystem.
+const PY_SKIPPED_NAMES: &[&str] = &["__init__"];
+
+/// Marker prefix for Django `include()` string references. Carries the edge
+/// kind so stage 3 needs no profile to resolve it, and so the M3
+/// package-heuristic probe never sees the bare dotted path.
+pub const DJANGO_INCLUDE_MARKER: &str = "django-include:";
 
 const EXPORT_NODE: &str = "export_statement";
 
@@ -58,6 +71,7 @@ pub struct FileParse {
 pub struct Parsers {
     ts: Parser,
     js: Parser,
+    py: Parser,
 }
 
 impl Parsers {
@@ -68,13 +82,16 @@ impl Parsers {
         let _ = ts.set_language(&tree_sitter_typescript::LANGUAGE_TSX.into());
         let mut js = Parser::new();
         let _ = js.set_language(&tree_sitter_javascript::LANGUAGE.into());
-        Parsers { ts, js }
+        let mut py = Parser::new();
+        let _ = py.set_language(&tree_sitter_python::LANGUAGE.into());
+        Parsers { ts, js, py }
     }
 
     fn for_language(&mut self, l: Language) -> &mut Parser {
         match l {
             Language::Ts | Language::Tsx => &mut self.ts,
             Language::Js | Language::Jsx => &mut self.js,
+            Language::Python => &mut self.py,
         }
     }
 }
@@ -112,49 +129,55 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
     };
     let root = tree.root_node();
     out.partial = root.has_error();
-    visit(root, src, false, &mut out, 0);
+    visit(root, src, false, lang.is_python(), &mut out, 0);
     out
 }
 
-fn visit(node: Node, src: &str, in_export: bool, out: &mut FileParse, depth: usize) {
+fn visit(node: Node, src: &str, in_export: bool, py: bool, out: &mut FileParse, depth: usize) {
     if depth > MAX_DEPTH {
         out.partial = true;
         return;
     }
 
     let kind = node.kind();
-    let exported = in_export || kind == EXPORT_NODE;
+    let line = node.start_position().row + 1;
 
-    if IMPORT_NODES.contains(&kind) {
-        if let Some(source) = node.child_by_field_name("source") {
-            if let Some(spec) = string_value(source, src) {
+    if py {
+        visit_python(node, src, line, out);
+    } else {
+        let exported = in_export || kind == EXPORT_NODE;
+
+        if IMPORT_NODES.contains(&kind) {
+            if let Some(source) = node.child_by_field_name("source") {
+                if let Some(spec) = string_value(source, src) {
+                    out.refs.push(RawRef {
+                        specifier: spec,
+                        line,
+                    });
+                }
+            }
+        }
+
+        if kind == "call_expression" {
+            if let Some(spec) = import_call_specifier(node, src) {
                 out.refs.push(RawRef {
                     specifier: spec,
-                    line: node.start_position().row + 1,
+                    line,
                 });
             }
         }
-    }
 
-    if kind == "call_expression" {
-        if let Some(spec) = import_call_specifier(node, src) {
-            out.refs.push(RawRef {
-                specifier: spec,
-                line: node.start_position().row + 1,
-            });
-        }
-    }
-
-    if let Some((_, sym_kind)) = SYMBOL_NODES.iter().find(|(k, _)| *k == kind) {
-        if let Some(name_node) = node.child_by_field_name("name") {
-            if let Ok(name) = name_node.utf8_text(src.as_bytes()) {
-                if is_interesting_symbol(name, *sym_kind) {
-                    out.symbols.push(Symbol {
-                        name: name.to_string(),
-                        kind: *sym_kind,
-                        exported,
-                        line: node.start_position().row + 1,
-                    });
+        if let Some((_, sym_kind)) = SYMBOL_NODES.iter().find(|(k, _)| *k == kind) {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                if let Ok(name) = name_node.utf8_text(src.as_bytes()) {
+                    if is_interesting_symbol(name, *sym_kind) {
+                        out.symbols.push(Symbol {
+                            name: name.to_string(),
+                            kind: *sym_kind,
+                            exported,
+                            line,
+                        });
+                    }
                 }
             }
         }
@@ -162,10 +185,165 @@ fn visit(node: Node, src: &str, in_export: bool, out: &mut FileParse, depth: usi
 
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        visit(child, src, exported, out, depth + 1);
+        visit(child, src, in_export || kind == EXPORT_NODE, py, out, depth + 1);
     }
 }
 
+/// Python half of `visit`. Import extraction reads node text rather than
+/// grammar fields: field names drift between grammar versions, while the
+/// surface syntax (`import a.b`, `from .x import y`) does not.
+fn visit_python(node: Node, src: &str, line: usize, out: &mut FileParse) {
+    match node.kind() {
+        "import_statement" => {
+            for spec in python_import_names(node, src) {
+                out.refs.push(RawRef { specifier: spec, line });
+            }
+        }
+        "import_from_statement" => {
+            if let Some(spec) = python_from_module(node, src) {
+                out.refs.push(RawRef { specifier: spec, line });
+            }
+        }
+        // The grammar gives `from __future__ import x` its own node kind.
+        // Recorded so stage 3 can file it external instead of unresolved.
+        "future_import_statement" => {
+            out.refs.push(RawRef { specifier: "__future__".to_string(), line });
+        }
+        // Python calls are `call` with an `argument_list`, not the TS
+        // `call_expression`/`arguments` shape. The callee is the first named
+        // child (`identifier`, or `attribute` for `obj.method()`).
+        "call" => {
+            if let Some(spec) = django_include_specifier(node, src) {
+                out.refs.push(RawRef { specifier: spec, line });
+            }
+        }
+        "function_definition" | "class_definition" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                if let Ok(name) = name_node.utf8_text(src.as_bytes()) {
+                    // No export keyword in Python; everything reads
+                    // unexported. `__init__` is noise, as decided in M4.
+                    if !PY_SKIPPED_NAMES.contains(&name) && name.len() >= 3 {
+                        out.symbols.push(Symbol {
+                            name: name.to_string(),
+                            kind: if node.kind() == "class_definition" {
+                                SymbolKind::Class
+                            } else {
+                                SymbolKind::Function
+                            },
+                            exported: false,
+                            line,
+                        });
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// `import a` / `import a.b as c, d` → one dotted specifier per name.
+/// Reads `dotted_name` descendants so `aliased_import` wrappers need no
+/// special field knowledge.
+fn python_import_names(node: Node, src: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut stack = vec![node];
+    while let Some(n) = stack.pop() {
+        if n.kind() == "dotted_name" {
+            if let Ok(text) = n.utf8_text(src.as_bytes()) {
+                if is_dotted_path(text) {
+                    out.push(text.to_string());
+                }
+            }
+            continue;
+        }
+        let mut cursor = n.walk();
+        for child in n.children(&mut cursor) {
+            if child.is_named() {
+                stack.push(child);
+            }
+        }
+    }
+    out.sort();
+    out.dedup();
+    out
+}
+
+/// `from X import y` → the module slice between the keywords: `.model`,
+/// `..pkg`, `flask`, or `.` for bare `from . import y`. Slicing source text
+/// instead of reading grammar fields keeps this working across grammar
+/// versions; the shape check rejects anything that is not a module path.
+fn python_from_module(node: Node, src: &str) -> Option<String> {
+    let bytes = src.as_bytes();
+    let mut cursor = node.walk();
+    let mut from_end = None;
+    let mut import_start = None;
+    for child in node.children(&mut cursor) {
+        if child.is_named() {
+            continue;
+        }
+        let Ok(text) = child.utf8_text(bytes) else {
+            continue;
+        };
+        if text == "from" && from_end.is_none() {
+            from_end = Some(child.end_byte());
+        } else if text == "import" {
+            import_start = Some(child.start_byte());
+            break;
+        }
+    }
+    let slice = src.get(from_end?..import_start?)?.trim();
+    // Parenthesized continuation or line break inside: not a static fact.
+    if slice.is_empty() || slice.contains(['(', ')', '\n', '\\']) {
+        return None;
+    }
+    let dots = slice.len() - slice.trim_start_matches('.').len();
+    let rest = &slice[dots..];
+    if rest.is_empty() {
+        // `from . import x` / `from .. import x`: the package itself.
+        return Some(".".repeat(dots.max(1)));
+    }
+    if !is_dotted_path(rest) {
+        return None;
+    }
+    Some(slice.to_string())
+}
+
+/// Django URL wiring: `include('conduit.apps.articles.urls')` is a real
+/// dependency with no import statement behind it. Only the first-arg string
+/// that parses as a dotted path is taken; URL patterns, `namespace=`
+/// kwargs and non-string args yield nothing.
+fn django_include_specifier(node: Node, src: &str) -> Option<String> {
+    let bytes = src.as_bytes();
+    let mut cursor = node.walk();
+    let kids: Vec<_> = node.children(&mut cursor).collect();
+    let callee = kids.iter().find(|c| c.is_named())?;
+    if callee.utf8_text(bytes).ok()? != "include" {
+        return None;
+    }
+    let args = kids.iter().find(|c| c.kind() == "argument_list")?;
+    let mut cursor = args.walk();
+    let first = args.named_children(&mut cursor).next()?;
+    let text = string_value(first, src)?;
+    if !is_dotted_path(&text) {
+        return None;
+    }
+    Some(format!("{DJANGO_INCLUDE_MARKER}{text}"))
+}
+
+fn is_dotted_path(s: &str) -> bool {
+    let mut parts = s.split('.');
+    match parts.next() {
+        Some(first) if is_identifier(first) => {}
+        _ => return false,
+    }
+    parts.all(is_identifier)
+}
+
+fn is_identifier(s: &str) -> bool {
+    !s.is_empty()
+        && s.bytes().next().is_some_and(|b| b.is_ascii_alphabetic() || b == b'_')
+        && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+}
 /// `require("x")` and `import("x")` both take the specifier as first argument.
 fn import_call_specifier(node: Node, src: &str) -> Option<String> {
     let callee = node.child_by_field_name("function")?;
@@ -180,14 +358,15 @@ fn import_call_specifier(node: Node, src: &str) -> Option<String> {
 }
 
 /// Text of a string literal without its quotes. Template strings are skipped:
-/// a computed specifier is not a static fact.
+/// a computed specifier is not a static fact. Handles both the TS
+/// `string_fragment` child and the Python `string_content` one.
 fn string_value(node: Node, src: &str) -> Option<String> {
     if node.kind() != "string" {
         return None;
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        if child.kind() == "string_fragment" {
+        if child.kind() == "string_fragment" || child.kind() == "string_content" {
             return child.utf8_text(src.as_bytes()).ok().map(|s| s.to_string());
         }
     }
@@ -277,8 +456,7 @@ mod tests {
     }
 
     #[test]
-    fn broken_source_is_partial_not_fatal() {
-        let out = parse("import { A } from './a'; function ( { ", Language::Ts);
+    fn broken_source_is_partial_not_fatal() {        let out = parse("import { A } from './a'; function ( { ", Language::Ts);
         assert!(out.partial);
         // The salvageable part is still extracted.
         assert_eq!(out.refs.len(), 1);
@@ -291,5 +469,63 @@ mod tests {
             Language::Tsx,
         );
         assert!(out.symbols.iter().any(|s| s.name == "Card"));
+    }
+
+    fn parse_py(src: &str) -> FileParse {
+        parse(src, Language::Python)
+    }
+
+    #[test]
+    fn python_import_forms() {
+        let out = parse_py(
+            "import os\nimport sqlalchemy.orm as sa_orm\nfrom .model import Model\nfrom ..pkg import Thing\nfrom . import Entry\nfrom flask import Flask\n",
+        );
+        let mut specs: Vec<&str> = out.refs.iter().map(|r| r.specifier.as_str()).collect();
+        specs.sort();
+        assert_eq!(
+            specs,
+            vec![".", "..pkg", ".model", "flask", "os", "sqlalchemy.orm"]
+        );
+    }
+
+    #[test]
+    fn python_future_import_is_kept_for_resolve() {
+        let out = parse_py("from __future__ import annotations\n");
+        assert_eq!(
+            out.refs.iter().map(|r| r.specifier.as_str()).collect::<Vec<_>>(),
+            vec!["__future__"]
+        );
+    }
+
+    #[test]
+    fn python_symbols_skip_init() {
+        let out = parse_py("class Article:\n    def __init__(self): ...\n    def publish(self): ...\n");
+        let names: Vec<&str> = out.symbols.iter().map(|s| s.name.as_str()).collect();
+        assert!(names.contains(&"Article"));
+        assert!(names.contains(&"publish"));
+        assert!(!names.contains(&"__init__"));
+        assert!(out.symbols.iter().all(|s| !s.exported));
+    }
+
+    #[test]
+    fn python_include_strings_are_marked() {
+        let out = parse_py("urlpatterns = [url(r'^api/', include('conduit.apps.articles.urls'))]\n");
+        assert_eq!(
+            out.refs.iter().map(|r| r.specifier.as_str()).collect::<Vec<_>>(),
+            vec!["django-include:conduit.apps.articles.urls"]
+        );
+    }
+
+    #[test]
+    fn python_include_rejects_patterns_and_other_callees() {
+        let out = parse_py("x = include(router.urls)\ny = path('a', view)\nz = include(r'^api/')\n");
+        assert!(out.refs.is_empty());
+    }
+
+    #[test]
+    fn python_broken_source_is_partial() {
+        let out = parse_py("from .model import Model\ndef broken(:\n");
+        assert!(out.partial);
+        assert!(out.refs.iter().any(|r| r.specifier == ".model"));
     }
 }
