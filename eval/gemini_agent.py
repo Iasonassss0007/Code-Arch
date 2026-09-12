@@ -1,0 +1,127 @@
+"""Stateless Gemini API adapter for the free tier. Same contract as openrouter_agent.complete.
+
+Only public benchmark observations are sent. The free tier bills nothing, so
+usage carries cost 0.0 explicitly: run_agent stops a run whose usage lacks a
+cost rather than guessing what it spent. Note that Google's free tier terms
+allow submitted content to be used to improve Google's products.
+"""
+import hashlib
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.request
+
+from openrouter_agent import SYSTEM
+
+BASE = 'https://generativelanguage.googleapis.com/v1beta'
+DEFAULT_MODEL = 'gemini-3.1-flash-lite'
+SEED = 24301
+# Impact answers list up to ~20 paths. The 512 inherited from M1's one-file answers
+# cut a 19-file gemini-3.6-flash answer mid-JSON in a live probe.
+MAX_TOKENS = 2048
+
+# Only settings probed against the live API on 2026-09-11. gemini-3.6-flash
+# rejects thinkingBudget 0 (HTTP 400) and, left on default thinking, spent a
+# 128-token reply limit on thoughts and truncated the JSON.
+THINKING = {
+    'gemini-3.6-flash': {'thinkingLevel': 'minimal'},
+    'gemini-3.1-flash-lite': {'thinkingBudget': 0},
+}
+
+# Free-tier Flash quotas are reported around 10 requests/minute per model.
+# Pacing stays under that instead of discovering it through 429s.
+MIN_INTERVAL = float(os.environ.get('CODEARCH_GEMINI_MIN_INTERVAL', '6.5'))
+RETRIES = 5
+RETRY_STATUS = {429, 500, 503}
+
+_last = [0.0]
+
+# The harness's action shape, enforced at the sampler. A live probe had
+# gemini-3.6-flash answer {"action": "search", ...}; JSON mode alone allows it.
+ACTION_SCHEMA = {
+    'type': 'OBJECT',
+    'properties': {
+        'tool': {'type': 'STRING', 'enum': ['search', 'open', 'answer']},
+        'query': {'type': 'STRING'},
+        'path': {'type': 'STRING'},
+        'files': {'type': 'ARRAY', 'items': {'type': 'STRING'}},
+    },
+    'required': ['tool'],
+}
+
+
+def payload(request, model, system=SYSTEM):
+    if model not in THINKING:
+        raise ValueError(f'No verified thinking setting for {model}; probe it and add it to THINKING')
+    return {'systemInstruction': {'parts': [{'text': system}]},
+            'contents': [{'role': 'user', 'parts': [{'text': json.dumps(request, ensure_ascii=False)}]}],
+            'generationConfig': {'temperature': 0, 'seed': SEED, 'maxOutputTokens': MAX_TOKENS,
+                                 'responseMimeType': 'application/json', 'responseSchema': ACTION_SCHEMA,
+                                 'thinkingConfig': THINKING[model]}}
+
+
+def parse(result, model, system=SYSTEM):
+    u = result.get('usageMetadata') or {}
+    usage = None
+    if 'promptTokenCount' in u:
+        # Thinking tokens are generated tokens; count them so provider totals stay honest.
+        usage = {'prompt_tokens': u['promptTokenCount'],
+                 'completion_tokens': u.get('candidatesTokenCount', 0) + u.get('thoughtsTokenCount', 0),
+                 'cost': 0.0}
+    meta = {'model': result.get('modelVersion', model), 'provider': 'google-ai-studio-free',
+            'id': result.get('responseId'), 'usage': usage,
+            'system_sha256': hashlib.sha256(system.encode()).hexdigest(),
+            'temperature': 0, 'seed': SEED, 'max_tokens': MAX_TOKENS, 'thinking': THINKING.get(model)}
+    candidate = (result.get('candidates') or [{}])[0]
+    meta['finish_reason'] = candidate.get('finishReason')
+    text = ''.join(part.get('text', '') for part in (candidate.get('content') or {}).get('parts') or [])
+    try:
+        action = json.loads(text)
+        if not isinstance(action, dict):
+            raise ValueError('Expected JSON object')
+    except ValueError:
+        error = 'Model did not return a JSON action'
+        # Recorded in the checkpoint, so a failed episode explains itself without a replay.
+        if candidate.get('finishReason'):
+            error += f" (finishReason={candidate['finishReason']}; text {text[:200]!r})"
+        return {'action': None, 'metadata': meta, 'error': error}
+    return {'action': action, 'metadata': meta}
+
+
+def complete(request, model=None, system=SYSTEM, opener=urllib.request.urlopen, sleep=time.sleep, clock=time.monotonic):
+    model = model or os.environ.get('CODEARCH_EVAL_MODEL', DEFAULT_MODEL)
+    key = os.environ.get('GEMINI_API_KEY')
+    if not key:
+        raise RuntimeError('GEMINI_API_KEY is not configured')
+    body = json.dumps(payload(request, model, system)).encode()
+    for attempt in range(RETRIES + 1):
+        wait = _last[0] + MIN_INTERVAL - clock()
+        if wait > 0:
+            sleep(wait)
+        _last[0] = clock()
+        # The key travels in a header so it never appears in a URL, a log line or an exception.
+        req = urllib.request.Request(f'{BASE}/models/{model}:generateContent', data=body,
+                                     headers={'x-goog-api-key': key, 'Content-Type': 'application/json'})
+        try:
+            with opener(req, timeout=180) as response:
+                return parse(json.load(response), model, system)
+        except urllib.error.HTTPError as exc:
+            if exc.code in RETRY_STATUS and attempt < RETRIES:
+                sleep(30 * (attempt + 1))
+                continue
+            # "HTTP" in the message is what run_agent.provider_failure keys on.
+            raise RuntimeError(f'Gemini HTTP {exc.code}') from None
+        except OSError as exc:
+            if attempt < RETRIES:
+                sleep(30 * (attempt + 1))
+                continue
+            raise RuntimeError(f'Gemini HTTP transport failure: {type(exc).__name__}') from None
+
+
+if __name__ == '__main__':
+    try:
+        print(json.dumps(complete(json.load(sys.stdin))))
+    except Exception as exc:
+        print(json.dumps({'action': None, 'error': str(exc), 'metadata': {}}))

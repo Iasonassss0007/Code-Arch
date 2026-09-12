@@ -1,7 +1,7 @@
 //! Stage 7 — Rank.
 //!
 //! Job    Score importance so the token budget spends itself on what matters.
-//! In     CodeGraph, RouteHints
+//! In     CodeGraph, RouteHints, per-file churn
 //! Out    importance score per file
 //! Fails  Cannot fail.
 //!
@@ -9,9 +9,10 @@
 //! entry-point-adjacent files. Line count is deliberately not a term: a
 //! 2,000-line generated constants file is not important.
 //!
-//! The churn term is 0.20 of the score and requires git history, which arrives
-//! at M2. Until then it contributes zero for every file, so it cancels out of
-//! the ordering rather than distorting it.
+//! The churn term is 0.20 of the score and requires git history. Where there is
+//! none it contributes zero for every file, so it cancels out of the ordering
+//! rather than distorting it. Counts are log-scaled: the difference between 2
+//! commits and 20 is real, the difference between 200 and 220 is not.
 
 use crate::graph::CodeGraph;
 use crate::types::{FileId, RouteHint};
@@ -25,7 +26,9 @@ pub const W_FAN_IN: f64 = 0.20;
 const DAMPING: f64 = 0.85;
 const ITERATIONS: usize = 40;
 
-pub fn score(g: &CodeGraph, routes: &[RouteHint]) -> Vec<f64> {
+/// `churn` is commits per file from stage 4, indexed by `FileId`. An empty
+/// slice means no git history was available.
+pub fn score(g: &CodeGraph, routes: &[RouteHint], churn: &[usize]) -> Vec<f64> {
     if g.n == 0 {
         return Vec::new();
     }
@@ -34,13 +37,18 @@ pub fn score(g: &CodeGraph, routes: &[RouteHint]) -> Vec<f64> {
     let entries: HashSet<FileId> = routes.iter().map(|r| r.file).collect();
     let fan_in: Vec<f64> = (0..g.n).map(|i| g.fan_in(i) as f64).collect();
     let fan_in = normalize(&fan_in);
+    let churn = normalize(
+        &(0..g.n)
+            .map(|i| (churn.get(i).copied().unwrap_or(0) as f64).ln_1p())
+            .collect::<Vec<f64>>(),
+    );
 
     (0..g.n)
         .map(|i| {
             let entry = if entries.contains(&i) { 1.0 } else { 0.0 };
             W_PAGERANK * pr[i]
                 + W_ENTRY_POINT * entry
-                + W_CHURN * 0.0 // git signals land at M2
+                + W_CHURN * churn[i]
                 + W_FAN_IN * fan_in[i]
         })
         .collect()
@@ -119,20 +127,38 @@ mod tests {
     #[test]
     fn entry_points_lift_the_score() {
         let g = CodeGraph::from_edges(2, &[(0, 1, 1.0)]);
-        let without = score(&g, &[]);
+        let without = score(&g, &[], &[]);
         let with = score(
             &g,
             &[RouteHint {
                 file: 0,
                 label: "entry: index.ts".into(),
             }],
+            &[],
         );
         assert!(with[0] > without[0]);
     }
 
     #[test]
+    fn churn_lifts_the_score_and_saturates() {
+        let g = CodeGraph::from_edges(3, &[(0, 1, 1.0), (0, 2, 1.0)]);
+        let quiet = score(&g, &[], &[0, 0, 0]);
+        let busy = score(&g, &[], &[40, 0, 0]);
+        assert!(busy[0] > quiet[0]);
+        // Log scaling: the 40 -> 200 step is worth far less than the 0 -> 40 one.
+        let busier = score(&g, &[], &[200, 0, 0]);
+        assert!(busier[0] - busy[0] < busy[0] - quiet[0]);
+    }
+
+    #[test]
+    fn missing_churn_counts_as_zero() {
+        let g = CodeGraph::from_edges(2, &[(0, 1, 1.0)]);
+        assert_eq!(score(&g, &[], &[]), score(&g, &[], &[0, 0]));
+    }
+
+    #[test]
     fn empty_graph_scores_nothing() {
         let g = CodeGraph::from_edges(0, &[]);
-        assert!(score(&g, &[]).is_empty());
+        assert!(score(&g, &[], &[]).is_empty());
     }
 }

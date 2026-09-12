@@ -21,8 +21,9 @@ default configuration.
 codearch /path/to/repo
 ```
 
-Writes `CODEBASE.md` at the repository root, plus `.codearch/index.json` unless
-`--no-index` is passed.
+Writes `CODEBASE.md` at the repository root, `.codearch/imports.md` (a reverse
+import index: for every file, each file that imports it, read on demand and
+outside the map budget), and `.codearch/index.json` unless `--no-index` is passed.
 
 ```
 --out <path>          where to write the map (default: <repo>/CODEBASE.md)
@@ -30,6 +31,7 @@ Writes `CODEBASE.md` at the repository root, plus `.codearch/index.json` unless
 --max-domains <n>     maximum top-level domains (default: 12)
 --seed <n>            clustering seed; changes tie-breaks only
 --no-index            skip .codearch/index.json
+--codearch-dir <path> write index.json and imports.md here (default: <repo>/.codearch)
 ```
 
 Currently parses TypeScript and JavaScript.

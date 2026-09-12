@@ -1,0 +1,62 @@
+[
+  {
+    "id": "item-000",
+    "repo": "typedi",
+    "name": "Interfaces",
+    "summary": "9 files under `src/interfaces`; key symbols ContainerInstance, ContainerRegistry, ServiceMetadata.",
+    "files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/empty.const.ts",
+      "src/interfaces/container-options.interface.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts",
+      "src/types/container-identifier.type.ts",
+      "src/types/container-scope.type.ts"
+    ]
+  },
+  {
+    "id": "item-001",
+    "repo": "typedi",
+    "name": "Core 2",
+    "summary": "5 files under `src`; key symbols ServiceNotFoundError, Bus, Car; uses reflect-metadata.",
+    "files": [
+      "src/error/service-not-found.error.ts",
+      "src/index.ts",
+      "test/Container.spec.ts",
+      "test/eager-loading-services.spec.ts",
+      "test/github-issues/87/issue-87.spec.ts"
+    ]
+  },
+  {
+    "id": "item-002",
+    "repo": "typedi",
+    "name": "Core",
+    "summary": "9 files under `src`; key symbols ContainerInstance, ContainerRegistry, ServiceMetadata.",
+    "files": [
+      "src/container-instance.class.ts",
+      "src/container-registry.class.ts",
+      "src/empty.const.ts",
+      "src/interfaces/container-options.interface.ts",
+      "src/interfaces/handler.interface.ts",
+      "src/interfaces/service-metadata.interface.ts",
+      "src/interfaces/service-options.interface.ts",
+      "src/types/container-identifier.type.ts",
+      "src/types/container-scope.type.ts"
+    ]
+  },
+  {
+    "id": "item-003",
+    "repo": "typedi",
+    "name": "Core",
+    "summary": "5 files under `src`; key symbols ServiceNotFoundError, Bus, Car; uses reflect-metadata.",
+    "files": [
+      "src/error/service-not-found.error.ts",
+      "src/index.ts",
+      "test/Container.spec.ts",
+      "test/eager-loading-services.spec.ts",
+      "test/github-issues/87/issue-87.spec.ts"
+    ]
+  }
+]

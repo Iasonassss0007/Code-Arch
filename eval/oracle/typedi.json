@@ -1,101 +1,182 @@
 {
-  "container-instance.class.ts": [
-    "container-registry.class.ts",
-    "empty.const.ts",
-    "error/cannot-instantiate-value.error.ts",
-    "error/service-not-found.error.ts",
-    "interfaces/handler.interface.ts",
-    "interfaces/service-metadata.interface.ts",
-    "interfaces/service-options.interface.ts",
-    "token.class.ts",
-    "types/constructable.type.ts",
-    "types/container-identifier.type.ts",
-    "types/container-scope.type.ts",
-    "types/service-identifier.type.ts"
+  "jest.config.js": [],
+  "rollup.config.js": [],
+  "src/container-instance.class.ts": [
+    "src/container-registry.class.ts",
+    "src/empty.const.ts",
+    "src/error/cannot-instantiate-value.error.ts",
+    "src/error/service-not-found.error.ts",
+    "src/interfaces/handler.interface.ts",
+    "src/interfaces/service-metadata.interface.ts",
+    "src/interfaces/service-options.interface.ts",
+    "src/token.class.ts",
+    "src/types/constructable.type.ts",
+    "src/types/container-identifier.type.ts",
+    "src/types/container-scope.type.ts",
+    "src/types/service-identifier.type.ts"
   ],
-  "container-registry.class.ts": [
-    "container-instance.class.ts",
-    "types/container-identifier.type.ts"
+  "src/container-registry.class.ts": [
+    "src/container-instance.class.ts",
+    "src/types/container-identifier.type.ts"
   ],
-  "decorators/inject-many.decorator.ts": [
-    "container-registry.class.ts",
-    "error/cannot-inject-value.error.ts",
-    "token.class.ts",
-    "types/constructable.type.ts",
-    "types/service-identifier.type.ts",
-    "utils/resolve-to-type-wrapper.util.ts"
+  "src/decorators/inject-many.decorator.ts": [
+    "src/container-registry.class.ts",
+    "src/error/cannot-inject-value.error.ts",
+    "src/token.class.ts",
+    "src/types/constructable.type.ts",
+    "src/types/service-identifier.type.ts",
+    "src/utils/resolve-to-type-wrapper.util.ts"
   ],
-  "decorators/inject.decorator.ts": [
-    "container-registry.class.ts",
-    "error/cannot-inject-value.error.ts",
-    "token.class.ts",
-    "types/constructable.type.ts",
-    "types/service-identifier.type.ts",
-    "utils/resolve-to-type-wrapper.util.ts"
+  "src/decorators/inject.decorator.ts": [
+    "src/container-registry.class.ts",
+    "src/error/cannot-inject-value.error.ts",
+    "src/token.class.ts",
+    "src/types/constructable.type.ts",
+    "src/types/service-identifier.type.ts",
+    "src/utils/resolve-to-type-wrapper.util.ts"
   ],
-  "decorators/service.decorator.ts": [
-    "container-registry.class.ts",
-    "empty.const.ts",
-    "interfaces/service-metadata.interface.ts",
-    "interfaces/service-options.interface.ts",
-    "types/constructable.type.ts"
+  "src/decorators/service.decorator.ts": [
+    "src/container-registry.class.ts",
+    "src/empty.const.ts",
+    "src/interfaces/service-metadata.interface.ts",
+    "src/interfaces/service-options.interface.ts",
+    "src/types/constructable.type.ts"
   ],
-  "empty.const.ts": [],
-  "error/cannot-inject-value.error.ts": [
-    "types/constructable.type.ts"
+  "src/empty.const.ts": [],
+  "src/error/cannot-inject-value.error.ts": [
+    "src/types/constructable.type.ts"
   ],
-  "error/cannot-instantiate-value.error.ts": [
-    "token.class.ts",
-    "types/service-identifier.type.ts"
+  "src/error/cannot-instantiate-value.error.ts": [
+    "src/token.class.ts",
+    "src/types/service-identifier.type.ts"
   ],
-  "error/service-not-found.error.ts": [
-    "token.class.ts",
-    "types/service-identifier.type.ts"
+  "src/error/service-not-found.error.ts": [
+    "src/token.class.ts",
+    "src/types/service-identifier.type.ts"
   ],
-  "index.ts": [
-    "container-instance.class.ts",
-    "container-registry.class.ts",
-    "decorators/inject-many.decorator.ts",
-    "decorators/inject.decorator.ts",
-    "decorators/service.decorator.ts",
-    "error/cannot-inject-value.error.ts",
-    "error/cannot-instantiate-value.error.ts",
-    "error/service-not-found.error.ts",
-    "interfaces/handler.interface.ts",
-    "interfaces/service-metadata.interface.ts",
-    "interfaces/service-options.interface.ts",
-    "token.class.ts",
-    "types/constructable.type.ts",
-    "types/service-identifier.type.ts"
+  "src/index.ts": [
+    "src/container-instance.class.ts",
+    "src/container-registry.class.ts",
+    "src/decorators/inject-many.decorator.ts",
+    "src/decorators/inject.decorator.ts",
+    "src/decorators/service.decorator.ts",
+    "src/error/cannot-inject-value.error.ts",
+    "src/error/cannot-instantiate-value.error.ts",
+    "src/error/service-not-found.error.ts",
+    "src/interfaces/handler.interface.ts",
+    "src/interfaces/service-metadata.interface.ts",
+    "src/interfaces/service-options.interface.ts",
+    "src/token.class.ts",
+    "src/types/constructable.type.ts",
+    "src/types/service-identifier.type.ts"
   ],
-  "interfaces/container-options.interface.ts": [],
-  "interfaces/handler.interface.ts": [
-    "container-instance.class.ts",
-    "types/constructable.type.ts"
+  "src/interfaces/container-options.interface.ts": [],
+  "src/interfaces/handler.interface.ts": [
+    "src/container-instance.class.ts",
+    "src/types/constructable.type.ts"
   ],
-  "interfaces/service-metadata.interface.ts": [
-    "container-instance.class.ts",
-    "types/constructable.type.ts",
-    "types/container-identifier.type.ts",
-    "types/container-scope.type.ts",
-    "types/service-identifier.type.ts"
+  "src/interfaces/service-metadata.interface.ts": [
+    "src/container-instance.class.ts",
+    "src/types/constructable.type.ts",
+    "src/types/container-identifier.type.ts",
+    "src/types/container-scope.type.ts",
+    "src/types/service-identifier.type.ts"
   ],
-  "interfaces/service-options.interface.ts": [
-    "interfaces/service-metadata.interface.ts"
+  "src/interfaces/service-options.interface.ts": [
+    "src/interfaces/service-metadata.interface.ts"
   ],
-  "token.class.ts": [],
-  "types/abstract-constructable.type.ts": [],
-  "types/constructable.type.ts": [],
-  "types/container-identifier.type.ts": [],
-  "types/container-scope.type.ts": [],
-  "types/service-identifier.type.ts": [
-    "token.class.ts",
-    "types/abstract-constructable.type.ts",
-    "types/constructable.type.ts"
+  "src/token.class.ts": [],
+  "src/types/abstract-constructable.type.ts": [],
+  "src/types/constructable.type.ts": [],
+  "src/types/container-identifier.type.ts": [],
+  "src/types/container-scope.type.ts": [],
+  "src/types/service-identifier.type.ts": [
+    "src/token.class.ts",
+    "src/types/abstract-constructable.type.ts",
+    "src/types/constructable.type.ts"
   ],
-  "utils/resolve-to-type-wrapper.util.ts": [
-    "token.class.ts",
-    "types/constructable.type.ts",
-    "types/service-identifier.type.ts"
+  "src/utils/resolve-to-type-wrapper.util.ts": [
+    "src/token.class.ts",
+    "src/types/constructable.type.ts",
+    "src/types/service-identifier.type.ts"
+  ],
+  "test/Container.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/error/service-not-found.error.ts",
+    "src/index.ts",
+    "src/token.class.ts"
+  ],
+  "test/decorators/Inject.spec.ts": [
+    "src/decorators/inject-many.decorator.ts",
+    "src/decorators/inject.decorator.ts",
+    "src/decorators/service.decorator.ts",
+    "src/index.ts",
+    "src/token.class.ts"
+  ],
+  "test/decorators/Service.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts",
+    "src/token.class.ts"
+  ],
+  "test/eager-loading-services.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/102/issue-102.spec.ts": [
+    "src/decorators/inject.decorator.ts",
+    "src/decorators/service.decorator.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/112/issue-112.spec.ts": [
+    "src/decorators/inject.decorator.ts",
+    "src/decorators/service.decorator.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/151/issue-151.spect.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/157/issue-157.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/40/issue-40.spec.ts": [
+    "src/decorators/inject.decorator.ts",
+    "src/decorators/service.decorator.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/41/issue-41.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts",
+    "src/token.class.ts"
+  ],
+  "test/github-issues/42/issue-42.spec.ts": [
+    "src/decorators/inject.decorator.ts",
+    "src/decorators/service.decorator.ts",
+    "src/error/cannot-inject-value.error.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/48/issue-48.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts",
+    "src/token.class.ts"
+  ],
+  "test/github-issues/53/issue-53.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts",
+    "src/token.class.ts"
+  ],
+  "test/github-issues/56/issue-56.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/61/issue-61.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/index.ts"
+  ],
+  "test/github-issues/87/issue-87.spec.ts": [
+    "src/decorators/service.decorator.ts",
+    "src/error/service-not-found.error.ts",
+    "src/index.ts"
   ]
 }

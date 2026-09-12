@@ -1,0 +1,31 @@
+{
+  "by_arm_repo": [
+    {
+      "arm": "with",
+      "repo": "typedi",
+      "items": 2,
+      "accept": 1,
+      "accept_rate": 0.5
+    },
+    {
+      "arm": "without",
+      "repo": "typedi",
+      "items": 2,
+      "accept": 1,
+      "accept_rate": 0.5
+    }
+  ],
+  "overall": {
+    "without": {
+      "items": 2,
+      "accept": 1,
+      "accept_rate": 0.5
+    },
+    "with": {
+      "items": 2,
+      "accept": 1,
+      "accept_rate": 0.5
+    }
+  },
+  "delta_pp": 0.0
+}

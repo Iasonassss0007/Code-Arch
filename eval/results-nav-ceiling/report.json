@@ -1,0 +1,727 @@
+{
+  "summary": {
+    "tasks": 37,
+    "mean_recall": 1.0,
+    "mean_f1": 0.981081081081081,
+    "mean_f1_scoped": 0.981081081081081,
+    "full_recall": 37,
+    "mean_adversary_f1": 0.1260270270270271,
+    "gate": 0.8,
+    "passes_gate": true
+  },
+  "rows": [
+    {
+      "id": "commerce-impact-image-5",
+      "predicted": [
+        "lib/shopify/fragments/cart.ts",
+        "lib/shopify/fragments/product.ts",
+        "lib/shopify/index.ts",
+        "lib/shopify/mutations/cart.ts",
+        "lib/shopify/queries/cart.ts",
+        "lib/shopify/queries/collection.ts",
+        "lib/shopify/queries/product.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "commerce",
+      "expected": 7,
+      "adversary_f1": 0.286
+    },
+    {
+      "id": "commerce-impact-price-3",
+      "predicted": [
+        "components/carousel.tsx",
+        "components/grid/tile.tsx",
+        "components/label.tsx"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "commerce",
+      "expected": 3,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "commerce-impact-product-6",
+      "predicted": [
+        "lib/shopify/fragments/cart.ts",
+        "lib/shopify/index.ts",
+        "lib/shopify/mutations/cart.ts",
+        "lib/shopify/queries/cart.ts",
+        "lib/shopify/queries/collection.ts",
+        "lib/shopify/queries/product.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "commerce",
+      "expected": 6,
+      "adversary_f1": 0.333
+    },
+    {
+      "id": "commerce-impact-cart-4",
+      "predicted": [
+        "lib/shopify/index.ts",
+        "lib/shopify/mutations/cart.ts",
+        "lib/shopify/queries/cart.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "commerce",
+      "expected": 3,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "commerce-impact-label-0",
+      "predicted": [
+        "components/carousel.tsx",
+        "components/grid/tile.tsx"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "commerce",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-handler-58",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "runtime-tests/deno/middleware.test.tsx",
+        "runtime-tests/deno/ssg.test.tsx",
+        "src/adapter/bun/index.ts",
+        "src/adapter/bun/ssg.ts",
+        "src/adapter/deno/index.ts",
+        "src/adapter/deno/ssg.ts",
+        "src/helper/dev/index.test.ts",
+        "src/helper/dev/index.ts",
+        "src/helper/ssg/index.ts",
+        "src/helper/ssg/middleware.ts",
+        "src/helper/ssg/plugins.test.tsx",
+        "src/helper/ssg/plugins.ts",
+        "src/helper/ssg/ssg.test.tsx",
+        "src/helper/ssg/ssg.ts",
+        "src/helper/ssg/utils.test.ts",
+        "src/helper/ssg/utils.ts",
+        "src/preset/quick.test.ts",
+        "src/preset/tiny.test.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 19,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-compress-56",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "runtime-tests/deno/middleware.test.tsx",
+        "runtime-tests/node/index.test.ts",
+        "runtime-tests/workerd/index.ts",
+        "src/adapter/bun/index.ts",
+        "src/adapter/bun/serve-static.ts",
+        "src/adapter/cloudflare-workers/index.ts",
+        "src/adapter/cloudflare-workers/serve-static-module.ts",
+        "src/adapter/cloudflare-workers/serve-static.test.ts",
+        "src/adapter/cloudflare-workers/serve-static.ts",
+        "src/adapter/cloudflare-workers/websocket.test.ts",
+        "src/adapter/deno/index.ts",
+        "src/adapter/deno/serve-static.ts",
+        "src/middleware/compress/index.test.ts",
+        "src/middleware/compress/index.ts",
+        "src/middleware/serve-static/index.test.ts",
+        "src/middleware/serve-static/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 17,
+      "adversary_f1": 0.211
+    },
+    {
+      "id": "hono-impact-concurrent-57",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "runtime-tests/deno/middleware.test.tsx",
+        "runtime-tests/deno/ssg.test.tsx",
+        "src/adapter/bun/index.ts",
+        "src/adapter/bun/ssg.ts",
+        "src/adapter/deno/index.ts",
+        "src/adapter/deno/ssg.ts",
+        "src/helper/ssg/index.ts",
+        "src/helper/ssg/plugins.test.tsx",
+        "src/helper/ssg/plugins.ts",
+        "src/helper/ssg/ssg.test.tsx",
+        "src/helper/ssg/ssg.ts",
+        "src/utils/concurrent.test.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 13,
+      "adversary_f1": 0.143
+    },
+    {
+      "id": "hono-impact-index-23",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "runtime-tests/deno/hono.test.ts",
+        "runtime-tests/deno/middleware.test.tsx",
+        "runtime-tests/fastly/index.test.ts",
+        "runtime-tests/node/index.test.ts",
+        "runtime-tests/workerd/index.ts",
+        "src/helper/adapter/index.test.ts",
+        "src/middleware/jwk/index.test.ts",
+        "src/middleware/jwk/index.ts",
+        "src/middleware/jwk/jwk.ts",
+        "src/middleware/jwt/index.test.ts",
+        "src/middleware/jwt/index.ts",
+        "src/middleware/jwt/jwt.ts",
+        "src/utils/jwt/index.ts",
+        "src/utils/jwt/jws.ts",
+        "src/utils/jwt/jwt.test.ts",
+        "src/utils/jwt/jwt.ts",
+        "src/utils/jwt/types.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 18,
+      "adversary_f1": 0.056
+    },
+    {
+      "id": "hono-impact-index-60",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "runtime-tests/deno/middleware.test.tsx",
+        "runtime-tests/fastly/index.test.ts",
+        "runtime-tests/node/index.test.ts",
+        "src/middleware/jwk/index.test.ts",
+        "src/middleware/jwk/index.ts",
+        "src/middleware/jwk/jwk.ts",
+        "src/middleware/jwt/index.test.ts",
+        "src/middleware/jwt/index.ts",
+        "src/middleware/jwt/jwt.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 10,
+      "adversary_f1": 0.3
+    },
+    {
+      "id": "hono-impact-index-26",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "runtime-tests/deno/middleware.test.tsx",
+        "runtime-tests/deno/ssg.test.tsx",
+        "src/adapter/bun/index.ts",
+        "src/adapter/bun/ssg.ts",
+        "src/adapter/deno/index.ts",
+        "src/adapter/deno/ssg.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 7,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-index-36",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "runtime-tests/deno/middleware.test.tsx",
+        "runtime-tests/fastly/index.test.ts",
+        "runtime-tests/node/index.test.ts",
+        "src/adapter/bun/conninfo.test.ts",
+        "src/adapter/bun/conninfo.ts",
+        "src/adapter/bun/index.ts",
+        "src/adapter/cloudflare-workers/websocket.test.ts",
+        "src/adapter/deno/websocket.test.ts",
+        "src/client/types.test.ts",
+        "src/helper/accepts/accepts.test.ts",
+        "src/helper/css/index.test.tsx",
+        "src/helper/factory/index.test.ts",
+        "src/middleware/bearer-auth/index.test.ts",
+        "src/middleware/ip-restriction/index.test.ts",
+        "src/middleware/ip-restriction/index.ts",
+        "src/middleware/jwt/index.test.ts",
+        "src/middleware/jwt/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 18,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-accept-53",
+      "predicted": [
+        "runtime-tests/node/index.test.ts",
+        "src/helper/accepts/accepts.test.ts",
+        "src/helper/accepts/accepts.ts",
+        "src/helper/accepts/index.ts",
+        "src/middleware/compress/index.test.ts",
+        "src/middleware/compress/index.ts",
+        "src/middleware/language/index.test.ts",
+        "src/middleware/language/index.ts",
+        "src/middleware/language/language.ts",
+        "src/utils/accept.test.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 10,
+      "adversary_f1": 0.182
+    },
+    {
+      "id": "hono-impact-color-55",
+      "predicted": [
+        "runtime-tests/workerd/index.ts",
+        "src/helper/dev/index.test.ts",
+        "src/helper/dev/index.ts",
+        "src/hono.test.ts",
+        "src/middleware/logger/index.test.ts",
+        "src/middleware/logger/index.ts",
+        "src/preset/quick.test.ts",
+        "src/preset/tiny.test.ts",
+        "src/utils/color.test.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 9,
+      "adversary_f1": 0.182
+    },
+    {
+      "id": "hono-impact-websocket-19",
+      "predicted": [
+        "runtime-tests/deno/middleware.test.tsx",
+        "src/adapter/deno/index.ts",
+        "src/adapter/deno/websocket.test.ts",
+        "src/client/client.test.ts",
+        "src/client/types.test.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 5,
+      "adversary_f1": 0.2
+    },
+    {
+      "id": "hono-impact-page-1",
+      "predicted": [
+        "benchmarks/jsx/src/benchmark.ts",
+        "benchmarks/jsx/src/hono.ts",
+        "benchmarks/jsx/src/nano.ts",
+        "benchmarks/jsx/src/preact.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 4,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-conninfo-16",
+      "predicted": [
+        "runtime-tests/deno/middleware.test.tsx",
+        "src/adapter/deno/conninfo.test.ts",
+        "src/adapter/deno/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 3,
+      "adversary_f1": 0.333
+    },
+    {
+      "id": "hono-impact-conninfo-20",
+      "predicted": [
+        "src/adapter/netlify/conninfo.test.ts",
+        "src/adapter/netlify/index.ts",
+        "src/adapter/netlify/mod.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 3,
+      "adversary_f1": 0.333
+    },
+    {
+      "id": "hono-impact-conninfo-7",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "src/adapter/bun/conninfo.test.ts",
+        "src/adapter/bun/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 3,
+      "adversary_f1": 0.333
+    },
+    {
+      "id": "hono-impact-index-25",
+      "predicted": [
+        "src/helper/route/index.test.ts",
+        "src/middleware/method-not-allowed/index.test.ts",
+        "src/middleware/method-not-allowed/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 3,
+      "adversary_f1": 0.333
+    },
+    {
+      "id": "hono-impact-serve-static-module-12",
+      "predicted": [
+        "runtime-tests/workerd/index.ts",
+        "src/adapter/cloudflare-workers/index.ts",
+        "src/adapter/cloudflare-workers/websocket.test.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 3,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-ssg-18",
+      "predicted": [
+        "runtime-tests/deno/middleware.test.tsx",
+        "runtime-tests/deno/ssg.test.tsx",
+        "src/adapter/deno/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 3,
+      "adversary_f1": 0.333
+    },
+    {
+      "id": "hono-impact-websocket-15",
+      "predicted": [
+        "runtime-tests/workerd/index.ts",
+        "src/adapter/cloudflare-workers/index.ts",
+        "src/adapter/cloudflare-workers/websocket.test.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 3,
+      "adversary_f1": 0.333
+    },
+    {
+      "id": "hono-impact-handler-21",
+      "predicted": [
+        "src/adapter/netlify/index.ts",
+        "src/adapter/netlify/mod.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-index-49",
+      "predicted": [
+        "benchmarks/routers/src/bench-includes-init.mts",
+        "src/preset/quick.test.ts",
+        "src/preset/quick.ts"
+      ],
+      "recall": 1.0,
+      "f1": 0.8,
+      "f1_scoped": 0.8,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-index-51",
+      "predicted": [
+        "benchmarks/routers-deno/src/bench.mts",
+        "benchmarks/routers-deno/src/hono.mts",
+        "benchmarks/routers/src/bench.mts",
+        "benchmarks/routers/src/hono.mts",
+        "src/preset/tiny.test.ts",
+        "src/preset/tiny.ts"
+      ],
+      "recall": 1.0,
+      "f1": 0.5,
+      "f1_scoped": 0.5,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-jsx-dev-runtime-39",
+      "predicted": [
+        "src/jsx/jsx-runtime.test.tsx",
+        "src/jsx/jsx-runtime.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-page-preact-4",
+      "predicted": [
+        "benchmarks/jsx/src/react-jsx/benchmark.ts",
+        "benchmarks/jsx/src/react-jsx/preact.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-page-react-0",
+      "predicted": [
+        "benchmarks/jsx/src/benchmark.ts",
+        "benchmarks/jsx/src/react.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-page-react-5",
+      "predicted": [
+        "benchmarks/jsx/src/react-jsx/benchmark.ts",
+        "benchmarks/jsx/src/react-jsx/react.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-serve-static-17",
+      "predicted": [
+        "runtime-tests/deno/middleware.test.tsx",
+        "src/adapter/deno/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-serve-static-8",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "src/adapter/bun/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "hono-impact-ssg-10",
+      "predicted": [
+        "runtime-tests/bun/index.test.tsx",
+        "src/adapter/bun/index.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "hono",
+      "expected": 2,
+      "adversary_f1": 0.0
+    },
+    {
+      "id": "typedi-impact-resolve-to-type-wrapper-3",
+      "predicted": [
+        "src/decorators/inject-many.decorator.ts",
+        "src/decorators/inject.decorator.ts",
+        "src/index.ts",
+        "test/Container.spec.ts",
+        "test/decorators/Inject.spec.ts",
+        "test/decorators/Service.spec.ts",
+        "test/eager-loading-services.spec.ts",
+        "test/github-issues/102/issue-102.spec.ts",
+        "test/github-issues/112/issue-112.spec.ts",
+        "test/github-issues/151/issue-151.spect.ts",
+        "test/github-issues/157/issue-157.spec.ts",
+        "test/github-issues/40/issue-40.spec.ts",
+        "test/github-issues/41/issue-41.spec.ts",
+        "test/github-issues/42/issue-42.spec.ts",
+        "test/github-issues/48/issue-48.spec.ts",
+        "test/github-issues/53/issue-53.spec.ts",
+        "test/github-issues/56/issue-56.spec.ts",
+        "test/github-issues/61/issue-61.spec.ts",
+        "test/github-issues/87/issue-87.spec.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "typedi",
+      "expected": 19,
+      "adversary_f1": 0.158
+    },
+    {
+      "id": "typedi-impact-cannot-inject-value-2",
+      "predicted": [
+        "src/decorators/inject-many.decorator.ts",
+        "src/decorators/inject.decorator.ts",
+        "src/index.ts",
+        "test/Container.spec.ts",
+        "test/decorators/Inject.spec.ts",
+        "test/decorators/Service.spec.ts",
+        "test/eager-loading-services.spec.ts",
+        "test/github-issues/102/issue-102.spec.ts",
+        "test/github-issues/112/issue-112.spec.ts",
+        "test/github-issues/151/issue-151.spect.ts",
+        "test/github-issues/157/issue-157.spec.ts",
+        "test/github-issues/40/issue-40.spec.ts",
+        "test/github-issues/41/issue-41.spec.ts",
+        "test/github-issues/42/issue-42.spec.ts",
+        "test/github-issues/48/issue-48.spec.ts",
+        "test/github-issues/53/issue-53.spec.ts",
+        "test/github-issues/56/issue-56.spec.ts",
+        "test/github-issues/61/issue-61.spec.ts",
+        "test/github-issues/87/issue-87.spec.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "typedi",
+      "expected": 19,
+      "adversary_f1": 0.25
+    },
+    {
+      "id": "typedi-impact-inject-1",
+      "predicted": [
+        "src/index.ts",
+        "test/Container.spec.ts",
+        "test/decorators/Inject.spec.ts",
+        "test/decorators/Service.spec.ts",
+        "test/eager-loading-services.spec.ts",
+        "test/github-issues/102/issue-102.spec.ts",
+        "test/github-issues/112/issue-112.spec.ts",
+        "test/github-issues/151/issue-151.spect.ts",
+        "test/github-issues/157/issue-157.spec.ts",
+        "test/github-issues/40/issue-40.spec.ts",
+        "test/github-issues/41/issue-41.spec.ts",
+        "test/github-issues/42/issue-42.spec.ts",
+        "test/github-issues/48/issue-48.spec.ts",
+        "test/github-issues/53/issue-53.spec.ts",
+        "test/github-issues/56/issue-56.spec.ts",
+        "test/github-issues/61/issue-61.spec.ts",
+        "test/github-issues/87/issue-87.spec.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "typedi",
+      "expected": 17,
+      "adversary_f1": 0.182
+    },
+    {
+      "id": "typedi-impact-inject-many-0",
+      "predicted": [
+        "src/index.ts",
+        "test/Container.spec.ts",
+        "test/decorators/Inject.spec.ts",
+        "test/decorators/Service.spec.ts",
+        "test/eager-loading-services.spec.ts",
+        "test/github-issues/102/issue-102.spec.ts",
+        "test/github-issues/112/issue-112.spec.ts",
+        "test/github-issues/151/issue-151.spect.ts",
+        "test/github-issues/157/issue-157.spec.ts",
+        "test/github-issues/40/issue-40.spec.ts",
+        "test/github-issues/41/issue-41.spec.ts",
+        "test/github-issues/42/issue-42.spec.ts",
+        "test/github-issues/48/issue-48.spec.ts",
+        "test/github-issues/53/issue-53.spec.ts",
+        "test/github-issues/56/issue-56.spec.ts",
+        "test/github-issues/61/issue-61.spec.ts",
+        "test/github-issues/87/issue-87.spec.ts"
+      ],
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_scoped": 1.0,
+      "missing": [],
+      "repo": "typedi",
+      "expected": 17,
+      "adversary_f1": 0.182
+    }
+  ]
+}

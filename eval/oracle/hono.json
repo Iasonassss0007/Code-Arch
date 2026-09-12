@@ -1,1428 +1,1614 @@
 {
-  "adapter/aws-lambda/conninfo.test.ts": [
-    "adapter/aws-lambda/conninfo.ts",
-    "context.ts"
-  ],
-  "adapter/aws-lambda/conninfo.ts": [
-    "adapter/aws-lambda/types.ts",
-    "context.ts",
-    "helper/conninfo/index.ts"
-  ],
-  "adapter/aws-lambda/handler.test.ts": [
-    "adapter/aws-lambda/handler.ts",
-    "adapter/aws-lambda/types.ts",
-    "helper/cookie/index.ts",
-    "hono.ts",
-    "middleware/body-limit/index.ts"
-  ],
-  "adapter/aws-lambda/handler.ts": [
-    "adapter/aws-lambda/types.ts",
-    "hono.ts",
-    "types.ts",
-    "utils/encode.ts"
-  ],
-  "adapter/aws-lambda/index.ts": [
-    "adapter/aws-lambda/conninfo.ts",
-    "adapter/aws-lambda/handler.ts",
-    "adapter/aws-lambda/types.ts"
-  ],
-  "adapter/aws-lambda/types.ts": [],
-  "adapter/bun/conninfo.test.ts": [
-    "adapter/bun/conninfo.ts",
-    "context.ts",
-    "helper/conninfo/index.ts"
-  ],
-  "adapter/bun/conninfo.ts": [
-    "adapter/bun/server.ts",
-    "helper/conninfo/index.ts",
-    "index.ts"
-  ],
-  "adapter/bun/index.ts": [
-    "adapter/bun/conninfo.ts",
-    "adapter/bun/serve-static.ts",
-    "adapter/bun/server.ts",
-    "adapter/bun/ssg.ts",
-    "adapter/bun/websocket.ts"
-  ],
-  "adapter/bun/serve-static.ts": [
-    "middleware/serve-static/index.ts",
-    "types.ts"
-  ],
-  "adapter/bun/server.test.ts": [
-    "adapter/bun/server.ts",
-    "context.ts"
-  ],
-  "adapter/bun/server.ts": [
-    "context.ts"
-  ],
-  "adapter/bun/ssg.ts": [
-    "helper/ssg/index.ts"
-  ],
-  "adapter/bun/websocket.test.ts": [
-    "adapter/bun/websocket.ts",
-    "context.ts"
-  ],
-  "adapter/bun/websocket.ts": [
-    "adapter/bun/server.ts",
-    "helper/websocket/index.ts"
-  ],
-  "adapter/cloudflare-pages/conninfo.test.ts": [
-    "adapter/cloudflare-pages/conninfo.ts",
-    "context.ts"
-  ],
-  "adapter/cloudflare-pages/conninfo.ts": [
-    "helper/conninfo/index.ts"
-  ],
-  "adapter/cloudflare-pages/handler.test.ts": [
-    "adapter/cloudflare-pages/handler.ts",
-    "helper/cookie/index.ts",
-    "hono.ts",
-    "http-exception.ts"
-  ],
-  "adapter/cloudflare-pages/handler.ts": [
-    "context.ts",
-    "hono.ts",
-    "http-exception.ts",
-    "types.ts"
-  ],
-  "adapter/cloudflare-pages/index.ts": [
-    "adapter/cloudflare-pages/conninfo.ts",
-    "adapter/cloudflare-pages/handler.ts"
-  ],
-  "adapter/cloudflare-workers/conninfo.test.ts": [
-    "adapter/cloudflare-workers/conninfo.ts",
-    "context.ts"
-  ],
-  "adapter/cloudflare-workers/conninfo.ts": [
-    "helper/conninfo/index.ts"
-  ],
-  "adapter/cloudflare-workers/index.ts": [
-    "adapter/cloudflare-workers/conninfo.ts",
-    "adapter/cloudflare-workers/serve-static-module.ts",
-    "adapter/cloudflare-workers/websocket.ts"
-  ],
-  "adapter/cloudflare-workers/serve-static-module.ts": [
-    "adapter/cloudflare-workers/serve-static.ts",
-    "types.ts"
-  ],
-  "adapter/cloudflare-workers/serve-static.test.ts": [
-    "adapter/cloudflare-workers/serve-static.ts",
-    "context.ts",
-    "hono.ts",
-    "types.ts"
-  ],
-  "adapter/cloudflare-workers/serve-static.ts": [
-    "adapter/cloudflare-workers/utils.ts",
-    "middleware/serve-static/index.ts",
-    "types.ts"
-  ],
-  "adapter/cloudflare-workers/utils.test.ts": [
-    "adapter/cloudflare-workers/utils.ts"
-  ],
-  "adapter/cloudflare-workers/utils.ts": [],
-  "adapter/cloudflare-workers/websocket.test.ts": [
-    "adapter/cloudflare-workers/index.ts",
-    "context.ts",
-    "index.ts"
-  ],
-  "adapter/cloudflare-workers/websocket.ts": [
-    "helper/websocket/index.ts"
-  ],
-  "adapter/deno/conninfo.test.ts": [
-    "adapter/deno/conninfo.ts",
-    "context.ts"
-  ],
-  "adapter/deno/conninfo.ts": [
-    "helper/conninfo/index.ts"
-  ],
-  "adapter/deno/deno.d.ts": [],
-  "adapter/deno/index.ts": [
-    "adapter/deno/conninfo.ts",
-    "adapter/deno/serve-static.ts",
-    "adapter/deno/ssg.ts",
-    "adapter/deno/websocket.ts"
-  ],
-  "adapter/deno/serve-static.ts": [
-    "middleware/serve-static/index.ts",
-    "types.ts"
-  ],
-  "adapter/deno/ssg.ts": [
-    "helper/ssg/index.ts"
-  ],
-  "adapter/deno/websocket.test.ts": [
-    "adapter/deno/websocket.ts",
-    "context.ts",
-    "index.ts"
-  ],
-  "adapter/deno/websocket.ts": [
-    "helper/websocket/index.ts"
-  ],
-  "adapter/lambda-edge/conninfo.test.ts": [
-    "adapter/lambda-edge/conninfo.ts",
-    "adapter/lambda-edge/handler.ts",
-    "context.ts"
-  ],
-  "adapter/lambda-edge/conninfo.ts": [
-    "adapter/lambda-edge/handler.ts",
-    "context.ts",
-    "helper/conninfo/index.ts"
-  ],
-  "adapter/lambda-edge/handler.test.ts": [
-    "adapter/lambda-edge/handler.ts",
-    "helper/cookie/index.ts",
-    "hono.ts",
-    "middleware/body-limit/index.ts",
-    "utils/encode.ts"
-  ],
-  "adapter/lambda-edge/handler.ts": [
-    "hono.ts",
-    "utils/encode.ts"
-  ],
-  "adapter/lambda-edge/index.ts": [
-    "adapter/lambda-edge/conninfo.ts",
-    "adapter/lambda-edge/handler.ts"
-  ],
-  "adapter/netlify/conninfo.test.ts": [
-    "adapter/netlify/conninfo.ts",
-    "context.ts"
-  ],
-  "adapter/netlify/conninfo.ts": [
-    "context.ts",
-    "helper/conninfo/index.ts"
-  ],
-  "adapter/netlify/handler.ts": [
-    "hono.ts"
-  ],
-  "adapter/netlify/index.ts": [
-    "adapter/netlify/mod.ts"
-  ],
-  "adapter/netlify/mod.ts": [
-    "adapter/netlify/conninfo.ts",
-    "adapter/netlify/handler.ts"
-  ],
-  "adapter/service-worker/handler.test.ts": [
-    "adapter/service-worker/handler.ts",
-    "adapter/service-worker/types.ts",
-    "hono.ts"
-  ],
-  "adapter/service-worker/handler.ts": [
-    "adapter/service-worker/types.ts",
-    "hono.ts",
-    "types.ts"
-  ],
-  "adapter/service-worker/index.ts": [
-    "adapter/service-worker/handler.ts",
-    "hono.ts",
-    "types.ts"
-  ],
-  "adapter/service-worker/types.ts": [],
-  "adapter/vercel/conninfo.test.ts": [
-    "adapter/vercel/conninfo.ts",
-    "context.ts"
-  ],
-  "adapter/vercel/conninfo.ts": [
-    "helper/conninfo/index.ts"
-  ],
-  "adapter/vercel/handler.test.ts": [
-    "adapter/vercel/handler.ts",
-    "hono.ts"
-  ],
-  "adapter/vercel/handler.ts": [
-    "hono.ts"
-  ],
-  "adapter/vercel/index.ts": [
-    "adapter/vercel/conninfo.ts",
-    "adapter/vercel/handler.ts"
-  ],
-  "client/client.test.ts": [
-    "adapter/deno/websocket.ts",
-    "client/client.ts",
-    "client/types.ts",
-    "hono.ts",
-    "utils/cookie.ts",
-    "utils/types.ts",
-    "validator/index.ts"
-  ],
-  "client/client.ts": [
-    "client/types.ts",
-    "client/utils.ts",
-    "hono.ts",
-    "types.ts",
-    "utils/cookie.ts",
-    "utils/types.ts"
-  ],
-  "client/fetch-result-please.ts": [],
-  "client/index.ts": [
-    "client/client.ts",
-    "client/types.ts",
-    "client/utils.ts"
-  ],
-  "client/types.test.ts": [
-    "adapter/deno/websocket.ts",
-    "client/index.ts",
-    "client/types.ts",
-    "index.ts"
-  ],
-  "client/types.ts": [
-    "hono-base.ts",
-    "hono.ts",
-    "router.ts",
-    "types.ts",
-    "utils/http-status.ts",
-    "utils/types.ts"
-  ],
-  "client/utils.test.ts": [
-    "client/client.ts",
-    "client/utils.ts",
-    "hono.ts",
-    "utils/types.ts"
-  ],
-  "client/utils.ts": [
-    "client/fetch-result-please.ts",
-    "client/types.ts",
-    "utils/http-status.ts"
-  ],
-  "compose.test.ts": [
-    "compose.ts",
-    "context.ts",
-    "router.ts",
-    "types.ts"
-  ],
-  "compose.ts": [
-    "context.ts",
-    "types.ts"
-  ],
-  "context.test.ts": [
-    "context.ts",
-    "helper/cookie/index.ts"
-  ],
-  "context.ts": [
-    "request.ts",
-    "router.ts",
-    "types.ts",
-    "utils/headers.ts",
-    "utils/html.ts",
-    "utils/http-status.ts",
-    "utils/mime.ts",
-    "utils/types.ts"
-  ],
-  "helper/accepts/accepts.test.ts": [
-    "helper/accepts/accepts.ts",
-    "index.ts",
-    "utils/accept.ts"
-  ],
-  "helper/accepts/accepts.ts": [
-    "context.ts",
-    "utils/accept.ts",
-    "utils/headers.ts"
-  ],
-  "helper/accepts/index.ts": [
-    "helper/accepts/accepts.ts"
-  ],
-  "helper/adapter/index.test.ts": [
-    "helper/adapter/index.ts",
-    "hono.ts"
-  ],
-  "helper/adapter/index.ts": [
-    "context.ts"
-  ],
-  "helper/conninfo/index.ts": [
-    "helper/conninfo/types.ts"
-  ],
-  "helper/conninfo/types.ts": [
-    "context.ts"
-  ],
-  "helper/cookie/index.test.ts": [
-    "helper/cookie/index.ts",
-    "hono.ts"
-  ],
-  "helper/cookie/index.ts": [
-    "context.ts",
-    "utils/cookie.ts"
-  ],
-  "helper/css/common.case.test.tsx": [
-    "helper/css/index.ts"
-  ],
-  "helper/css/common.ts": [],
-  "helper/css/index.test.tsx": [
-    "helper/css/common.case.test.tsx",
-    "helper/css/index.ts",
-    "helper/html/index.ts",
-    "index.ts",
-    "jsx/index.ts",
-    "jsx/streaming.ts",
-    "utils/html.ts"
-  ],
-  "helper/css/index.ts": [
-    "helper/css/common.ts",
-    "helper/html/index.ts",
-    "jsx/constants.ts",
-    "jsx/dom/css.ts",
-    "utils/html.ts"
-  ],
-  "helper/dev/index.test.ts": [
-    "helper/dev/index.ts",
-    "hono.ts",
-    "router/reg-exp-router/index.ts",
-    "types.ts"
-  ],
-  "helper/dev/index.ts": [
-    "hono.ts",
-    "types.ts",
-    "utils/color.ts",
-    "utils/handler.ts"
-  ],
-  "helper/factory/index.test.ts": [
-    "client/index.ts",
-    "client/types.ts",
-    "helper/factory/index.ts",
-    "index.ts",
-    "types.ts",
-    "utils/http-status.ts",
-    "utils/types.ts",
-    "validator/index.ts"
-  ],
-  "helper/factory/index.ts": [
-    "hono-base.ts",
-    "hono.ts",
-    "types.ts"
-  ],
-  "helper/html/index.test.ts": [
-    "helper/html/index.ts",
-    "utils/html.ts"
-  ],
-  "helper/html/index.ts": [
-    "utils/html.ts"
-  ],
-  "helper/proxy/index.test.ts": [
-    "helper/proxy/index.ts",
-    "hono.ts"
-  ],
-  "helper/proxy/index.ts": [
-    "http-exception.ts",
-    "utils/headers.ts"
-  ],
-  "helper/route/index.test.ts": [
-    "context.ts",
-    "helper/route/index.ts",
-    "hono.ts"
-  ],
-  "helper/route/index.ts": [
-    "context.ts",
-    "request/constants.ts",
-    "types.ts",
-    "utils/url.ts"
-  ],
-  "helper/ssg/index.ts": [
-    "helper/ssg/middleware.ts",
-    "helper/ssg/plugins.ts",
-    "helper/ssg/ssg.ts"
-  ],
-  "helper/ssg/middleware.ts": [
-    "context.ts",
-    "helper/ssg/utils.ts",
-    "types.ts"
-  ],
-  "helper/ssg/plugins.test.tsx": [
-    "helper/ssg/plugins.ts",
-    "helper/ssg/ssg.ts",
-    "hono.ts",
-    "utils/http-status.ts"
-  ],
-  "helper/ssg/plugins.ts": [
-    "helper/html/index.ts",
-    "helper/ssg/ssg.ts"
-  ],
-  "helper/ssg/ssg.test.tsx": [
-    "helper/ssg/middleware.ts",
-    "helper/ssg/ssg.ts",
-    "hono.ts",
-    "middleware/powered-by/index.ts"
-  ],
-  "helper/ssg/ssg.ts": [
-    "client/utils.ts",
-    "helper/ssg/middleware.ts",
-    "helper/ssg/plugins.ts",
-    "helper/ssg/utils.ts",
-    "hono.ts",
-    "types.ts",
-    "utils/concurrent.ts",
-    "utils/mime.ts"
-  ],
-  "helper/ssg/utils.test.ts": [
-    "helper/ssg/utils.ts"
-  ],
-  "helper/ssg/utils.ts": [
-    "hono.ts",
-    "router.ts",
-    "types.ts",
-    "utils/handler.ts"
-  ],
-  "helper/streaming/index.ts": [
-    "helper/streaming/sse.ts",
-    "helper/streaming/stream.ts",
-    "helper/streaming/text.ts"
-  ],
-  "helper/streaming/sse.test.tsx": [
-    "context.ts",
-    "helper/streaming/index.ts",
-    "jsx/index.ts"
-  ],
-  "helper/streaming/sse.ts": [
-    "context.ts",
-    "helper/streaming/utils.ts",
-    "utils/html.ts",
-    "utils/stream.ts"
-  ],
-  "helper/streaming/stream.test.ts": [
-    "context.ts",
-    "helper/streaming/index.ts"
-  ],
-  "helper/streaming/stream.ts": [
-    "context.ts",
-    "helper/streaming/utils.ts",
-    "utils/stream.ts"
-  ],
-  "helper/streaming/text.test.ts": [
-    "context.ts",
-    "helper/streaming/index.ts"
-  ],
-  "helper/streaming/text.ts": [
-    "context.ts",
-    "helper/streaming/index.ts",
-    "utils/stream.ts"
-  ],
-  "helper/streaming/utils.ts": [],
-  "helper/testing/index.test.ts": [
-    "helper/testing/index.ts",
-    "hono.ts"
-  ],
-  "helper/testing/index.ts": [
-    "client/index.ts",
-    "client/types.ts",
-    "context.ts",
-    "hono.ts",
-    "types.ts",
-    "utils/types.ts"
-  ],
-  "helper/websocket/index.test.ts": [
-    "context.ts",
-    "helper/websocket/index.ts"
-  ],
-  "helper/websocket/index.ts": [
-    "context.ts",
-    "types.ts",
-    "utils/http-status.ts"
-  ],
-  "hono-base.ts": [
-    "compose.ts",
-    "context.ts",
-    "router.ts",
-    "types.ts",
-    "utils/constants.ts",
-    "utils/url.ts"
-  ],
-  "hono.test.ts": [
-    "client/index.ts",
-    "context.ts",
-    "hono.ts",
-    "http-exception.ts",
-    "middleware/logger/index.ts",
-    "middleware/powered-by/index.ts",
-    "router/reg-exp-router/index.ts",
-    "router/smart-router/index.ts",
-    "router/trie-router/index.ts",
-    "types.ts",
-    "utils/types.ts",
-    "utils/url.ts"
-  ],
-  "hono.ts": [
-    "hono-base.ts",
-    "router/reg-exp-router/index.ts",
-    "router/smart-router/index.ts",
-    "router/trie-router/index.ts",
-    "types.ts"
-  ],
-  "http-exception.test.ts": [
-    "http-exception.ts"
-  ],
-  "http-exception.ts": [
-    "utils/http-status.ts"
-  ],
-  "index.ts": [
-    "client/index.ts",
-    "context.ts",
-    "hono.ts",
-    "request.ts",
-    "types.ts"
-  ],
-  "jsx/base.test.tsx": [
-    "jsx/base.ts",
-    "utils/html.ts"
-  ],
-  "jsx/base.ts": [
-    "helper/html/index.ts",
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/intrinsic-element/common.ts",
-    "jsx/intrinsic-element/components.ts",
-    "jsx/intrinsic-elements.ts",
-    "jsx/utils.ts",
-    "utils/html.ts"
-  ],
-  "jsx/children.test.ts": [
-    "jsx/children.ts",
-    "jsx/index.ts"
-  ],
-  "jsx/children.ts": [
-    "jsx/base.ts"
-  ],
-  "jsx/components.test.tsx": [
-    "helper/html/index.ts",
-    "jsx/components.ts",
-    "jsx/streaming.ts",
-    "utils/html.ts"
-  ],
-  "jsx/components.ts": [
-    "helper/html/index.ts",
-    "jsx/base.ts",
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/dom/components.ts",
-    "jsx/dom/render.ts",
-    "jsx/index.ts",
-    "jsx/streaming.ts",
-    "utils/html.ts"
-  ],
-  "jsx/constants.ts": [],
-  "jsx/context-isolation.test.ts": [
-    "jsx/hooks/index.ts",
-    "jsx/index.ts",
-    "jsx/streaming.ts"
-  ],
-  "jsx/context.ts": [
-    "helper/html/index.ts",
-    "jsx/base.ts",
-    "jsx/constants.ts",
-    "jsx/dom/context.ts",
-    "jsx/index.ts",
-    "utils/html.ts"
-  ],
-  "jsx/dom/client.test.tsx": [
-    "jsx/dom/client.ts",
-    "jsx/dom/index.ts"
-  ],
-  "jsx/dom/client.ts": [
-    "jsx/base.ts",
-    "jsx/dom/render.ts",
-    "jsx/hooks/index.ts"
-  ],
-  "jsx/dom/components.test.tsx": [
-    "jsx/dom/index.ts",
-    "jsx/hooks/index.ts",
-    "jsx/index.ts"
-  ],
-  "jsx/dom/components.ts": [
-    "jsx/components.ts",
-    "jsx/constants.ts",
-    "jsx/dom/jsx-runtime.ts",
-    "jsx/index.ts"
-  ],
-  "jsx/dom/context.test.tsx": [
-    "jsx/dom/index.ts",
-    "jsx/index.ts"
-  ],
-  "jsx/dom/context.ts": [
-    "jsx/base.ts",
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/dom/utils.ts"
-  ],
-  "jsx/dom/css.test.tsx": [
-    "helper/css/common.case.test.tsx",
-    "helper/css/common.ts",
-    "helper/css/index.ts",
-    "jsx/dom/index.ts",
-    "jsx/index.ts"
-  ],
-  "jsx/dom/css.ts": [
-    "helper/css/common.ts",
-    "jsx/index.ts"
-  ],
-  "jsx/dom/hooks/index.test.tsx": [
-    "jsx/dom/hooks/index.ts",
-    "jsx/dom/index.ts"
-  ],
-  "jsx/dom/hooks/index.ts": [
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/dom/context.ts",
-    "jsx/hooks/index.ts"
-  ],
-  "jsx/dom/index.test.tsx": [
-    "jsx/dom/index.ts",
-    "jsx/hooks/index.ts",
-    "jsx/index.ts"
-  ],
-  "jsx/dom/index.ts": [
-    "jsx/base.ts",
-    "jsx/children.ts",
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/dom/components.ts",
-    "jsx/dom/context.ts",
-    "jsx/dom/hooks/index.ts",
-    "jsx/dom/jsx-runtime.ts",
-    "jsx/dom/render.ts",
-    "jsx/hooks/index.ts",
-    "jsx/types.ts"
-  ],
-  "jsx/dom/intrinsic-element/components.test.tsx": [
-    "jsx/dom/index.ts",
-    "jsx/dom/intrinsic-element/components.ts",
-    "jsx/hooks/index.ts"
-  ],
-  "jsx/dom/intrinsic-element/components.ts": [
-    "jsx/base.ts",
-    "jsx/context.ts",
-    "jsx/dom/hooks/index.ts",
-    "jsx/dom/render.ts",
-    "jsx/hooks/index.ts",
-    "jsx/intrinsic-element/common.ts",
-    "jsx/intrinsic-elements.ts",
-    "jsx/types.ts"
-  ],
-  "jsx/dom/jsx-dev-runtime.ts": [
-    "jsx/base.ts",
-    "jsx/dom/intrinsic-element/components.ts"
-  ],
-  "jsx/dom/jsx-runtime.ts": [
-    "jsx/dom/jsx-dev-runtime.ts"
-  ],
-  "jsx/dom/render.ts": [
-    "jsx/base.ts",
-    "jsx/children.ts",
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/dom/context.ts",
-    "jsx/hooks/index.ts",
-    "jsx/utils.ts"
-  ],
-  "jsx/dom/server.test.tsx": [
-    "helper/html/index.ts",
-    "jsx/dom/server.ts"
-  ],
-  "jsx/dom/server.ts": [
-    "jsx/base.ts",
-    "jsx/dom/index.ts",
-    "jsx/streaming.ts",
-    "utils/html.ts"
-  ],
-  "jsx/dom/utils.ts": [
-    "jsx/constants.ts"
-  ],
-  "jsx/hooks/dom.test.tsx": [
-    "jsx/dom/index.ts",
-    "jsx/hooks/index.ts"
-  ],
-  "jsx/hooks/index.ts": [
-    "jsx/base.ts",
-    "jsx/constants.ts",
-    "jsx/dom/render.ts"
-  ],
-  "jsx/hooks/string.test.tsx": [
-    "jsx/index.ts"
-  ],
-  "jsx/index.test.tsx": [
-    "helper/html/index.ts",
-    "hono.ts",
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/index.ts",
-    "jsx/streaming.ts"
-  ],
-  "jsx/index.ts": [
-    "jsx/base.ts",
-    "jsx/children.ts",
-    "jsx/components.ts",
-    "jsx/context.ts",
-    "jsx/dom/hooks/index.ts",
-    "jsx/hooks/index.ts",
-    "jsx/intrinsic-elements.ts",
-    "jsx/streaming.ts",
-    "jsx/types.ts"
-  ],
-  "jsx/intrinsic-element/common.ts": [
-    "jsx/base.ts"
-  ],
-  "jsx/intrinsic-element/components.test.tsx": [
-    "jsx/index.ts",
-    "utils/html.ts"
-  ],
-  "jsx/intrinsic-element/components.ts": [
-    "helper/html/index.ts",
-    "jsx/base.ts",
-    "jsx/children.ts",
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/intrinsic-element/common.ts",
-    "jsx/intrinsic-elements.ts",
-    "jsx/types.ts",
-    "utils/html.ts"
-  ],
-  "jsx/intrinsic-elements.ts": [
-    "utils/mime.ts",
-    "utils/types.ts"
-  ],
-  "jsx/jsx-dev-runtime.ts": [
-    "jsx/base.ts",
-    "utils/html.ts"
-  ],
-  "jsx/jsx-runtime.test.tsx": [
-    "hono.ts",
-    "jsx/jsx-runtime.ts"
-  ],
-  "jsx/jsx-runtime.ts": [
-    "helper/html/index.ts",
-    "jsx/jsx-dev-runtime.ts",
-    "jsx/utils.ts",
-    "utils/html.ts"
-  ],
-  "jsx/streaming.test.tsx": [
-    "helper/html/index.ts",
-    "jsx/context.ts",
-    "jsx/dom/render.ts",
-    "jsx/hooks/index.ts",
-    "jsx/streaming.ts",
-    "utils/html.ts"
-  ],
-  "jsx/streaming.ts": [
-    "helper/html/index.ts",
-    "jsx/base.ts",
-    "jsx/components.ts",
-    "jsx/constants.ts",
-    "jsx/context.ts",
-    "jsx/dom/components.ts",
-    "jsx/dom/render.ts",
-    "jsx/index.ts",
-    "utils/html.ts"
-  ],
-  "jsx/types.ts": [
-    "jsx/base.ts",
-    "jsx/context.ts",
-    "jsx/hooks/index.ts",
-    "jsx/intrinsic-elements.ts"
-  ],
-  "jsx/utils.test.ts": [
-    "jsx/utils.ts"
-  ],
-  "jsx/utils.ts": [],
-  "middleware/basic-auth/index.test.ts": [
-    "hono.ts",
-    "middleware/basic-auth/index.ts"
-  ],
-  "middleware/basic-auth/index.ts": [
-    "context.ts",
-    "http-exception.ts",
-    "types.ts",
-    "utils/basic-auth.ts",
-    "utils/buffer.ts"
-  ],
-  "middleware/bearer-auth/index.test.ts": [
-    "hono.ts",
-    "index.ts",
-    "middleware/bearer-auth/index.ts"
-  ],
-  "middleware/bearer-auth/index.ts": [
-    "context.ts",
-    "http-exception.ts",
-    "types.ts",
-    "utils/buffer.ts",
-    "utils/http-status.ts"
-  ],
-  "middleware/body-limit/index.test.ts": [
-    "hono.ts",
-    "middleware/body-limit/index.ts"
-  ],
-  "middleware/body-limit/index.ts": [
-    "context.ts",
-    "http-exception.ts",
-    "types.ts"
-  ],
-  "middleware/cache/index.test.ts": [
-    "context.ts",
-    "hono.ts",
-    "middleware/cache/index.ts"
-  ],
-  "middleware/cache/index.ts": [
-    "context.ts",
-    "request.ts",
-    "types.ts",
-    "utils/crypto.ts",
-    "utils/http-status.ts"
-  ],
-  "middleware/combine/index.test.ts": [
-    "hono.ts",
-    "middleware/combine/index.ts",
-    "types.ts"
-  ],
-  "middleware/combine/index.ts": [
-    "compose.ts",
-    "context.ts",
-    "router.ts",
-    "router/trie-router/index.ts",
-    "types.ts"
-  ],
-  "middleware/compress/index.test.ts": [
-    "helper/streaming/index.ts",
-    "hono.ts",
-    "middleware/compress/index.ts"
-  ],
-  "middleware/compress/index.ts": [
-    "types.ts",
-    "utils/accept.ts",
-    "utils/compress.ts"
-  ],
-  "middleware/context-storage/index.test.ts": [
-    "hono.ts",
-    "middleware/context-storage/index.ts"
-  ],
-  "middleware/context-storage/index.ts": [
-    "context.ts",
-    "types.ts"
-  ],
-  "middleware/cors/index.test.ts": [
-    "hono.ts",
-    "middleware/cors/index.ts"
-  ],
-  "middleware/cors/index.ts": [
-    "context.ts",
-    "types.ts"
-  ],
-  "middleware/csrf/index.test.ts": [
-    "context.ts",
-    "hono.ts",
-    "middleware/csrf/index.ts"
-  ],
-  "middleware/csrf/index.ts": [
-    "context.ts",
-    "http-exception.ts",
-    "types.ts"
-  ],
-  "middleware/etag/digest.test.ts": [
-    "middleware/etag/digest.ts"
-  ],
-  "middleware/etag/digest.ts": [],
-  "middleware/etag/index.test.ts": [
-    "hono.ts",
-    "middleware/etag/index.ts"
-  ],
-  "middleware/etag/index.ts": [
-    "middleware/etag/digest.ts",
-    "types.ts"
-  ],
-  "middleware/ip-restriction/index.test.ts": [
-    "context.ts",
-    "helper/conninfo/index.ts",
-    "hono.ts",
-    "middleware/ip-restriction/index.ts"
-  ],
-  "middleware/ip-restriction/index.ts": [
-    "helper/conninfo/index.ts",
-    "http-exception.ts",
-    "index.ts",
-    "utils/ipaddr.ts"
-  ],
-  "middleware/jsx-renderer/index.test.tsx": [
-    "helper/html/index.ts",
-    "hono.ts",
-    "jsx/index.ts",
-    "jsx/streaming.ts",
-    "middleware/jsx-renderer/index.ts"
-  ],
-  "middleware/jsx-renderer/index.ts": [
-    "context.ts",
-    "helper/html/index.ts",
-    "jsx/index.ts",
-    "jsx/streaming.ts",
-    "types.ts"
-  ],
-  "middleware/jwk/index.test.ts": [
-    "helper/cookie/index.ts",
-    "hono.ts",
-    "http-exception.ts",
-    "middleware/jwk/index.ts",
-    "middleware/jwk/keys.test.json",
-    "utils/encode.ts",
-    "utils/jwt/index.ts",
-    "utils/jwt/jws.ts",
-    "utils/jwt/jwt.ts",
-    "utils/jwt/types.ts",
-    "utils/jwt/utf8.ts"
-  ],
-  "middleware/jwk/index.ts": [
-    "middleware/jwk/jwk.ts"
-  ],
-  "middleware/jwk/jwk.ts": [
-    "context.ts",
-    "helper/cookie/index.ts",
-    "http-exception.ts",
-    "types.ts",
-    "utils/cookie.ts",
-    "utils/jwt/index.ts",
-    "utils/jwt/jwa.ts",
-    "utils/jwt/jws.ts",
-    "utils/jwt/jwt.ts"
-  ],
-  "middleware/jwk/keys.test.json": [],
-  "middleware/jwt/index.test.ts": [
-    "hono.ts",
-    "http-exception.ts",
-    "middleware/jwt/index.ts"
-  ],
-  "middleware/jwt/index.ts": [
-    "index.ts",
-    "middleware/jwt/jwt.ts",
-    "utils/jwt/jwa.ts"
-  ],
-  "middleware/jwt/jwt.ts": [
-    "context.ts",
-    "helper/cookie/index.ts",
-    "http-exception.ts",
-    "types.ts",
-    "utils/cookie.ts",
-    "utils/jwt/index.ts",
-    "utils/jwt/jwa.ts",
-    "utils/jwt/jws.ts",
-    "utils/jwt/jwt.ts"
-  ],
-  "middleware/language/index.test.ts": [
-    "hono.ts",
-    "middleware/language/index.ts",
-    "middleware/language/language.ts"
-  ],
-  "middleware/language/index.ts": [
-    "middleware/language/language.ts"
-  ],
-  "middleware/language/language.ts": [
-    "context.ts",
-    "helper/cookie/index.ts",
-    "types.ts",
-    "utils/accept.ts"
-  ],
-  "middleware/logger/index.test.ts": [
-    "hono.ts",
-    "middleware/logger/index.ts"
-  ],
-  "middleware/logger/index.ts": [
-    "types.ts",
-    "utils/color.ts"
-  ],
-  "middleware/method-not-allowed/index.test.ts": [
-    "hono.ts",
-    "middleware/method-not-allowed/index.ts"
-  ],
-  "middleware/method-not-allowed/index.ts": [
-    "context.ts",
-    "helper/route/index.ts",
-    "hono.ts",
-    "router.ts",
-    "router/trie-router/index.ts",
-    "types.ts"
-  ],
-  "middleware/method-override/index.test.ts": [
-    "hono.ts",
-    "middleware/method-override/index.ts"
-  ],
-  "middleware/method-override/index.ts": [
-    "context.ts",
-    "hono.ts",
-    "types.ts",
-    "utils/body.ts"
-  ],
-  "middleware/powered-by/index.test.ts": [
-    "hono.ts",
-    "middleware/powered-by/index.ts"
-  ],
-  "middleware/powered-by/index.ts": [
-    "types.ts"
-  ],
-  "middleware/pretty-json/index.test.ts": [
-    "hono.ts",
-    "middleware/pretty-json/index.ts"
-  ],
-  "middleware/pretty-json/index.ts": [
-    "types.ts"
-  ],
-  "middleware/request-id/index.test.ts": [
-    "context.ts",
-    "hono.ts",
-    "middleware/request-id/index.ts"
-  ],
-  "middleware/request-id/index.ts": [
-    "middleware/request-id/request-id.ts"
-  ],
-  "middleware/request-id/request-id.ts": [
-    "context.ts",
-    "types.ts"
-  ],
-  "middleware/secure-headers/index.test.ts": [
-    "hono.ts",
-    "middleware/powered-by/index.ts",
-    "middleware/secure-headers/index.ts"
-  ],
-  "middleware/secure-headers/index.ts": [
-    "middleware/secure-headers/secure-headers.ts"
-  ],
-  "middleware/secure-headers/permissions-policy.ts": [],
-  "middleware/secure-headers/secure-headers.ts": [
-    "context.ts",
-    "middleware/secure-headers/permissions-policy.ts",
-    "types.ts",
-    "utils/encode.ts"
-  ],
-  "middleware/serve-static/index.test.ts": [
-    "hono.ts",
-    "middleware/serve-static/index.ts"
-  ],
-  "middleware/serve-static/index.ts": [
-    "context.ts",
-    "middleware/serve-static/path.ts",
-    "types.ts",
-    "utils/compress.ts",
-    "utils/mime.ts",
-    "utils/url.ts"
-  ],
-  "middleware/serve-static/path.test.ts": [
-    "middleware/serve-static/path.ts"
-  ],
-  "middleware/serve-static/path.ts": [],
-  "middleware/timeout/index.test.ts": [
-    "context.ts",
-    "hono.ts",
-    "http-exception.ts",
-    "middleware/timeout/index.ts"
-  ],
-  "middleware/timeout/index.ts": [
-    "context.ts",
-    "http-exception.ts",
-    "types.ts"
-  ],
-  "middleware/timing/index.test.ts": [
-    "hono.ts",
-    "middleware/timing/index.ts"
-  ],
-  "middleware/timing/index.ts": [
-    "middleware/timing/timing.ts"
-  ],
-  "middleware/timing/timing.ts": [
-    "context.ts",
-    "types.ts"
-  ],
-  "middleware/trailing-slash/index.test.ts": [
-    "hono.ts",
-    "middleware/trailing-slash/index.ts"
-  ],
-  "middleware/trailing-slash/index.ts": [
-    "types.ts"
-  ],
-  "preset/quick.test.ts": [
-    "helper/dev/index.ts",
-    "preset/quick.ts"
-  ],
-  "preset/quick.ts": [
-    "hono-base.ts",
-    "router/linear-router/index.ts",
-    "router/smart-router/index.ts",
-    "router/trie-router/index.ts",
-    "types.ts"
-  ],
-  "preset/tiny.test.ts": [
-    "helper/dev/index.ts",
-    "preset/tiny.ts"
-  ],
-  "preset/tiny.ts": [
-    "hono-base.ts",
-    "router/pattern-router/index.ts",
-    "types.ts"
-  ],
-  "request.test.ts": [
-    "http-exception.ts",
-    "request.ts",
-    "types.ts"
-  ],
-  "request.ts": [
-    "http-exception.ts",
-    "request/constants.ts",
-    "router.ts",
-    "types.ts",
-    "utils/body.ts",
-    "utils/headers.ts",
-    "utils/types.ts",
-    "utils/url.ts"
-  ],
-  "request/constants.ts": [],
-  "router.ts": [],
-  "router/common.case.test.ts": [
-    "router.ts"
-  ],
-  "router/linear-router/index.ts": [
-    "router/linear-router/router.ts"
-  ],
-  "router/linear-router/router.test.ts": [
-    "router.ts",
-    "router/common.case.test.ts",
-    "router/linear-router/router.ts"
-  ],
-  "router/linear-router/router.ts": [
-    "router.ts",
-    "utils/url.ts"
-  ],
-  "router/pattern-router/index.ts": [
-    "router/pattern-router/router.ts"
-  ],
-  "router/pattern-router/router.test.ts": [
-    "router.ts",
-    "router/common.case.test.ts",
-    "router/pattern-router/router.ts"
-  ],
-  "router/pattern-router/router.ts": [
-    "router.ts"
-  ],
-  "router/reg-exp-router/index.ts": [
-    "router/reg-exp-router/prepared-router.ts",
-    "router/reg-exp-router/router.ts"
-  ],
-  "router/reg-exp-router/matcher.ts": [
-    "router.ts"
-  ],
-  "router/reg-exp-router/node.ts": [
-    "router/utils.ts"
-  ],
-  "router/reg-exp-router/prepared-router.test.ts": [
-    "router.ts",
-    "router/common.case.test.ts",
-    "router/reg-exp-router/prepared-router.ts"
-  ],
-  "router/reg-exp-router/prepared-router.ts": [
-    "router.ts",
-    "router/reg-exp-router/matcher.ts",
-    "router/reg-exp-router/router.ts"
-  ],
-  "router/reg-exp-router/router.test.ts": [
-    "router.ts",
-    "router/common.case.test.ts",
-    "router/reg-exp-router/router.ts"
-  ],
-  "router/reg-exp-router/router.ts": [
-    "router.ts",
-    "router/reg-exp-router/matcher.ts",
-    "router/reg-exp-router/node.ts",
-    "router/reg-exp-router/trie.ts",
-    "router/utils.ts",
-    "utils/url.ts"
-  ],
-  "router/reg-exp-router/trie.ts": [
-    "router/reg-exp-router/node.ts",
-    "router/utils.ts"
-  ],
-  "router/smart-router/index.ts": [
-    "router/smart-router/router.ts"
-  ],
-  "router/smart-router/router.test.ts": [
-    "router/common.case.test.ts",
-    "router/reg-exp-router/index.ts",
-    "router/smart-router/router.ts",
-    "router/trie-router/index.ts"
-  ],
-  "router/smart-router/router.ts": [
-    "router.ts"
-  ],
-  "router/trie-router/index.ts": [
-    "router/trie-router/router.ts"
-  ],
-  "router/trie-router/node.test.ts": [
-    "router/trie-router/node.ts"
-  ],
-  "router/trie-router/node.ts": [
-    "router.ts",
-    "router/utils.ts",
-    "utils/url.ts"
-  ],
-  "router/trie-router/router.test.ts": [
-    "router/common.case.test.ts",
-    "router/trie-router/router.ts"
-  ],
-  "router/trie-router/router.ts": [
-    "router.ts",
-    "router/trie-router/node.ts",
-    "utils/url.ts"
-  ],
-  "router/utils.ts": [],
-  "types.test.ts": [
-    "client/index.ts",
-    "context.ts",
-    "helper/factory/index.ts",
-    "helper/testing/index.ts",
-    "hono.ts",
-    "middleware/powered-by/index.ts",
-    "types.ts",
-    "utils/http-status.ts",
-    "utils/types.ts",
-    "validator/index.ts"
-  ],
-  "types.ts": [
-    "context.ts",
-    "hono-base.ts",
-    "utils/headers.ts",
-    "utils/http-status.ts",
-    "utils/types.ts"
-  ],
-  "utils/accept.test.ts": [
-    "utils/accept.ts"
-  ],
-  "utils/accept.ts": [],
-  "utils/basic-auth.test.ts": [
-    "utils/basic-auth.ts"
-  ],
-  "utils/basic-auth.ts": [
-    "utils/encode.ts"
-  ],
-  "utils/body.test.ts": [
-    "utils/body.ts"
-  ],
-  "utils/body.ts": [
-    "request.ts",
-    "utils/buffer.ts"
-  ],
-  "utils/buffer.test.ts": [
-    "utils/buffer.ts"
-  ],
-  "utils/buffer.ts": [
-    "utils/crypto.ts"
-  ],
-  "utils/color.test.ts": [
-    "utils/color.ts"
-  ],
-  "utils/color.ts": [],
-  "utils/compress.ts": [],
-  "utils/concurrent.test.ts": [
-    "utils/concurrent.ts"
-  ],
-  "utils/concurrent.ts": [],
-  "utils/constants.ts": [],
-  "utils/cookie.test.ts": [
-    "utils/cookie.ts"
-  ],
-  "utils/cookie.ts": [
-    "utils/url.ts"
-  ],
-  "utils/crypto.test.ts": [
-    "utils/crypto.ts"
-  ],
-  "utils/crypto.ts": [
-    "utils/types.ts"
-  ],
-  "utils/encode.test.ts": [
-    "utils/encode.ts"
-  ],
-  "utils/encode.ts": [],
-  "utils/filepath.test.ts": [
-    "utils/filepath.ts"
-  ],
-  "utils/filepath.ts": [],
-  "utils/handler.ts": [
-    "utils/constants.ts"
-  ],
-  "utils/headers.ts": [],
-  "utils/html.test.ts": [
-    "utils/html.ts"
-  ],
-  "utils/html.ts": [],
-  "utils/http-status.ts": [],
-  "utils/ipaddr.test.ts": [
-    "utils/ipaddr.ts"
-  ],
-  "utils/ipaddr.ts": [
-    "helper/conninfo/index.ts"
-  ],
-  "utils/jwt/index.ts": [
-    "utils/jwt/jwt.ts"
-  ],
-  "utils/jwt/jwa.test.ts": [
-    "utils/jwt/jwa.ts"
-  ],
-  "utils/jwt/jwa.ts": [],
-  "utils/jwt/jws.ts": [
-    "helper/adapter/index.ts",
-    "utils/encode.ts",
-    "utils/jwt/jwa.ts",
-    "utils/jwt/types.ts",
-    "utils/jwt/utf8.ts"
-  ],
-  "utils/jwt/jwt.test.ts": [
-    "utils/encode.ts",
-    "utils/jwt/jwa.ts",
-    "utils/jwt/jws.ts",
-    "utils/jwt/jwt.ts",
-    "utils/jwt/types.ts",
-    "utils/jwt/utf8.ts"
-  ],
-  "utils/jwt/jwt.ts": [
-    "utils/encode.ts",
-    "utils/jwt/jwa.ts",
-    "utils/jwt/jws.ts",
-    "utils/jwt/types.ts",
-    "utils/jwt/utf8.ts"
-  ],
-  "utils/jwt/types.ts": [
-    "utils/jwt/jws.ts"
-  ],
-  "utils/jwt/utf8.ts": [],
-  "utils/mime.test.ts": [
-    "utils/mime.ts"
-  ],
-  "utils/mime.ts": [],
-  "utils/stream.test.ts": [
-    "utils/stream.ts"
-  ],
-  "utils/stream.ts": [],
-  "utils/types.test.ts": [
-    "utils/types.ts"
-  ],
-  "utils/types.ts": [],
-  "utils/url.test.ts": [
-    "utils/url.ts"
-  ],
-  "utils/url.ts": [],
-  "validator/index.ts": [
-    "validator/utils.ts",
-    "validator/validator.ts"
-  ],
-  "validator/utils.test.ts": [
-    "validator/utils.ts"
-  ],
-  "validator/utils.ts": [
-    "types.ts",
-    "utils/types.ts"
-  ],
-  "validator/validator.test.ts": [
-    "context.ts",
-    "hono.ts",
-    "http-exception.ts",
-    "request.ts",
-    "types.ts",
-    "utils/http-status.ts",
-    "utils/types.ts",
-    "validator/validator.ts"
-  ],
-  "validator/validator.ts": [
-    "context.ts",
-    "helper/cookie/index.ts",
-    "http-exception.ts",
-    "types.ts",
-    "utils/body.ts",
-    "utils/buffer.ts",
-    "validator/utils.ts"
-  ]
+  "benchmarks/fetch/bench.mts": [],
+  "benchmarks/fetch/summarize.mts": [],
+  "benchmarks/fetch/ts-resolve.mjs": [],
+  "benchmarks/http-server/benchmark.ts": [],
+  "benchmarks/jsx/src/benchmark.ts": [
+    "benchmarks/jsx/src/hono.ts",
+    "benchmarks/jsx/src/nano.ts",
+    "benchmarks/jsx/src/preact.ts",
+    "benchmarks/jsx/src/react.ts"
+  ],
+  "benchmarks/jsx/src/hono.ts": [
+    "benchmarks/jsx/src/page.tsx",
+    "src/jsx/index.ts"
+  ],
+  "benchmarks/jsx/src/nano.ts": [
+    "benchmarks/jsx/src/page.tsx"
+  ],
+  "benchmarks/jsx/src/page-react.tsx": [],
+  "benchmarks/jsx/src/page.tsx": [],
+  "benchmarks/jsx/src/preact.ts": [
+    "benchmarks/jsx/src/page.tsx"
+  ],
+  "benchmarks/jsx/src/react-jsx/benchmark.ts": [
+    "benchmarks/jsx/src/react-jsx/hono.ts",
+    "benchmarks/jsx/src/react-jsx/nano.ts",
+    "benchmarks/jsx/src/react-jsx/preact.ts",
+    "benchmarks/jsx/src/react-jsx/react.ts"
+  ],
+  "benchmarks/jsx/src/react-jsx/hono.ts": [
+    "benchmarks/jsx/src/react-jsx/page-hono.tsx"
+  ],
+  "benchmarks/jsx/src/react-jsx/nano.ts": [
+    "benchmarks/jsx/src/react-jsx/page-nano.tsx"
+  ],
+  "benchmarks/jsx/src/react-jsx/page-hono.tsx": [],
+  "benchmarks/jsx/src/react-jsx/page-nano.tsx": [],
+  "benchmarks/jsx/src/react-jsx/page-preact.tsx": [],
+  "benchmarks/jsx/src/react-jsx/page-react.tsx": [],
+  "benchmarks/jsx/src/react-jsx/preact.ts": [
+    "benchmarks/jsx/src/react-jsx/page-preact.tsx"
+  ],
+  "benchmarks/jsx/src/react-jsx/react.ts": [
+    "benchmarks/jsx/src/react-jsx/page-react.tsx"
+  ],
+  "benchmarks/jsx/src/react.ts": [
+    "benchmarks/jsx/src/page-react.tsx"
+  ],
+  "benchmarks/query-param/src/bench.mts": [],
+  "benchmarks/query-param/src/fast-querystring.mts": [],
+  "benchmarks/query-param/src/hono.mts": [],
+  "benchmarks/query-param/src/qs.mts": [],
+  "benchmarks/routers-deno/src/bench.mts": [],
+  "benchmarks/routers-deno/src/find-my-way.mts": [],
+  "benchmarks/routers-deno/src/hono.mts": [],
+  "benchmarks/routers-deno/src/koa-router.mts": [],
+  "benchmarks/routers-deno/src/koa-tree-router.mts": [],
+  "benchmarks/routers-deno/src/medley-router.mts": [],
+  "benchmarks/routers-deno/src/tool.mts": [],
+  "benchmarks/routers-deno/src/trek-router.mts": [],
+  "benchmarks/routers/src/bench-includes-init.mts": [],
+  "benchmarks/routers/src/bench.mts": [],
+  "benchmarks/routers/src/express.mts": [],
+  "benchmarks/routers/src/find-my-way.mts": [],
+  "benchmarks/routers/src/hono.mts": [],
+  "benchmarks/routers/src/koa-router.mts": [],
+  "benchmarks/routers/src/koa-tree-router.mts": [],
+  "benchmarks/routers/src/medley-router.mts": [],
+  "benchmarks/routers/src/memoirist.mts": [],
+  "benchmarks/routers/src/radix3.mts": [],
+  "benchmarks/routers/src/rou3.mts": [],
+  "benchmarks/routers/src/tool.mts": [],
+  "benchmarks/routers/src/trek-router.mts": [],
+  "benchmarks/utils/src/get-path.ts": [],
+  "benchmarks/utils/src/loop.js": [],
+  "build/build.ts": [
+    "build/remove-private-fields.ts",
+    "build/validate-exports.ts"
+  ],
+  "build/remove-private-fields.test.ts": [
+    "build/remove-private-fields.ts"
+  ],
+  "build/remove-private-fields.ts": [],
+  "build/validate-exports.test.ts": [
+    "build/validate-exports.ts"
+  ],
+  "build/validate-exports.ts": [],
+  "eslint.config.mjs": [],
+  "perf-measures/bundle-check/scripts/check-bundle-size.ts": [],
+  "perf-measures/type-check/client.ts": [
+    "src/client/index.ts"
+  ],
+  "perf-measures/type-check/scripts/generate-app.ts": [],
+  "perf-measures/type-check/scripts/process-results.ts": [],
+  "runtime-tests/bun/color.test.ts": [],
+  "runtime-tests/bun/index.test.tsx": [
+    "src/adapter/bun/index.ts",
+    "src/adapter/bun/websocket.ts",
+    "src/context.ts",
+    "src/helper/adapter/index.ts",
+    "src/helper/streaming/index.ts",
+    "src/helper/websocket/index.ts",
+    "src/index.ts",
+    "src/jsx/index.ts",
+    "src/middleware/basic-auth/index.ts",
+    "src/middleware/jwt/index.ts"
+  ],
+  "runtime-tests/deno-jsx/jsx.test.tsx": [
+    "src/helper/css/index.ts",
+    "src/jsx/streaming.ts",
+    "src/utils/html.ts"
+  ],
+  "runtime-tests/deno/hono.test.ts": [
+    "src/context.ts",
+    "src/helper/adapter/index.ts",
+    "src/hono.ts"
+  ],
+  "runtime-tests/deno/middleware.test.tsx": [
+    "src/adapter/deno/index.ts",
+    "src/hono.ts",
+    "src/middleware/basic-auth/index.ts",
+    "src/middleware/jwt/index.ts"
+  ],
+  "runtime-tests/deno/ssg.test.tsx": [
+    "src/adapter/deno/ssg.ts",
+    "src/hono.ts"
+  ],
+  "runtime-tests/deno/stream.test.ts": [
+    "src/helper/streaming/index.ts",
+    "src/hono.ts"
+  ],
+  "runtime-tests/fastly/index.test.ts": [
+    "src/helper/adapter/index.ts",
+    "src/index.ts",
+    "src/middleware/basic-auth/index.ts",
+    "src/middleware/jwt/index.ts"
+  ],
+  "runtime-tests/fastly/vitest.config.ts": [],
+  "runtime-tests/lambda-edge/index.test.ts": [
+    "src/adapter/lambda-edge/handler.ts",
+    "src/hono.ts",
+    "src/middleware/basic-auth/index.ts"
+  ],
+  "runtime-tests/lambda-edge/vitest.config.ts": [],
+  "runtime-tests/lambda/index.test.ts": [
+    "runtime-tests/lambda/mock.ts",
+    "src/adapter/aws-lambda/handler.ts",
+    "src/adapter/aws-lambda/types.ts",
+    "src/helper/cookie/index.ts",
+    "src/helper/streaming/index.ts",
+    "src/hono.ts",
+    "src/middleware/basic-auth/index.ts"
+  ],
+  "runtime-tests/lambda/mock.ts": [
+    "src/adapter/aws-lambda/handler.ts",
+    "src/adapter/aws-lambda/types.ts"
+  ],
+  "runtime-tests/lambda/stream-mock.ts": [
+    "src/adapter/aws-lambda/handler.ts",
+    "src/adapter/aws-lambda/types.ts"
+  ],
+  "runtime-tests/lambda/stream.test.ts": [
+    "runtime-tests/lambda/stream-mock.ts",
+    "src/adapter/aws-lambda/handler.ts",
+    "src/adapter/aws-lambda/types.ts",
+    "src/hono.ts"
+  ],
+  "runtime-tests/lambda/vitest.config.ts": [],
+  "runtime-tests/node/index.test.ts": [
+    "src/context.ts",
+    "src/helper/adapter/index.ts",
+    "src/helper/streaming/index.ts",
+    "src/index.ts",
+    "src/middleware/basic-auth/index.ts",
+    "src/middleware/compress/index.ts",
+    "src/middleware/jwt/index.ts"
+  ],
+  "runtime-tests/node/vitest.config.ts": [],
+  "runtime-tests/workerd/index.test.ts": [],
+  "runtime-tests/workerd/index.ts": [
+    "src/adapter/cloudflare-workers/index.ts",
+    "src/helper/adapter/index.ts",
+    "src/hono.ts",
+    "src/utils/color.ts"
+  ],
+  "runtime-tests/workerd/vitest.config.ts": [],
+  "src/adapter/aws-lambda/conninfo.test.ts": [
+    "src/adapter/aws-lambda/conninfo.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/aws-lambda/conninfo.ts": [
+    "src/adapter/aws-lambda/types.ts",
+    "src/context.ts",
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/adapter/aws-lambda/handler.test.ts": [
+    "src/adapter/aws-lambda/handler.ts",
+    "src/adapter/aws-lambda/types.ts",
+    "src/helper/cookie/index.ts",
+    "src/hono.ts",
+    "src/middleware/body-limit/index.ts"
+  ],
+  "src/adapter/aws-lambda/handler.ts": [
+    "src/adapter/aws-lambda/types.ts",
+    "src/hono.ts",
+    "src/types.ts",
+    "src/utils/encode.ts"
+  ],
+  "src/adapter/aws-lambda/index.ts": [
+    "src/adapter/aws-lambda/conninfo.ts",
+    "src/adapter/aws-lambda/handler.ts",
+    "src/adapter/aws-lambda/types.ts"
+  ],
+  "src/adapter/aws-lambda/types.ts": [],
+  "src/adapter/bun/conninfo.test.ts": [
+    "src/adapter/bun/conninfo.ts",
+    "src/context.ts",
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/adapter/bun/conninfo.ts": [
+    "src/adapter/bun/server.ts",
+    "src/helper/conninfo/index.ts",
+    "src/index.ts"
+  ],
+  "src/adapter/bun/index.ts": [
+    "src/adapter/bun/conninfo.ts",
+    "src/adapter/bun/serve-static.ts",
+    "src/adapter/bun/server.ts",
+    "src/adapter/bun/ssg.ts",
+    "src/adapter/bun/websocket.ts"
+  ],
+  "src/adapter/bun/serve-static.ts": [
+    "src/middleware/serve-static/index.ts",
+    "src/types.ts"
+  ],
+  "src/adapter/bun/server.test.ts": [
+    "src/adapter/bun/server.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/bun/server.ts": [
+    "src/context.ts"
+  ],
+  "src/adapter/bun/ssg.ts": [
+    "src/helper/ssg/index.ts"
+  ],
+  "src/adapter/bun/websocket.test.ts": [
+    "src/adapter/bun/websocket.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/bun/websocket.ts": [
+    "src/adapter/bun/server.ts",
+    "src/helper/websocket/index.ts"
+  ],
+  "src/adapter/cloudflare-pages/conninfo.test.ts": [
+    "src/adapter/cloudflare-pages/conninfo.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/cloudflare-pages/conninfo.ts": [
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/adapter/cloudflare-pages/handler.test.ts": [
+    "src/adapter/cloudflare-pages/handler.ts",
+    "src/helper/cookie/index.ts",
+    "src/hono.ts",
+    "src/http-exception.ts"
+  ],
+  "src/adapter/cloudflare-pages/handler.ts": [
+    "src/context.ts",
+    "src/hono.ts",
+    "src/http-exception.ts",
+    "src/types.ts"
+  ],
+  "src/adapter/cloudflare-pages/index.ts": [
+    "src/adapter/cloudflare-pages/conninfo.ts",
+    "src/adapter/cloudflare-pages/handler.ts"
+  ],
+  "src/adapter/cloudflare-workers/conninfo.test.ts": [
+    "src/adapter/cloudflare-workers/conninfo.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/cloudflare-workers/conninfo.ts": [
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/adapter/cloudflare-workers/index.ts": [
+    "src/adapter/cloudflare-workers/conninfo.ts",
+    "src/adapter/cloudflare-workers/serve-static-module.ts",
+    "src/adapter/cloudflare-workers/websocket.ts"
+  ],
+  "src/adapter/cloudflare-workers/serve-static-module.ts": [
+    "src/adapter/cloudflare-workers/serve-static.ts",
+    "src/types.ts"
+  ],
+  "src/adapter/cloudflare-workers/serve-static.test.ts": [
+    "src/adapter/cloudflare-workers/serve-static.ts",
+    "src/context.ts",
+    "src/hono.ts",
+    "src/types.ts"
+  ],
+  "src/adapter/cloudflare-workers/serve-static.ts": [
+    "src/adapter/cloudflare-workers/utils.ts",
+    "src/middleware/serve-static/index.ts",
+    "src/types.ts"
+  ],
+  "src/adapter/cloudflare-workers/utils.test.ts": [
+    "src/adapter/cloudflare-workers/utils.ts"
+  ],
+  "src/adapter/cloudflare-workers/utils.ts": [],
+  "src/adapter/cloudflare-workers/websocket.test.ts": [
+    "src/adapter/cloudflare-workers/index.ts",
+    "src/context.ts",
+    "src/index.ts"
+  ],
+  "src/adapter/cloudflare-workers/websocket.ts": [
+    "src/helper/websocket/index.ts"
+  ],
+  "src/adapter/deno/conninfo.test.ts": [
+    "src/adapter/deno/conninfo.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/deno/conninfo.ts": [
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/adapter/deno/deno.d.ts": [],
+  "src/adapter/deno/index.ts": [
+    "src/adapter/deno/conninfo.ts",
+    "src/adapter/deno/serve-static.ts",
+    "src/adapter/deno/ssg.ts",
+    "src/adapter/deno/websocket.ts"
+  ],
+  "src/adapter/deno/serve-static.ts": [
+    "src/middleware/serve-static/index.ts",
+    "src/types.ts"
+  ],
+  "src/adapter/deno/ssg.ts": [
+    "src/helper/ssg/index.ts"
+  ],
+  "src/adapter/deno/websocket.test.ts": [
+    "src/adapter/deno/websocket.ts",
+    "src/context.ts",
+    "src/index.ts"
+  ],
+  "src/adapter/deno/websocket.ts": [
+    "src/helper/websocket/index.ts"
+  ],
+  "src/adapter/lambda-edge/conninfo.test.ts": [
+    "src/adapter/lambda-edge/conninfo.ts",
+    "src/adapter/lambda-edge/handler.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/lambda-edge/conninfo.ts": [
+    "src/adapter/lambda-edge/handler.ts",
+    "src/context.ts",
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/adapter/lambda-edge/handler.test.ts": [
+    "src/adapter/lambda-edge/handler.ts",
+    "src/helper/cookie/index.ts",
+    "src/hono.ts",
+    "src/middleware/body-limit/index.ts",
+    "src/utils/encode.ts"
+  ],
+  "src/adapter/lambda-edge/handler.ts": [
+    "src/hono.ts",
+    "src/utils/encode.ts"
+  ],
+  "src/adapter/lambda-edge/index.ts": [
+    "src/adapter/lambda-edge/conninfo.ts",
+    "src/adapter/lambda-edge/handler.ts"
+  ],
+  "src/adapter/netlify/conninfo.test.ts": [
+    "src/adapter/netlify/conninfo.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/netlify/conninfo.ts": [
+    "src/context.ts",
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/adapter/netlify/handler.ts": [
+    "src/hono.ts"
+  ],
+  "src/adapter/netlify/index.ts": [
+    "src/adapter/netlify/mod.ts"
+  ],
+  "src/adapter/netlify/mod.ts": [
+    "src/adapter/netlify/conninfo.ts",
+    "src/adapter/netlify/handler.ts"
+  ],
+  "src/adapter/service-worker/handler.test.ts": [
+    "src/adapter/service-worker/handler.ts",
+    "src/adapter/service-worker/types.ts",
+    "src/hono.ts"
+  ],
+  "src/adapter/service-worker/handler.ts": [
+    "src/adapter/service-worker/types.ts",
+    "src/hono.ts",
+    "src/types.ts"
+  ],
+  "src/adapter/service-worker/index.ts": [
+    "src/adapter/service-worker/handler.ts",
+    "src/hono.ts",
+    "src/types.ts"
+  ],
+  "src/adapter/service-worker/types.ts": [],
+  "src/adapter/vercel/conninfo.test.ts": [
+    "src/adapter/vercel/conninfo.ts",
+    "src/context.ts"
+  ],
+  "src/adapter/vercel/conninfo.ts": [
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/adapter/vercel/handler.test.ts": [
+    "src/adapter/vercel/handler.ts",
+    "src/hono.ts"
+  ],
+  "src/adapter/vercel/handler.ts": [
+    "src/hono.ts"
+  ],
+  "src/adapter/vercel/index.ts": [
+    "src/adapter/vercel/conninfo.ts",
+    "src/adapter/vercel/handler.ts"
+  ],
+  "src/client/client.test.ts": [
+    "src/adapter/deno/websocket.ts",
+    "src/client/client.ts",
+    "src/client/types.ts",
+    "src/hono.ts",
+    "src/utils/cookie.ts",
+    "src/utils/types.ts",
+    "src/validator/index.ts"
+  ],
+  "src/client/client.ts": [
+    "src/client/types.ts",
+    "src/client/utils.ts",
+    "src/hono.ts",
+    "src/types.ts",
+    "src/utils/cookie.ts",
+    "src/utils/types.ts"
+  ],
+  "src/client/fetch-result-please.ts": [],
+  "src/client/index.ts": [
+    "src/client/client.ts",
+    "src/client/types.ts",
+    "src/client/utils.ts"
+  ],
+  "src/client/types.test.ts": [
+    "src/adapter/deno/websocket.ts",
+    "src/client/index.ts",
+    "src/client/types.ts",
+    "src/index.ts"
+  ],
+  "src/client/types.ts": [
+    "src/hono-base.ts",
+    "src/hono.ts",
+    "src/router.ts",
+    "src/types.ts",
+    "src/utils/http-status.ts",
+    "src/utils/types.ts"
+  ],
+  "src/client/utils.test.ts": [
+    "src/client/client.ts",
+    "src/client/utils.ts",
+    "src/hono.ts",
+    "src/utils/types.ts"
+  ],
+  "src/client/utils.ts": [
+    "src/client/fetch-result-please.ts",
+    "src/client/types.ts",
+    "src/utils/http-status.ts"
+  ],
+  "src/compose.test.ts": [
+    "src/compose.ts",
+    "src/context.ts",
+    "src/router.ts",
+    "src/types.ts"
+  ],
+  "src/compose.ts": [
+    "src/context.ts",
+    "src/types.ts"
+  ],
+  "src/context.test.ts": [
+    "src/context.ts",
+    "src/helper/cookie/index.ts"
+  ],
+  "src/context.ts": [
+    "src/request.ts",
+    "src/router.ts",
+    "src/types.ts",
+    "src/utils/headers.ts",
+    "src/utils/html.ts",
+    "src/utils/http-status.ts",
+    "src/utils/mime.ts",
+    "src/utils/types.ts"
+  ],
+  "src/helper/accepts/accepts.test.ts": [
+    "src/helper/accepts/accepts.ts",
+    "src/index.ts",
+    "src/utils/accept.ts"
+  ],
+  "src/helper/accepts/accepts.ts": [
+    "src/context.ts",
+    "src/utils/accept.ts",
+    "src/utils/headers.ts"
+  ],
+  "src/helper/accepts/index.ts": [
+    "src/helper/accepts/accepts.ts"
+  ],
+  "src/helper/adapter/index.test.ts": [
+    "src/helper/adapter/index.ts",
+    "src/hono.ts"
+  ],
+  "src/helper/adapter/index.ts": [
+    "src/context.ts"
+  ],
+  "src/helper/conninfo/index.ts": [
+    "src/helper/conninfo/types.ts"
+  ],
+  "src/helper/conninfo/types.ts": [
+    "src/context.ts"
+  ],
+  "src/helper/cookie/index.test.ts": [
+    "src/helper/cookie/index.ts",
+    "src/hono.ts"
+  ],
+  "src/helper/cookie/index.ts": [
+    "src/context.ts",
+    "src/utils/cookie.ts"
+  ],
+  "src/helper/css/common.case.test.tsx": [
+    "src/helper/css/index.ts"
+  ],
+  "src/helper/css/common.ts": [],
+  "src/helper/css/index.test.tsx": [
+    "src/helper/css/common.case.test.tsx",
+    "src/helper/css/index.ts",
+    "src/helper/html/index.ts",
+    "src/index.ts",
+    "src/jsx/index.ts",
+    "src/jsx/streaming.ts",
+    "src/utils/html.ts"
+  ],
+  "src/helper/css/index.ts": [
+    "src/helper/css/common.ts",
+    "src/helper/html/index.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/dom/css.ts",
+    "src/utils/html.ts"
+  ],
+  "src/helper/dev/index.test.ts": [
+    "src/helper/dev/index.ts",
+    "src/hono.ts",
+    "src/router/reg-exp-router/index.ts",
+    "src/types.ts"
+  ],
+  "src/helper/dev/index.ts": [
+    "src/hono.ts",
+    "src/types.ts",
+    "src/utils/color.ts",
+    "src/utils/handler.ts"
+  ],
+  "src/helper/factory/index.test.ts": [
+    "src/client/index.ts",
+    "src/client/types.ts",
+    "src/helper/factory/index.ts",
+    "src/index.ts",
+    "src/types.ts",
+    "src/utils/http-status.ts",
+    "src/utils/types.ts",
+    "src/validator/index.ts"
+  ],
+  "src/helper/factory/index.ts": [
+    "src/hono-base.ts",
+    "src/hono.ts",
+    "src/types.ts"
+  ],
+  "src/helper/html/index.test.ts": [
+    "src/helper/html/index.ts",
+    "src/utils/html.ts"
+  ],
+  "src/helper/html/index.ts": [
+    "src/utils/html.ts"
+  ],
+  "src/helper/proxy/index.test.ts": [
+    "src/helper/proxy/index.ts",
+    "src/hono.ts"
+  ],
+  "src/helper/proxy/index.ts": [
+    "src/http-exception.ts",
+    "src/utils/headers.ts"
+  ],
+  "src/helper/route/index.test.ts": [
+    "src/context.ts",
+    "src/helper/route/index.ts",
+    "src/hono.ts"
+  ],
+  "src/helper/route/index.ts": [
+    "src/context.ts",
+    "src/request/constants.ts",
+    "src/types.ts",
+    "src/utils/url.ts"
+  ],
+  "src/helper/ssg/index.ts": [
+    "src/helper/ssg/middleware.ts",
+    "src/helper/ssg/plugins.ts",
+    "src/helper/ssg/ssg.ts"
+  ],
+  "src/helper/ssg/middleware.ts": [
+    "src/context.ts",
+    "src/helper/ssg/utils.ts",
+    "src/types.ts"
+  ],
+  "src/helper/ssg/plugins.test.tsx": [
+    "src/helper/ssg/plugins.ts",
+    "src/helper/ssg/ssg.ts",
+    "src/hono.ts",
+    "src/utils/http-status.ts"
+  ],
+  "src/helper/ssg/plugins.ts": [
+    "src/helper/html/index.ts",
+    "src/helper/ssg/ssg.ts"
+  ],
+  "src/helper/ssg/ssg.test.tsx": [
+    "src/helper/ssg/middleware.ts",
+    "src/helper/ssg/ssg.ts",
+    "src/hono.ts",
+    "src/middleware/powered-by/index.ts"
+  ],
+  "src/helper/ssg/ssg.ts": [
+    "src/client/utils.ts",
+    "src/helper/ssg/middleware.ts",
+    "src/helper/ssg/plugins.ts",
+    "src/helper/ssg/utils.ts",
+    "src/hono.ts",
+    "src/types.ts",
+    "src/utils/concurrent.ts",
+    "src/utils/mime.ts"
+  ],
+  "src/helper/ssg/utils.test.ts": [
+    "src/helper/ssg/utils.ts"
+  ],
+  "src/helper/ssg/utils.ts": [
+    "src/hono.ts",
+    "src/router.ts",
+    "src/types.ts",
+    "src/utils/handler.ts"
+  ],
+  "src/helper/streaming/index.ts": [
+    "src/helper/streaming/sse.ts",
+    "src/helper/streaming/stream.ts",
+    "src/helper/streaming/text.ts"
+  ],
+  "src/helper/streaming/sse.test.tsx": [
+    "src/context.ts",
+    "src/helper/streaming/index.ts",
+    "src/jsx/index.ts"
+  ],
+  "src/helper/streaming/sse.ts": [
+    "src/context.ts",
+    "src/helper/streaming/utils.ts",
+    "src/utils/html.ts",
+    "src/utils/stream.ts"
+  ],
+  "src/helper/streaming/stream.test.ts": [
+    "src/context.ts",
+    "src/helper/streaming/index.ts"
+  ],
+  "src/helper/streaming/stream.ts": [
+    "src/context.ts",
+    "src/helper/streaming/utils.ts",
+    "src/utils/stream.ts"
+  ],
+  "src/helper/streaming/text.test.ts": [
+    "src/context.ts",
+    "src/helper/streaming/index.ts"
+  ],
+  "src/helper/streaming/text.ts": [
+    "src/context.ts",
+    "src/helper/streaming/index.ts",
+    "src/utils/stream.ts"
+  ],
+  "src/helper/streaming/utils.ts": [],
+  "src/helper/testing/index.test.ts": [
+    "src/helper/testing/index.ts",
+    "src/hono.ts"
+  ],
+  "src/helper/testing/index.ts": [
+    "src/client/index.ts",
+    "src/client/types.ts",
+    "src/context.ts",
+    "src/hono.ts",
+    "src/types.ts",
+    "src/utils/types.ts"
+  ],
+  "src/helper/websocket/index.test.ts": [
+    "src/context.ts",
+    "src/helper/websocket/index.ts"
+  ],
+  "src/helper/websocket/index.ts": [
+    "src/context.ts",
+    "src/types.ts",
+    "src/utils/http-status.ts"
+  ],
+  "src/hono-base.ts": [
+    "src/compose.ts",
+    "src/context.ts",
+    "src/router.ts",
+    "src/types.ts",
+    "src/utils/constants.ts",
+    "src/utils/url.ts"
+  ],
+  "src/hono.test.ts": [
+    "src/client/index.ts",
+    "src/context.ts",
+    "src/hono.ts",
+    "src/http-exception.ts",
+    "src/middleware/logger/index.ts",
+    "src/middleware/powered-by/index.ts",
+    "src/router/reg-exp-router/index.ts",
+    "src/router/smart-router/index.ts",
+    "src/router/trie-router/index.ts",
+    "src/types.ts",
+    "src/utils/types.ts",
+    "src/utils/url.ts"
+  ],
+  "src/hono.ts": [
+    "src/hono-base.ts",
+    "src/router/reg-exp-router/index.ts",
+    "src/router/smart-router/index.ts",
+    "src/router/trie-router/index.ts",
+    "src/types.ts"
+  ],
+  "src/http-exception.test.ts": [
+    "src/http-exception.ts"
+  ],
+  "src/http-exception.ts": [
+    "src/utils/http-status.ts"
+  ],
+  "src/index.ts": [
+    "src/client/index.ts",
+    "src/context.ts",
+    "src/hono.ts",
+    "src/request.ts",
+    "src/types.ts"
+  ],
+  "src/jsx/base.test.tsx": [
+    "src/jsx/base.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/base.ts": [
+    "src/helper/html/index.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/intrinsic-element/common.ts",
+    "src/jsx/intrinsic-element/components.ts",
+    "src/jsx/intrinsic-elements.ts",
+    "src/jsx/utils.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/children.test.ts": [
+    "src/jsx/children.ts",
+    "src/jsx/index.ts"
+  ],
+  "src/jsx/children.ts": [
+    "src/jsx/base.ts"
+  ],
+  "src/jsx/components.test.tsx": [
+    "src/helper/html/index.ts",
+    "src/jsx/components.ts",
+    "src/jsx/streaming.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/components.ts": [
+    "src/helper/html/index.ts",
+    "src/jsx/base.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/components.ts",
+    "src/jsx/dom/render.ts",
+    "src/jsx/index.ts",
+    "src/jsx/streaming.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/constants.ts": [],
+  "src/jsx/context-isolation.test.ts": [
+    "src/jsx/hooks/index.ts",
+    "src/jsx/index.ts",
+    "src/jsx/streaming.ts"
+  ],
+  "src/jsx/context.ts": [
+    "src/helper/html/index.ts",
+    "src/jsx/base.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/dom/context.ts",
+    "src/jsx/index.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/dom/client.test.tsx": [
+    "src/jsx/dom/client.ts",
+    "src/jsx/dom/index.ts"
+  ],
+  "src/jsx/dom/client.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/dom/render.ts",
+    "src/jsx/hooks/index.ts"
+  ],
+  "src/jsx/dom/components.test.tsx": [
+    "src/jsx/dom/index.ts",
+    "src/jsx/hooks/index.ts",
+    "src/jsx/index.ts"
+  ],
+  "src/jsx/dom/components.ts": [
+    "src/jsx/components.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/dom/jsx-runtime.ts",
+    "src/jsx/index.ts"
+  ],
+  "src/jsx/dom/context.test.tsx": [
+    "src/jsx/dom/index.ts",
+    "src/jsx/index.ts"
+  ],
+  "src/jsx/dom/context.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/utils.ts"
+  ],
+  "src/jsx/dom/css.test.tsx": [
+    "src/helper/css/common.case.test.tsx",
+    "src/helper/css/common.ts",
+    "src/helper/css/index.ts",
+    "src/jsx/dom/index.ts",
+    "src/jsx/index.ts"
+  ],
+  "src/jsx/dom/css.ts": [
+    "src/helper/css/common.ts",
+    "src/jsx/index.ts"
+  ],
+  "src/jsx/dom/hooks/index.test.tsx": [
+    "src/jsx/dom/hooks/index.ts",
+    "src/jsx/dom/index.ts"
+  ],
+  "src/jsx/dom/hooks/index.ts": [
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/context.ts",
+    "src/jsx/hooks/index.ts"
+  ],
+  "src/jsx/dom/index.test.tsx": [
+    "src/jsx/dom/index.ts",
+    "src/jsx/hooks/index.ts",
+    "src/jsx/index.ts"
+  ],
+  "src/jsx/dom/index.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/children.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/components.ts",
+    "src/jsx/dom/context.ts",
+    "src/jsx/dom/hooks/index.ts",
+    "src/jsx/dom/jsx-runtime.ts",
+    "src/jsx/dom/render.ts",
+    "src/jsx/hooks/index.ts",
+    "src/jsx/types.ts"
+  ],
+  "src/jsx/dom/intrinsic-element/components.test.tsx": [
+    "src/jsx/dom/index.ts",
+    "src/jsx/dom/intrinsic-element/components.ts",
+    "src/jsx/hooks/index.ts"
+  ],
+  "src/jsx/dom/intrinsic-element/components.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/hooks/index.ts",
+    "src/jsx/dom/render.ts",
+    "src/jsx/hooks/index.ts",
+    "src/jsx/intrinsic-element/common.ts",
+    "src/jsx/intrinsic-elements.ts",
+    "src/jsx/types.ts"
+  ],
+  "src/jsx/dom/jsx-dev-runtime.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/dom/intrinsic-element/components.ts"
+  ],
+  "src/jsx/dom/jsx-runtime.ts": [
+    "src/jsx/dom/jsx-dev-runtime.ts"
+  ],
+  "src/jsx/dom/render.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/children.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/context.ts",
+    "src/jsx/hooks/index.ts",
+    "src/jsx/utils.ts"
+  ],
+  "src/jsx/dom/server.test.tsx": [
+    "src/helper/html/index.ts",
+    "src/jsx/dom/server.ts"
+  ],
+  "src/jsx/dom/server.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/dom/index.ts",
+    "src/jsx/streaming.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/dom/utils.ts": [
+    "src/jsx/constants.ts"
+  ],
+  "src/jsx/hooks/dom.test.tsx": [
+    "src/jsx/dom/index.ts",
+    "src/jsx/hooks/index.ts"
+  ],
+  "src/jsx/hooks/index.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/dom/render.ts"
+  ],
+  "src/jsx/hooks/string.test.tsx": [
+    "src/jsx/index.ts"
+  ],
+  "src/jsx/index.test.tsx": [
+    "src/helper/html/index.ts",
+    "src/hono.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/index.ts",
+    "src/jsx/streaming.ts"
+  ],
+  "src/jsx/index.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/children.ts",
+    "src/jsx/components.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/hooks/index.ts",
+    "src/jsx/hooks/index.ts",
+    "src/jsx/intrinsic-elements.ts",
+    "src/jsx/streaming.ts",
+    "src/jsx/types.ts"
+  ],
+  "src/jsx/intrinsic-element/common.ts": [
+    "src/jsx/base.ts"
+  ],
+  "src/jsx/intrinsic-element/components.test.tsx": [
+    "src/jsx/index.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/intrinsic-element/components.ts": [
+    "src/helper/html/index.ts",
+    "src/jsx/base.ts",
+    "src/jsx/children.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/intrinsic-element/common.ts",
+    "src/jsx/intrinsic-elements.ts",
+    "src/jsx/types.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/intrinsic-elements.ts": [
+    "src/utils/mime.ts",
+    "src/utils/types.ts"
+  ],
+  "src/jsx/jsx-dev-runtime.ts": [
+    "src/jsx/base.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/jsx-runtime.test.tsx": [
+    "src/hono.ts",
+    "src/jsx/jsx-runtime.ts"
+  ],
+  "src/jsx/jsx-runtime.ts": [
+    "src/helper/html/index.ts",
+    "src/jsx/jsx-dev-runtime.ts",
+    "src/jsx/utils.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/streaming.test.tsx": [
+    "src/helper/html/index.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/render.ts",
+    "src/jsx/hooks/index.ts",
+    "src/jsx/streaming.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/streaming.ts": [
+    "src/helper/html/index.ts",
+    "src/jsx/base.ts",
+    "src/jsx/components.ts",
+    "src/jsx/constants.ts",
+    "src/jsx/context.ts",
+    "src/jsx/dom/components.ts",
+    "src/jsx/dom/render.ts",
+    "src/jsx/index.ts",
+    "src/utils/html.ts"
+  ],
+  "src/jsx/types.ts": [
+    "src/jsx/base.ts",
+    "src/jsx/context.ts",
+    "src/jsx/hooks/index.ts",
+    "src/jsx/intrinsic-elements.ts"
+  ],
+  "src/jsx/utils.test.ts": [
+    "src/jsx/utils.ts"
+  ],
+  "src/jsx/utils.ts": [],
+  "src/middleware/basic-auth/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/basic-auth/index.ts"
+  ],
+  "src/middleware/basic-auth/index.ts": [
+    "src/context.ts",
+    "src/http-exception.ts",
+    "src/types.ts",
+    "src/utils/basic-auth.ts",
+    "src/utils/buffer.ts"
+  ],
+  "src/middleware/bearer-auth/index.test.ts": [
+    "src/hono.ts",
+    "src/index.ts",
+    "src/middleware/bearer-auth/index.ts"
+  ],
+  "src/middleware/bearer-auth/index.ts": [
+    "src/context.ts",
+    "src/http-exception.ts",
+    "src/types.ts",
+    "src/utils/buffer.ts",
+    "src/utils/http-status.ts"
+  ],
+  "src/middleware/body-limit/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/body-limit/index.ts"
+  ],
+  "src/middleware/body-limit/index.ts": [
+    "src/context.ts",
+    "src/http-exception.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/cache/index.test.ts": [
+    "src/context.ts",
+    "src/hono.ts",
+    "src/middleware/cache/index.ts"
+  ],
+  "src/middleware/cache/index.ts": [
+    "src/context.ts",
+    "src/request.ts",
+    "src/types.ts",
+    "src/utils/crypto.ts",
+    "src/utils/http-status.ts"
+  ],
+  "src/middleware/combine/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/combine/index.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/combine/index.ts": [
+    "src/compose.ts",
+    "src/context.ts",
+    "src/router.ts",
+    "src/router/trie-router/index.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/compress/index.test.ts": [
+    "src/helper/streaming/index.ts",
+    "src/hono.ts",
+    "src/middleware/compress/index.ts"
+  ],
+  "src/middleware/compress/index.ts": [
+    "src/types.ts",
+    "src/utils/accept.ts",
+    "src/utils/compress.ts"
+  ],
+  "src/middleware/context-storage/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/context-storage/index.ts"
+  ],
+  "src/middleware/context-storage/index.ts": [
+    "src/context.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/cors/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/cors/index.ts"
+  ],
+  "src/middleware/cors/index.ts": [
+    "src/context.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/csrf/index.test.ts": [
+    "src/context.ts",
+    "src/hono.ts",
+    "src/middleware/csrf/index.ts"
+  ],
+  "src/middleware/csrf/index.ts": [
+    "src/context.ts",
+    "src/http-exception.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/etag/digest.test.ts": [
+    "src/middleware/etag/digest.ts"
+  ],
+  "src/middleware/etag/digest.ts": [],
+  "src/middleware/etag/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/etag/index.ts"
+  ],
+  "src/middleware/etag/index.ts": [
+    "src/middleware/etag/digest.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/ip-restriction/index.test.ts": [
+    "src/context.ts",
+    "src/helper/conninfo/index.ts",
+    "src/hono.ts",
+    "src/middleware/ip-restriction/index.ts"
+  ],
+  "src/middleware/ip-restriction/index.ts": [
+    "src/helper/conninfo/index.ts",
+    "src/http-exception.ts",
+    "src/index.ts",
+    "src/utils/ipaddr.ts"
+  ],
+  "src/middleware/jsx-renderer/index.test.tsx": [
+    "src/helper/html/index.ts",
+    "src/hono.ts",
+    "src/jsx/index.ts",
+    "src/jsx/streaming.ts",
+    "src/middleware/jsx-renderer/index.ts"
+  ],
+  "src/middleware/jsx-renderer/index.ts": [
+    "src/context.ts",
+    "src/helper/html/index.ts",
+    "src/jsx/index.ts",
+    "src/jsx/streaming.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/jwk/index.test.ts": [
+    "src/helper/cookie/index.ts",
+    "src/hono.ts",
+    "src/http-exception.ts",
+    "src/middleware/jwk/index.ts",
+    "src/middleware/jwk/keys.test.json",
+    "src/utils/encode.ts",
+    "src/utils/jwt/index.ts",
+    "src/utils/jwt/jws.ts",
+    "src/utils/jwt/jwt.ts",
+    "src/utils/jwt/types.ts",
+    "src/utils/jwt/utf8.ts"
+  ],
+  "src/middleware/jwk/index.ts": [
+    "src/middleware/jwk/jwk.ts"
+  ],
+  "src/middleware/jwk/jwk.ts": [
+    "src/context.ts",
+    "src/helper/cookie/index.ts",
+    "src/http-exception.ts",
+    "src/types.ts",
+    "src/utils/cookie.ts",
+    "src/utils/jwt/index.ts",
+    "src/utils/jwt/jwa.ts",
+    "src/utils/jwt/jws.ts",
+    "src/utils/jwt/jwt.ts"
+  ],
+  "src/middleware/jwk/keys.test.json": [],
+  "src/middleware/jwt/index.test.ts": [
+    "src/hono.ts",
+    "src/http-exception.ts",
+    "src/middleware/jwt/index.ts"
+  ],
+  "src/middleware/jwt/index.ts": [
+    "src/index.ts",
+    "src/middleware/jwt/jwt.ts",
+    "src/utils/jwt/jwa.ts"
+  ],
+  "src/middleware/jwt/jwt.ts": [
+    "src/context.ts",
+    "src/helper/cookie/index.ts",
+    "src/http-exception.ts",
+    "src/types.ts",
+    "src/utils/cookie.ts",
+    "src/utils/jwt/index.ts",
+    "src/utils/jwt/jwa.ts",
+    "src/utils/jwt/jws.ts",
+    "src/utils/jwt/jwt.ts"
+  ],
+  "src/middleware/language/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/language/index.ts",
+    "src/middleware/language/language.ts"
+  ],
+  "src/middleware/language/index.ts": [
+    "src/middleware/language/language.ts"
+  ],
+  "src/middleware/language/language.ts": [
+    "src/context.ts",
+    "src/helper/cookie/index.ts",
+    "src/types.ts",
+    "src/utils/accept.ts"
+  ],
+  "src/middleware/logger/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/logger/index.ts"
+  ],
+  "src/middleware/logger/index.ts": [
+    "src/types.ts",
+    "src/utils/color.ts"
+  ],
+  "src/middleware/method-not-allowed/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/method-not-allowed/index.ts"
+  ],
+  "src/middleware/method-not-allowed/index.ts": [
+    "src/context.ts",
+    "src/helper/route/index.ts",
+    "src/hono.ts",
+    "src/router.ts",
+    "src/router/trie-router/index.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/method-override/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/method-override/index.ts"
+  ],
+  "src/middleware/method-override/index.ts": [
+    "src/context.ts",
+    "src/hono.ts",
+    "src/types.ts",
+    "src/utils/body.ts"
+  ],
+  "src/middleware/powered-by/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/powered-by/index.ts"
+  ],
+  "src/middleware/powered-by/index.ts": [
+    "src/types.ts"
+  ],
+  "src/middleware/pretty-json/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/pretty-json/index.ts"
+  ],
+  "src/middleware/pretty-json/index.ts": [
+    "src/types.ts"
+  ],
+  "src/middleware/request-id/index.test.ts": [
+    "src/context.ts",
+    "src/hono.ts",
+    "src/middleware/request-id/index.ts"
+  ],
+  "src/middleware/request-id/index.ts": [
+    "src/middleware/request-id/request-id.ts"
+  ],
+  "src/middleware/request-id/request-id.ts": [
+    "src/context.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/secure-headers/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/powered-by/index.ts",
+    "src/middleware/secure-headers/index.ts"
+  ],
+  "src/middleware/secure-headers/index.ts": [
+    "src/middleware/secure-headers/secure-headers.ts"
+  ],
+  "src/middleware/secure-headers/permissions-policy.ts": [],
+  "src/middleware/secure-headers/secure-headers.ts": [
+    "src/context.ts",
+    "src/middleware/secure-headers/permissions-policy.ts",
+    "src/types.ts",
+    "src/utils/encode.ts"
+  ],
+  "src/middleware/serve-static/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/serve-static/index.ts"
+  ],
+  "src/middleware/serve-static/index.ts": [
+    "src/context.ts",
+    "src/middleware/serve-static/path.ts",
+    "src/types.ts",
+    "src/utils/compress.ts",
+    "src/utils/mime.ts",
+    "src/utils/url.ts"
+  ],
+  "src/middleware/serve-static/path.test.ts": [
+    "src/middleware/serve-static/path.ts"
+  ],
+  "src/middleware/serve-static/path.ts": [],
+  "src/middleware/timeout/index.test.ts": [
+    "src/context.ts",
+    "src/hono.ts",
+    "src/http-exception.ts",
+    "src/middleware/timeout/index.ts"
+  ],
+  "src/middleware/timeout/index.ts": [
+    "src/context.ts",
+    "src/http-exception.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/timing/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/timing/index.ts"
+  ],
+  "src/middleware/timing/index.ts": [
+    "src/middleware/timing/timing.ts"
+  ],
+  "src/middleware/timing/timing.ts": [
+    "src/context.ts",
+    "src/types.ts"
+  ],
+  "src/middleware/trailing-slash/index.test.ts": [
+    "src/hono.ts",
+    "src/middleware/trailing-slash/index.ts"
+  ],
+  "src/middleware/trailing-slash/index.ts": [
+    "src/types.ts"
+  ],
+  "src/preset/quick.test.ts": [
+    "src/helper/dev/index.ts",
+    "src/preset/quick.ts"
+  ],
+  "src/preset/quick.ts": [
+    "src/hono-base.ts",
+    "src/router/linear-router/index.ts",
+    "src/router/smart-router/index.ts",
+    "src/router/trie-router/index.ts",
+    "src/types.ts"
+  ],
+  "src/preset/tiny.test.ts": [
+    "src/helper/dev/index.ts",
+    "src/preset/tiny.ts"
+  ],
+  "src/preset/tiny.ts": [
+    "src/hono-base.ts",
+    "src/router/pattern-router/index.ts",
+    "src/types.ts"
+  ],
+  "src/request.test.ts": [
+    "src/http-exception.ts",
+    "src/request.ts",
+    "src/types.ts"
+  ],
+  "src/request.ts": [
+    "src/http-exception.ts",
+    "src/request/constants.ts",
+    "src/router.ts",
+    "src/types.ts",
+    "src/utils/body.ts",
+    "src/utils/headers.ts",
+    "src/utils/types.ts",
+    "src/utils/url.ts"
+  ],
+  "src/request/constants.ts": [],
+  "src/router.ts": [],
+  "src/router/common.case.test.ts": [
+    "src/router.ts"
+  ],
+  "src/router/linear-router/index.ts": [
+    "src/router/linear-router/router.ts"
+  ],
+  "src/router/linear-router/router.test.ts": [
+    "src/router.ts",
+    "src/router/common.case.test.ts",
+    "src/router/linear-router/router.ts"
+  ],
+  "src/router/linear-router/router.ts": [
+    "src/router.ts",
+    "src/utils/url.ts"
+  ],
+  "src/router/pattern-router/index.ts": [
+    "src/router/pattern-router/router.ts"
+  ],
+  "src/router/pattern-router/router.test.ts": [
+    "src/router.ts",
+    "src/router/common.case.test.ts",
+    "src/router/pattern-router/router.ts"
+  ],
+  "src/router/pattern-router/router.ts": [
+    "src/router.ts"
+  ],
+  "src/router/reg-exp-router/index.ts": [
+    "src/router/reg-exp-router/prepared-router.ts",
+    "src/router/reg-exp-router/router.ts"
+  ],
+  "src/router/reg-exp-router/matcher.ts": [
+    "src/router.ts"
+  ],
+  "src/router/reg-exp-router/node.ts": [
+    "src/router/utils.ts"
+  ],
+  "src/router/reg-exp-router/prepared-router.test.ts": [
+    "src/router.ts",
+    "src/router/common.case.test.ts",
+    "src/router/reg-exp-router/prepared-router.ts"
+  ],
+  "src/router/reg-exp-router/prepared-router.ts": [
+    "src/router.ts",
+    "src/router/reg-exp-router/matcher.ts",
+    "src/router/reg-exp-router/router.ts"
+  ],
+  "src/router/reg-exp-router/router.test.ts": [
+    "src/router.ts",
+    "src/router/common.case.test.ts",
+    "src/router/reg-exp-router/router.ts"
+  ],
+  "src/router/reg-exp-router/router.ts": [
+    "src/router.ts",
+    "src/router/reg-exp-router/matcher.ts",
+    "src/router/reg-exp-router/node.ts",
+    "src/router/reg-exp-router/trie.ts",
+    "src/router/utils.ts",
+    "src/utils/url.ts"
+  ],
+  "src/router/reg-exp-router/trie.ts": [
+    "src/router/reg-exp-router/node.ts",
+    "src/router/utils.ts"
+  ],
+  "src/router/smart-router/index.ts": [
+    "src/router/smart-router/router.ts"
+  ],
+  "src/router/smart-router/router.test.ts": [
+    "src/router/common.case.test.ts",
+    "src/router/reg-exp-router/index.ts",
+    "src/router/smart-router/router.ts",
+    "src/router/trie-router/index.ts"
+  ],
+  "src/router/smart-router/router.ts": [
+    "src/router.ts"
+  ],
+  "src/router/trie-router/index.ts": [
+    "src/router/trie-router/router.ts"
+  ],
+  "src/router/trie-router/node.test.ts": [
+    "src/router/trie-router/node.ts"
+  ],
+  "src/router/trie-router/node.ts": [
+    "src/router.ts",
+    "src/router/utils.ts",
+    "src/utils/url.ts"
+  ],
+  "src/router/trie-router/router.test.ts": [
+    "src/router/common.case.test.ts",
+    "src/router/trie-router/router.ts"
+  ],
+  "src/router/trie-router/router.ts": [
+    "src/router.ts",
+    "src/router/trie-router/node.ts",
+    "src/utils/url.ts"
+  ],
+  "src/router/utils.ts": [],
+  "src/types.test.ts": [
+    "src/client/index.ts",
+    "src/context.ts",
+    "src/helper/factory/index.ts",
+    "src/helper/testing/index.ts",
+    "src/hono.ts",
+    "src/middleware/powered-by/index.ts",
+    "src/types.ts",
+    "src/utils/http-status.ts",
+    "src/utils/types.ts",
+    "src/validator/index.ts"
+  ],
+  "src/types.ts": [
+    "src/context.ts",
+    "src/hono-base.ts",
+    "src/utils/headers.ts",
+    "src/utils/http-status.ts",
+    "src/utils/types.ts"
+  ],
+  "src/utils/accept.test.ts": [
+    "src/utils/accept.ts"
+  ],
+  "src/utils/accept.ts": [],
+  "src/utils/basic-auth.test.ts": [
+    "src/utils/basic-auth.ts"
+  ],
+  "src/utils/basic-auth.ts": [
+    "src/utils/encode.ts"
+  ],
+  "src/utils/body.test.ts": [
+    "src/utils/body.ts"
+  ],
+  "src/utils/body.ts": [
+    "src/request.ts",
+    "src/utils/buffer.ts"
+  ],
+  "src/utils/buffer.test.ts": [
+    "src/utils/buffer.ts"
+  ],
+  "src/utils/buffer.ts": [
+    "src/utils/crypto.ts"
+  ],
+  "src/utils/color.test.ts": [
+    "src/utils/color.ts"
+  ],
+  "src/utils/color.ts": [],
+  "src/utils/compress.ts": [],
+  "src/utils/concurrent.test.ts": [
+    "src/utils/concurrent.ts"
+  ],
+  "src/utils/concurrent.ts": [],
+  "src/utils/constants.ts": [],
+  "src/utils/cookie.test.ts": [
+    "src/utils/cookie.ts"
+  ],
+  "src/utils/cookie.ts": [
+    "src/utils/url.ts"
+  ],
+  "src/utils/crypto.test.ts": [
+    "src/utils/crypto.ts"
+  ],
+  "src/utils/crypto.ts": [
+    "src/utils/types.ts"
+  ],
+  "src/utils/encode.test.ts": [
+    "src/utils/encode.ts"
+  ],
+  "src/utils/encode.ts": [],
+  "src/utils/filepath.test.ts": [
+    "src/utils/filepath.ts"
+  ],
+  "src/utils/filepath.ts": [],
+  "src/utils/handler.ts": [
+    "src/utils/constants.ts"
+  ],
+  "src/utils/headers.ts": [],
+  "src/utils/html.test.ts": [
+    "src/utils/html.ts"
+  ],
+  "src/utils/html.ts": [],
+  "src/utils/http-status.ts": [],
+  "src/utils/ipaddr.test.ts": [
+    "src/utils/ipaddr.ts"
+  ],
+  "src/utils/ipaddr.ts": [
+    "src/helper/conninfo/index.ts"
+  ],
+  "src/utils/jwt/index.ts": [
+    "src/utils/jwt/jwt.ts"
+  ],
+  "src/utils/jwt/jwa.test.ts": [
+    "src/utils/jwt/jwa.ts"
+  ],
+  "src/utils/jwt/jwa.ts": [],
+  "src/utils/jwt/jws.ts": [
+    "src/helper/adapter/index.ts",
+    "src/utils/encode.ts",
+    "src/utils/jwt/jwa.ts",
+    "src/utils/jwt/types.ts",
+    "src/utils/jwt/utf8.ts"
+  ],
+  "src/utils/jwt/jwt.test.ts": [
+    "src/utils/encode.ts",
+    "src/utils/jwt/jwa.ts",
+    "src/utils/jwt/jws.ts",
+    "src/utils/jwt/jwt.ts",
+    "src/utils/jwt/types.ts",
+    "src/utils/jwt/utf8.ts"
+  ],
+  "src/utils/jwt/jwt.ts": [
+    "src/utils/encode.ts",
+    "src/utils/jwt/jwa.ts",
+    "src/utils/jwt/jws.ts",
+    "src/utils/jwt/types.ts",
+    "src/utils/jwt/utf8.ts"
+  ],
+  "src/utils/jwt/types.ts": [
+    "src/utils/jwt/jws.ts"
+  ],
+  "src/utils/jwt/utf8.ts": [],
+  "src/utils/mime.test.ts": [
+    "src/utils/mime.ts"
+  ],
+  "src/utils/mime.ts": [],
+  "src/utils/stream.test.ts": [
+    "src/utils/stream.ts"
+  ],
+  "src/utils/stream.ts": [],
+  "src/utils/types.test.ts": [
+    "src/utils/types.ts"
+  ],
+  "src/utils/types.ts": [],
+  "src/utils/url.test.ts": [
+    "src/utils/url.ts"
+  ],
+  "src/utils/url.ts": [],
+  "src/validator/index.ts": [
+    "src/validator/utils.ts",
+    "src/validator/validator.ts"
+  ],
+  "src/validator/utils.test.ts": [
+    "src/validator/utils.ts"
+  ],
+  "src/validator/utils.ts": [
+    "src/types.ts",
+    "src/utils/types.ts"
+  ],
+  "src/validator/validator.test.ts": [
+    "src/context.ts",
+    "src/hono.ts",
+    "src/http-exception.ts",
+    "src/request.ts",
+    "src/types.ts",
+    "src/utils/http-status.ts",
+    "src/utils/types.ts",
+    "src/validator/validator.ts"
+  ],
+  "src/validator/validator.ts": [
+    "src/context.ts",
+    "src/helper/cookie/index.ts",
+    "src/http-exception.ts",
+    "src/types.ts",
+    "src/utils/body.ts",
+    "src/utils/buffer.ts",
+    "src/validator/utils.ts"
+  ],
+  "vitest.config.ts": []
 }

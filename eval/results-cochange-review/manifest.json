@@ -1,0 +1,22 @@
+{
+  "item-000": {
+    "repo": "typedi",
+    "arm": "without",
+    "cluster": 0
+  },
+  "item-001": {
+    "repo": "typedi",
+    "arm": "with",
+    "cluster": 2
+  },
+  "item-002": {
+    "repo": "typedi",
+    "arm": "with",
+    "cluster": 0
+  },
+  "item-003": {
+    "repo": "typedi",
+    "arm": "without",
+    "cluster": 2
+  }
+}

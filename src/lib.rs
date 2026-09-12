@@ -1,13 +1,13 @@
 //! Code Arch — analyze a repository locally and emit a compact navigation map.
 //!
-//! Pipeline (M0 covers stages 0-3, 5-7, 9, 10; git signals and flow extraction
-//! arrive at M2 and M3):
+//! Pipeline (M2 covers stages 0-7, 9, 10; flow extraction arrives at M3):
 //!
 //! ```text
 //! 0  Inventory   walk, classify, exclude
 //! 1  Profile     manifests -> ecosystem and framework priors
 //! 2  Parse       tree-sitter -> symbols, references
 //! 3  Resolve     specifier strings -> concrete file targets
+//! 4  Git         co-change pairs and per-file churn
 //! 5  Graph       weighted multi-signal graph
 //! 6  Cluster     modularity clustering with a connectivity guarantee
 //! 7  Rank        importance scoring
@@ -19,6 +19,8 @@
 //! byte for byte.
 
 pub mod cluster;
+pub mod confidence;
+pub mod git;
 pub mod graph;
 pub mod inventory;
 pub mod label;
@@ -56,6 +58,13 @@ pub struct Options {
     pub max_domains: usize,
     pub seed: u64,
     pub write_index: bool,
+    /// Skip stage 4 entirely. The map is then built from imports and directory
+    /// structure alone, which is what the with-git / without-git comparison
+    /// measures against.
+    pub no_git: bool,
+    /// Where `.codearch` outputs go (default: `<root>/.codearch`). The root map
+    /// still names the canonical location; relocating is for tooling.
+    pub codearch_dir: Option<PathBuf>,
     pub labeler: LabelerKind,
     pub model_path: Option<PathBuf>,
     pub llm_threads: Option<i32>,
@@ -70,6 +79,8 @@ impl Default for Options {
             max_domains: DEFAULT_MAX_DOMAINS,
             seed: 0x5EED,
             write_index: true,
+            no_git: false,
+            codearch_dir: None,
             labeler: LabelerKind::Derived,
             model_path: None,
             llm_threads: None,
@@ -87,6 +98,18 @@ pub struct RunReport {
     pub unresolved: usize,
     pub out_path: PathBuf,
     pub index_path: Option<PathBuf>,
+    pub imports_path: PathBuf,
+    pub import_edges: usize,
+    /// Measured size of the on-demand import index, outside the map budget.
+    pub imports_tokens: usize,
+    /// Co-change pairs that survived stage 4 filtering.
+    pub cochange_pairs: usize,
+    /// Commits stage 4 actually read. Zero means no usable git history.
+    pub commits_read: usize,
+    /// Size-weighted mean of the per-cluster confidence scores.
+    pub confidence: f64,
+    /// Clusters rendered in the low band.
+    pub low_confidence_domains: usize,
     pub used_directory_fallback: bool,
     pub truncated: bool,
     /// The domain cap could not be met without merging groups of files that
@@ -117,8 +140,15 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     // 3 — Resolve
     let res = resolve::resolve_all(&inv, &parsed, &profile.mappings);
 
+    // 4 — Git signals. Absent history is a degraded run, not a failed one.
+    let cc = if opts.no_git {
+        git::CoChange::default()
+    } else {
+        git::collect(&inv.root, &inv)
+    };
+
     // 5 — Graph
-    let g = graph::build(&inv, &res);
+    let g = graph::build(&inv, &res, &cc);
 
     // 6 — Cluster. With no edges at all there is nothing to cluster, which is
     // stage 6's declared failure path rather than an error.
@@ -130,7 +160,11 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     };
 
     // 7 — Rank
-    let scores = rank::score(&g, &routes);
+    let scores = rank::score(&g, &routes, &cc.churn);
+
+    // 8 — Confidence. Stability re-runs the clustering under other tie-break
+    // orders, so it costs a few extra partitions and nothing else.
+    let stability = confidence::file_stability(&g, &part, opts.max_domains, opts.seed);
 
     // 9 — Label
     let summaries = label::summarize(&inv, &parsed, &res, &g, &part, &scores, &routes);
@@ -163,7 +197,22 @@ Rebuild with: cargo build --release --features llm"
         labels.push(l);
     }
 
-    // 10 — Render
+    let conf: Vec<confidence::ClusterConfidence> = summaries
+        .iter()
+        .map(|c| confidence::for_cluster(&c.files, &res, &g, &stability, !cc.is_empty()))
+        .collect();
+
+    // 10 — Render. The import index is built once, outside the budget ladder:
+    // the root map only advertises it.
+    let paths: Vec<&str> = inv.files.iter().map(|f| f.rel.as_str()).collect();
+    let imports = render::import_index(
+        &render::map_title(&profile, &inv),
+        &paths,
+        &g.in_edges,
+        res.resolution_rate,
+        res.unresolved.len(),
+    );
+    let hubs = render::import_hubs(&paths, &g.in_edges, render::IMPORT_HUBS);
     let rendered = render::render_map(&render::MapInput {
         inv: &inv,
         profile: &profile,
@@ -171,6 +220,10 @@ Rebuild with: cargo build --release --features llm"
         parsed: &parsed,
         summaries: &summaries,
         labels: &labels,
+        imports: &imports,
+        hubs: &hubs,
+        confidence: &conf,
+        cochange_pairs: cc.has_history().then(|| cc.pairs.len()),
         budget: opts.budget,
     });
 
@@ -181,12 +234,20 @@ Rebuild with: cargo build --release --features llm"
     std::fs::write(&out_path, &rendered.markdown)
         .with_context(|| format!("cannot write {}", out_path.display()))?;
 
+    let dir = opts
+        .codearch_dir
+        .clone()
+        .unwrap_or_else(|| inv.root.join(".codearch"));
+    std::fs::create_dir_all(&dir).with_context(|| format!("cannot create {}", dir.display()))?;
+    // Always written: the root map points at it.
+    let imports_path = dir.join("imports.md");
+    std::fs::write(&imports_path, &imports.markdown)
+        .with_context(|| format!("cannot write {}", imports_path.display()))?;
+
     let mut index_path = None;
     if opts.write_index {
-        let dir = inv.root.join(".codearch");
-        std::fs::create_dir_all(&dir).with_context(|| format!("cannot create {}", dir.display()))?;
         let p = dir.join("index.json");
-        let json = render::index_json(&inv, &res, &summaries, &labels, rendered.tokens);
+        let json = render::index_json(&inv, &res, &summaries, &labels, &conf, rendered.tokens);
         std::fs::write(&p, json).with_context(|| format!("cannot write {}", p.display()))?;
         index_path = Some(p);
     }
@@ -203,9 +264,56 @@ Rebuild with: cargo build --release --features llm"
         unresolved: res.unresolved.len(),
         out_path,
         index_path,
+        imports_path,
+        import_edges: imports.imports,
+        imports_tokens: imports.tokens,
+        confidence: confidence::global(
+            &conf,
+            &summaries.iter().map(|c| c.size()).collect::<Vec<_>>(),
+        ),
+        low_confidence_domains: conf
+            .iter()
+            .filter(|c| c.band() == confidence::Band::Low)
+            .count(),
+        cochange_pairs: cc.pairs.len(),
+        commits_read: cc.commits_read,
         used_directory_fallback,
         truncated: rendered.truncated,
         over_domain_cap: summaries.len() > opts.max_domains,
         labels_fell_back: labeler.fell_back(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn run_writes_the_import_index_and_links_it_from_the_map() {
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("eval/fixtures/tier1");
+        let tmp = std::env::temp_dir().join(format!("codearch-imports-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(&tmp).unwrap();
+        let opts = Options {
+            root: fixture,
+            out: Some(tmp.join("CODEBASE.md")),
+            codearch_dir: Some(tmp.join("state")),
+            write_index: false,
+            ..Options::default()
+        };
+
+        let report = run(&opts).unwrap();
+        let map = std::fs::read_to_string(&report.out_path).unwrap();
+        let index = std::fs::read_to_string(&report.imports_path).unwrap();
+        let _ = std::fs::remove_dir_all(&tmp);
+
+        assert_eq!(report.imports_path, tmp.join("state").join("imports.md"));
+        assert!(report.import_edges > 0);
+        assert!(index.lines().any(|l| l.contains(" ← ")));
+        let imports_at = map.find("## Imports").expect("map has an Imports section");
+        let nav_at = map.find("## Task Navigation").unwrap();
+        assert!(imports_at < nav_at);
+        assert!(map.contains("`.codearch/imports.md`"));
+        assert!(report.map_tokens <= DEFAULT_BUDGET);
+    }
 }

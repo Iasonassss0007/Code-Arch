@@ -32,11 +32,15 @@ import sys
 from collections import deque
 from pathlib import Path
 
+from run import SOURCE_SUFFIXES
+
 ROOT = Path(__file__).resolve().parent
 
-# madge is run against the source subdirectory when one exists, so its paths
-# need this prefix to become repository-relative.
-BASES = {"hono": "src", "typedi": "src", "commerce": ""}
+# Prefix that makes madge's paths repository-relative. Empty everywhere: madge
+# now scans the whole checkout. Scanning only `src/` made correct dependents in
+# benchmarks and tests count as wrong answers, because the task asks for every
+# dependent and the agent may answer any inventoried path.
+BASES = {"hono": "", "typedi": "", "commerce": ""}
 
 REPO_URLS = {
     "hono": "https://github.com/honojs/hono.git",
@@ -160,7 +164,7 @@ def source_files(repo):
         p.relative_to(root).as_posix()
         for p in root.rglob("*")
         if p.is_file()
-        and p.suffix in {".ts", ".tsx", ".js", ".jsx"}
+        and p.suffix in SOURCE_SUFFIXES
         and ".git" not in p.parts
     }
 
