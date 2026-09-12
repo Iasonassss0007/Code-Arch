@@ -247,6 +247,19 @@ fn next_app_kind(rest: &str) -> Option<&'static str> {
         "page" => Some("page"),
         "route" => Some("API"),
         "layout" => Some("layout"),
+        // Route-adjacent conventions: entries of their route, not standalone
+        // pages. Without these, flows start one step late.
+        "loading" => Some("loading"),
+        "error" => Some("error"),
+        "not-found" => Some("not-found"),
+        "opengraph-image" => Some("opengraph-image"),
+        "twitter-image" => Some("twitter-image"),
+        "sitemap" => Some("sitemap"),
+        "robots" => Some("robots"),
+        "manifest" => Some("manifest"),
+        "favicon" => Some("favicon"),
+        "icon" => Some("icon"),
+        "apple-icon" => Some("apple-icon"),
         _ => None,
     }
 }
@@ -453,5 +466,15 @@ mod tests {
         assert_eq!(pages_route("api/users/[id].ts"), "/api/users/:id");
         assert_eq!(pages_route("index.tsx"), "/");
         assert_eq!(pages_route("blog/index.tsx"), "/blog");
+    }
+
+    #[test]
+    fn route_adjacent_files_are_entries_of_their_route() {
+        assert_eq!(next_app_kind("search/loading.tsx"), Some("loading"));
+        assert_eq!(next_app_kind("product/[handle]/not-found.tsx"), Some("not-found"));
+        assert_eq!(next_app_kind("[page]/opengraph-image.tsx"), Some("opengraph-image"));
+        assert_eq!(next_app_kind("sitemap.ts"), Some("sitemap"));
+        // Non-convention files still yield nothing.
+        assert_eq!(next_app_kind("search/grid.tsx"), None);
     }
 }

@@ -1,6 +1,6 @@
 //! Code Arch — analyze a repository locally and emit a compact navigation map.
 //!
-//! Pipeline (M2 covers stages 0-7, 9, 10; flow extraction arrives at M3):
+//! Pipeline (M3 covers stages 0-10; the LLM labeler in stage 9 is optional):
 //!
 //! ```text
 //! 0  Inventory   walk, classify, exclude
@@ -20,6 +20,7 @@
 
 pub mod cluster;
 pub mod confidence;
+pub mod flows;
 pub mod git;
 pub mod graph;
 pub mod inventory;
@@ -33,7 +34,9 @@ pub mod types;
 
 use anyhow::{Context, Result};
 use label::{DerivedLabeler, Label, Labeler};
+use std::collections::HashMap;
 use std::path::PathBuf;
+use types::FileId;
 
 /// A root map larger than this stops being cheaper than the repository.
 pub const DEFAULT_BUDGET: usize = 4_000;
@@ -110,6 +113,10 @@ pub struct RunReport {
     pub confidence: f64,
     /// Clusters rendered in the low band.
     pub low_confidence_domains: usize,
+    /// Entry→import-chain flows rendered in the map.
+    pub flows: usize,
+    /// The budget ladder dropped flows before shrinking file lists.
+    pub flows_dropped: bool,
     pub used_directory_fallback: bool,
     pub truncated: bool,
     /// The domain cap could not be met without merging groups of files that
@@ -202,6 +209,39 @@ Rebuild with: cargo build --release --features llm"
         .map(|c| confidence::for_cluster(&c.files, &res, &g, &stability, !cc.is_empty()))
         .collect();
 
+    // 8b — Flows. High band only, per contract: entries best-first by
+    // importance, capped, traversed intra-cluster. Medium/low bands and
+    // entry-less domains get no flows rather than thin ones.
+    let rels: Vec<String> = inv.files.iter().map(|f| f.rel.clone()).collect();
+    let mut routes_by_file: HashMap<FileId, Vec<&str>> = HashMap::new();
+    for r in &routes {
+        routes_by_file.entry(r.file).or_default().push(r.label.as_str());
+    }
+    let domain_flows: Vec<Vec<flows::Flow>> = summaries
+        .iter()
+        .zip(&conf)
+        .map(|(s, c)| {
+            if c.band() != confidence::Band::High {
+                return Vec::new();
+            }
+            let member_set: std::collections::HashSet<FileId> =
+                s.files.iter().copied().collect();
+            let mut entries: Vec<(FileId, &str)> = routes_by_file
+                .iter()
+                .filter(|(f, _)| member_set.contains(f))
+                .flat_map(|(f, labels)| labels.iter().map(move |l| (*f, *l)))
+                .collect();
+            entries.sort_by(|&(a, _), &(b, _)| {
+                scores[b]
+                    .partial_cmp(&scores[a])
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then_with(|| rels[a].cmp(&rels[b]))
+            });
+            entries.truncate(flows::MAX_FLOWS);
+            flows::domain_flows(&s.files, &entries, &g, &scores, &rels)
+        })
+        .collect();
+
     // 10 — Render. The import index is built once, outside the budget ladder:
     // the root map only advertises it.
     let paths: Vec<&str> = inv.files.iter().map(|f| f.rel.as_str()).collect();
@@ -223,6 +263,7 @@ Rebuild with: cargo build --release --features llm"
         imports: &imports,
         hubs: &hubs,
         confidence: &conf,
+        flows: &domain_flows,
         cochange_pairs: cc.has_history().then(|| cc.pairs.len()),
         budget: opts.budget,
     });
@@ -247,7 +288,15 @@ Rebuild with: cargo build --release --features llm"
     let mut index_path = None;
     if opts.write_index {
         let p = dir.join("index.json");
-        let json = render::index_json(&inv, &res, &summaries, &labels, &conf, rendered.tokens);
+        let json = render::index_json(
+            &inv,
+            &res,
+            &summaries,
+            &labels,
+            &conf,
+            &domain_flows,
+            rendered.tokens,
+        );
         std::fs::write(&p, json).with_context(|| format!("cannot write {}", p.display()))?;
         index_path = Some(p);
     }
@@ -275,6 +324,8 @@ Rebuild with: cargo build --release --features llm"
             .iter()
             .filter(|c| c.band() == confidence::Band::Low)
             .count(),
+        flows: domain_flows.iter().map(|f| f.len()).sum(),
+        flows_dropped: rendered.flows_dropped,
         cochange_pairs: cc.pairs.len(),
         commits_read: cc.commits_read,
         used_directory_fallback,
@@ -315,5 +366,92 @@ mod tests {
         assert!(imports_at < nav_at);
         assert!(map.contains("`.codearch/imports.md`"));
         assert!(report.map_tokens <= DEFAULT_BUDGET);
+    }
+
+    fn flow_fixture(tmp: &std::path::Path) -> PathBuf {
+        let root = tmp.join("flow-repo");
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("app/shop")).unwrap();
+        std::fs::create_dir_all(root.join("lib")).unwrap();
+        std::fs::write(
+            root.join("package.json"),
+            r#"{"name": "flow-shop", "dependencies": {"next": "*"}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("app/shop/page.tsx"),
+            "import { cart } from \"../../lib/cart\";\nexport default function Page() { return cart; }\n",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("lib/cart.ts"),
+            "import { money } from \"./money\";\nexport const cart = money;\n",
+        )
+        .unwrap();
+        std::fs::write(root.join("lib/money.ts"), "export const money = 1;\n").unwrap();
+        root
+    }
+
+    #[test]
+    fn run_renders_entry_flows_and_records_them_in_the_index() {
+        let tmp = std::env::temp_dir().join(format!("codearch-flows-test-{}", std::process::id()));
+        let root = flow_fixture(&tmp);
+        let opts = Options {
+            root: root.clone(),
+            out: Some(tmp.join("CODEBASE.md")),
+            codearch_dir: Some(tmp.join("state")),
+            write_index: true,
+            no_git: true,
+            ..Options::default()
+        };
+
+        let report = run(&opts).unwrap();
+        let map = std::fs::read_to_string(&report.out_path).unwrap();
+        let index = std::fs::read_to_string(report.index_path.as_ref().unwrap()).unwrap();
+        let _ = std::fs::remove_dir_all(&tmp);
+
+        assert!(report.flows > 0, "expected at least one flow, got none");
+        assert!(!report.flows_dropped);
+        assert!(map.contains("Flows:"), "map has no Flows section");
+        assert!(map.contains("→"), "no flow chain rendered");
+        assert!(
+            map.contains("import-chain traversals"),
+            "caveat does not describe flows"
+        );
+        assert!(index.contains("\"flows\""), "index.json has no flows");
+    }
+
+    #[test]
+    fn budget_pressure_drops_flows_before_file_lists() {
+        let tmp = std::env::temp_dir().join(format!("codearch-flows-budget-{}", std::process::id()));
+        let root = flow_fixture(&tmp);
+        let full = Options {
+            root: root.clone(),
+            out: Some(tmp.join("full.md")),
+            codearch_dir: Some(tmp.join("state")),
+            write_index: false,
+            no_git: true,
+            ..Options::default()
+        };
+        let full_report = run(&full).unwrap();
+        assert!(full_report.flows > 0);
+
+        // Just under the full-map cost: flows must go, file lists must stay.
+        let tight = Options {
+            root,
+            out: Some(tmp.join("tight.md")),
+            codearch_dir: Some(tmp.join("state")),
+            write_index: false,
+            no_git: true,
+            budget: full_report.map_tokens - 1,
+            ..Options::default()
+        };
+        let tight_report = run(&tight).unwrap();
+        let tight_map = std::fs::read_to_string(&tight_report.out_path).unwrap();
+        let _ = std::fs::remove_dir_all(&tmp);
+
+        assert!(tight_report.flows_dropped, "flows survived budget pressure");
+        assert!(!tight_map.contains("Flows:"), "flows still rendered");
+        assert!(tight_report.map_tokens <= tight.budget);
     }
 }

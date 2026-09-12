@@ -6,7 +6,8 @@
 //! Fails  Cannot fail. With no imports at all it degrades to directory adjacency.
 //!
 //! M2 carries three of the four planned signals. Embedding similarity (0.35)
-//! arrives at M3; the fusion point is here so adding it touches only this file.
+//! stays out: M3 showed the Tier-2 gap was a resolver bug, not a missing
+//! signal. The fusion point is here so adding it touches only this file.
 
 use crate::git::CoChange;
 use crate::inventory::Inventory;

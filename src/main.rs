@@ -129,6 +129,14 @@ fn main() -> Result<()> {
     );
     println!("Domains:             {}", report.domains);
     println!(
+        "Flows:               {}",
+        if report.flows_dropped {
+            format!("{} computed, dropped over budget", report.flows)
+        } else {
+            format!("{}", report.flows)
+        }
+    );
+    println!(
         "Confidence:          {:.2}{}",
         report.confidence,
         if report.low_confidence_domains > 0 {

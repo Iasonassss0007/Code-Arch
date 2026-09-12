@@ -129,6 +129,26 @@ pub fn resolve_all(inv: &Inventory, parsed: &[FileParse], mappings: &PathMapping
         for r in &p.refs {
             let spec = r.specifier.as_str();
 
+            // Relative specifiers are always internal attempts. Bare
+            // specifiers first try the alias/baseUrl table: a hit means the
+            // repository itself answers to that name (the Next.js baseUrl
+            // convention), and only a miss falls through to the package
+            // heuristic. Without this order, `components/grid` reads as the
+            // package `components` and route files lose all out-edges.
+            // Accepted collision: an npm name matching a repo file resolves
+            // to the repo file. node_modules is excluded from the inventory,
+            // so the repo file is the saner reading.
+            if !spec.starts_with('.') {
+                if let Some(to) = resolve_bare(spec, mappings, &index) {
+                    internal_attempts += 1;
+                    internal_hits += 1;
+                    if to != from && seen.insert((from, to)) {
+                        out.edges.push((from, to));
+                    }
+                    continue;
+                }
+            }
+
             if is_external_specifier(spec) {
                 let pkg = package_name(spec);
                 if from < out.file_externals.len() && !out.file_externals[from].contains(&pkg) {
@@ -171,6 +191,13 @@ fn resolve_one(
         return lookup(&joined, index);
     }
 
+    resolve_bare(spec, mappings, index)
+}
+
+/// Alias table and baseUrl lookup for a non-relative specifier. Called twice
+/// for bare specs — once as an internal-attempt probe before the external
+/// heuristic, once inside `resolve_one` — so it must stay side-effect free.
+fn resolve_bare(spec: &str, mappings: &PathMappings, index: &FileIndex) -> Option<FileId> {
     for (pattern, targets) in &mappings.paths {
         if let Some(tail) = match_alias(pattern, spec) {
             for target in targets {
@@ -339,5 +366,100 @@ mod tests {
     fn strips_only_known_extensions() {
         assert_eq!(strip_extension("src/a.ts"), "src/a");
         assert_eq!(strip_extension("src/a.config"), "src/a.config");
+    }
+
+    fn inventory(paths: &[&str]) -> Inventory {
+        use crate::types::{FileClass, FileRecord, Language};
+        Inventory {
+            root: std::path::PathBuf::from("."),
+            files: paths
+                .iter()
+                .enumerate()
+                .map(|(id, rel)| FileRecord {
+                    id,
+                    rel: (*rel).into(),
+                    abs: std::path::PathBuf::from(rel),
+                    language: Language::Ts,
+                    bytes: 100,
+                    loc: 10,
+                    class: FileClass::Source,
+                })
+                .collect(),
+            skipped: Vec::new(),
+            excluded: crate::inventory::ExcludeStats {
+                generated: 0,
+                config: 0,
+                declarations: 0,
+                too_large: 0,
+                unreadable: 0,
+                non_js_ts: 0,
+            },
+        }
+    }
+
+    fn parsed(file: usize, specs: &[&str]) -> FileParse {
+        use crate::types::RawRef;
+        FileParse {
+            file,
+            symbols: Vec::new(),
+            refs: specs
+                .iter()
+                .map(|s| RawRef {
+                    specifier: (*s).into(),
+                    line: 1,
+                })
+                .collect(),
+            partial: false,
+        }
+    }
+
+    fn base_url_mappings() -> PathMappings {
+        PathMappings {
+            base_url: Some(".".into()),
+            paths: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn baseurl_bare_import_beats_the_package_heuristic() {
+        // `components/grid` is package-shaped (lowercase head) and used to be
+        // filed as external before the alias/baseUrl table was consulted.
+        let inv = inventory(&["app/search/page.tsx", "components/grid/index.tsx"]);
+        let res = resolve_all(&inv, &[parsed(0, &["components/grid"])], &base_url_mappings());
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert!(res.unresolved.is_empty());
+        assert!((res.resolution_rate - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn missing_bare_import_is_still_external_not_unresolved() {
+        let inv = inventory(&["app/search/page.tsx"]);
+        let res = resolve_all(&inv, &[parsed(0, &["react"])], &base_url_mappings());
+        assert!(res.edges.is_empty());
+        assert!(res.unresolved.is_empty());
+        assert_eq!(res.externals.get("react"), Some(&1));
+    }
+
+    #[test]
+    fn genuinely_internal_miss_stays_unresolved() {
+        // Mixed-case heads never looked like packages; a miss is still a miss.
+        let inv = inventory(&["app/search/page.tsx"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["Components/Missing"])],
+            &base_url_mappings(),
+        );
+        assert_eq!(res.unresolved.len(), 1);
+    }
+
+    #[test]
+    fn relative_specs_bypass_the_probe_unchanged() {
+        let inv = inventory(&["src/a.ts", "src/b.ts"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["./b"])],
+            &PathMappings::default(),
+        );
+        assert_eq!(res.edges, vec![(0, 1)]);
     }
 }
