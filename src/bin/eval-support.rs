@@ -24,7 +24,7 @@ fn main() -> anyhow::Result<()> {
             let routes = codearch::profile::route_hints(&profile, &inv);
             let parsed = codearch::parse::parse_all(&inv);
             let res = codearch::resolve::resolve_all(&inv, &parsed, &profile.mappings);
-            let graph = codearch::graph::build(&inv, &res);
+            let graph = codearch::graph::build(&inv, &res, &codearch::git::CoChange::default());
             let part = if graph.edge_count() == 0 {
                 codearch::cluster::directory_partition(&inv)
             } else {
@@ -34,7 +34,7 @@ fn main() -> anyhow::Result<()> {
                     0x5EED,
                 )
             };
-            let scores = codearch::rank::score(&graph, &routes);
+            let scores = codearch::rank::score(&graph, &routes, &[]);
             let summaries =
                 codearch::label::summarize(&inv, &parsed, &res, &graph, &part, &scores, &routes);
             json!(

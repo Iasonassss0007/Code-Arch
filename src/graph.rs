@@ -5,16 +5,19 @@
 //! Out    CodeGraph
 //! Fails  Cannot fail. With no imports at all it degrades to directory adjacency.
 //!
-//! M0 carries two of the four planned signals. Git co-change (0.55) arrives at
-//! M2 and embedding similarity (0.35) at M3; the fusion point is here so adding
-//! them touches only this file.
+//! M2 carries three of the four planned signals. Embedding similarity (0.35)
+//! arrives at M3; the fusion point is here so adding it touches only this file.
 
+use crate::git::CoChange;
 use crate::inventory::Inventory;
 use crate::resolve::Resolution;
 use std::collections::HashMap;
 
 /// Strong, directional, ground truth.
 pub const W_IMPORT: f64 = 1.00;
+/// Language-agnostic and noisy alone, which is why it is worth less than an
+/// import edge and more than mere co-location.
+pub const W_COCHANGE: f64 = 0.55;
 /// Weak prior that keeps sibling files from fragmenting when imports are sparse.
 pub const W_DIRECTORY: f64 = 0.25;
 
@@ -29,6 +32,10 @@ pub struct CodeGraph {
     /// Directed import edges, for PageRank and fan-in.
     pub out_edges: Vec<Vec<usize>>,
     pub in_edges: Vec<Vec<usize>>,
+    /// Co-change pairs that survived stage 4, `(low, high)` and sorted. Kept
+    /// apart from the fused weights because the confidence model measures how
+    /// far this signal and the import graph agree.
+    pub cochange: Vec<(usize, usize)>,
 }
 
 impl CodeGraph {
@@ -70,11 +77,12 @@ impl CodeGraph {
             adj,
             out_edges,
             in_edges,
+            cochange: Vec::new(),
         }
     }
 }
 
-pub fn build(inv: &Inventory, res: &Resolution) -> CodeGraph {
+pub fn build(inv: &Inventory, res: &Resolution, cc: &CoChange) -> CodeGraph {
     let n = inv.len();
     let mut weights: HashMap<(usize, usize), f64> = HashMap::new();
     let mut out_edges = vec![Vec::new(); n];
@@ -87,6 +95,17 @@ pub fn build(inv: &Inventory, res: &Resolution) -> CodeGraph {
         out_edges[from].push(to);
         in_edges[to].push(from);
         *weights.entry(key(from, to)).or_insert(0.0) += W_IMPORT;
+    }
+
+    // Co-change: files that keep changing together are coupled whether or not
+    // either imports the other. Weights arrive normalized to (0, 1].
+    let mut cochange = Vec::with_capacity(cc.pairs.len());
+    for &((i, j), w) in &cc.pairs {
+        if i >= n || j >= n || i == j {
+            continue;
+        }
+        *weights.entry(key(i, j)).or_insert(0.0) += W_COCHANGE * w;
+        cochange.push(key(i, j));
     }
 
     // Directory adjacency: files that sit together usually belong together,
@@ -130,6 +149,7 @@ pub fn build(inv: &Inventory, res: &Resolution) -> CodeGraph {
         adj,
         out_edges,
         in_edges,
+        cochange,
     }
 }
 
@@ -144,6 +164,78 @@ fn key(a: usize, b: usize) -> (usize, usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::{FileClass, FileRecord, Language};
+    use std::path::PathBuf;
+
+    fn inventory(paths: &[&str]) -> Inventory {
+        Inventory {
+            root: PathBuf::from("."),
+            files: paths
+                .iter()
+                .enumerate()
+                .map(|(id, rel)| FileRecord {
+                    id,
+                    rel: (*rel).into(),
+                    abs: PathBuf::from(rel),
+                    language: Language::Ts,
+                    bytes: 100,
+                    loc: 10,
+                    class: FileClass::Source,
+                })
+                .collect(),
+            skipped: Vec::new(),
+            excluded: Default::default(),
+        }
+    }
+
+    fn weight(g: &CodeGraph, i: usize, j: usize) -> f64 {
+        g.adj[i]
+            .iter()
+            .find(|(k, _)| *k == j)
+            .map(|(_, w)| *w)
+            .unwrap_or(0.0)
+    }
+
+    #[test]
+    fn co_change_adds_an_edge_where_no_import_exists() {
+        // Separate directories, so directory adjacency cannot explain the edge.
+        let inv = inventory(&["a/one.ts", "b/two.ts"]);
+        let res = Resolution::default();
+        let cc = CoChange {
+            pairs: vec![((0, 1), 1.0)],
+            churn: vec![3, 3],
+            commits_read: 3,
+        };
+        let g = build(&inv, &res, &cc);
+        assert!((weight(&g, 0, 1) - W_COCHANGE).abs() < 1e-9);
+        assert_eq!(g.cochange, vec![(0, 1)]);
+        // It is not an import edge: PageRank and fan-in must not see it.
+        assert_eq!(g.fan_in(1), 0);
+    }
+
+    #[test]
+    fn co_change_and_imports_sum_on_the_same_pair() {
+        let inv = inventory(&["a/one.ts", "b/two.ts"]);
+        let mut res = Resolution::default();
+        res.edges.push((0, 1));
+        let cc = CoChange {
+            pairs: vec![((0, 1), 0.5)],
+            churn: vec![1, 1],
+            commits_read: 1,
+        };
+        let g = build(&inv, &res, &cc);
+        assert!((weight(&g, 0, 1) - (W_IMPORT + W_COCHANGE * 0.5)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn without_git_the_graph_is_unchanged() {
+        let inv = inventory(&["a/one.ts", "b/two.ts"]);
+        let mut res = Resolution::default();
+        res.edges.push((0, 1));
+        let with_empty = build(&inv, &res, &CoChange::default());
+        assert!((weight(&with_empty, 0, 1) - W_IMPORT).abs() < 1e-9);
+        assert!(with_empty.cochange.is_empty());
+    }
 
     #[test]
     fn totals_each_undirected_edge_once() {

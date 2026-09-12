@@ -42,6 +42,14 @@ struct Cli {
     #[arg(long)]
     no_index: bool,
 
+    /// Ignore git history: no co-change edges, no churn term.
+    #[arg(long)]
+    no_git: bool,
+
+    /// Where index.json and imports.md are written (default: <repo>/.codearch).
+    #[arg(long)]
+    codearch_dir: Option<PathBuf>,
+
     /// How domains are named. `llm` needs a binary built with --features llm.
     #[arg(long, value_enum, default_value_t = LabelerArg::Derived)]
     labeler: LabelerArg,
@@ -82,6 +90,8 @@ fn main() -> Result<()> {
         max_domains: cli.max_domains,
         seed: cli.seed,
         write_index: !cli.no_index,
+        no_git: cli.no_git,
+        codearch_dir: cli.codearch_dir,
         labeler: cli.labeler.into(),
         model_path: cli.model,
         llm_threads: cli.llm_threads,
@@ -106,7 +116,27 @@ fn main() -> Result<()> {
             String::new()
         }
     );
+    println!(
+        "Git co-change:       {}",
+        if report.commits_read == 0 {
+            "none (no usable history)".to_string()
+        } else {
+            format!(
+                "{} pairs from {} commits",
+                report.cochange_pairs, report.commits_read
+            )
+        }
+    );
     println!("Domains:             {}", report.domains);
+    println!(
+        "Confidence:          {:.2}{}",
+        report.confidence,
+        if report.low_confidence_domains > 0 {
+            format!(" ({} low-confidence domains)", report.low_confidence_domains)
+        } else {
+            String::new()
+        }
+    );
     if report.labels_fell_back > 0 {
         println!(
             "Derived fallbacks:   {} of {} domains",
@@ -119,8 +149,13 @@ fn main() -> Result<()> {
     if let Some(p) = &report.index_path {
         println!("  {}", p.display());
     }
+    println!("  {}", report.imports_path.display());
     println!();
     println!("Generated context:   {} tokens", report.map_tokens);
+    println!(
+        "Import index:        {} imports, {} tokens, read on demand",
+        report.import_edges, report.imports_tokens
+    );
 
     if report.used_directory_fallback {
         println!();

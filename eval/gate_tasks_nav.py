@@ -30,6 +30,9 @@ import re
 from collections import Counter
 from pathlib import Path
 
+from build_tasks_nav import BASES
+from run import SOURCE_SUFFIXES
+
 ROOT = Path(__file__).resolve().parent
 
 # Path segments too common to carry information about which files relate.
@@ -62,7 +65,7 @@ def inventory(repo):
         p.relative_to(root).as_posix()
         for p in root.rglob("*")
         if p.is_file()
-        and p.suffix in {".ts", ".tsx", ".js", ".jsx"}
+        and p.suffix in SOURCE_SUFFIXES
         and ".git" not in p.parts
     )
 
@@ -97,7 +100,7 @@ def import_counts(repo):
     """How often each file is imported, straight from the madge oracle."""
     name = Path(repo).name
     raw = json.loads((ROOT / "oracle" / f"{name}.json").read_text(encoding="utf-8"))
-    base = {"hono": "src", "typedi": "src", "commerce": ""}.get(name, "")
+    base = BASES.get(name, "")
     counts = Counter()
     for deps in raw.values():
         for d in deps:

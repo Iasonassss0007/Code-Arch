@@ -127,5 +127,6 @@
   "lib/shopify/types.ts": [],
   "lib/type-guards.ts": [],
   "lib/utils.ts": [],
-  "next.config.ts": []
+  "next.config.ts": [],
+  "postcss.config.mjs": []
 }

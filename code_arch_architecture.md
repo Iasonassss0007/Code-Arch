@@ -101,6 +101,7 @@ CODEBASE.md                     committed, always the entry point, hard cap 4,00
         billing.md
         ...
     index.json                  machine-readable graph, clusters, confidence, hashes
+    imports.md                  reverse import index, one line per imported file, on demand
     cache/                      parse and label caches, gitignored
 ```
 
@@ -335,7 +336,7 @@ Caching is keyed on a hash of the ClusterSummary. Unchanged clusters are never r
 ```text
 Job       Assemble output within a hard token budget.
 In        everything above
-Out       CODEBASE.md, .codearch/domains/*.md, .codearch/index.json
+Out       CODEBASE.md, .codearch/domains/*.md, .codearch/index.json, .codearch/imports.md
 Fails     Cannot fail. Budget overflow truncates by ascending importance.
 ```
 
@@ -814,3 +815,129 @@ the unsupported-token list behind every groundedness failure. Generated maps are
 in `eval/results-llm/`. Reproduce with `python eval/score_llm_labels.py` against
 a binary built `--features llm`. 63 Rust tests pass on the default feature set,
 up from 44 at M1.
+
+
+## Reverse import index — ceiling measured, agent run deferred
+
+Spec: `docs/superpowers/specs/2026-09-11-reverse-import-index-design.md`.
+
+The representation research (`research/codearch-representation/report/rebuild/`)
+produced one structural result large enough to act on. On direct-dependency
+questions an explicit edge list scored 1.000 and the prose map 0.000. The map
+had no file-level dependency information at all: stage 10 dropped `in_edges`
+after ranking.
+
+`codearch` now writes `.codearch/imports.md`, with one line per imported file
+listing every analyzed file that imports it, sorted by path. `CODEBASE.md` gains
+an Imports section inside the budget: the eight most-imported files, and a
+pointer stating the index's measured size. The index is read on demand and sits
+outside the budget, the same routing pattern as Decision 2.
+
+```text
+            map tokens   imports   index tokens   byte-identical x2   checkout clean
+Hono        3,266        960       9,772          yes                 yes
+Commerce    2,220        38        542            yes                 yes
+TypeDI      1,604        111       1,229          yes                 yes
+```
+
+**Deterministic ceiling** (`eval/check_import_index.py`,
+`eval/results-nav-ceiling/`). Walking importers from the index alone reaches
+every madge-expected file on all 37 M1v2 tasks: recall 1.000, mean F1 0.981.
+The free adversaries in the task gate average F1 0.126. The answer to every
+impact task is in the index. Whether an agent extracts it is the open question.
+
+**Oracle rebuilt.** The first oracle ran madge on `repos/<r>/src` only, but the
+task asks for every dependent and the agent may answer any inventoried path.
+Against that oracle the ceiling scored F1 0.873. The index found real dependents
+in Hono's benchmarks and TypeDI's `test/` (19 files against 3 expected on one
+TypeDI task), and they counted as wrong. madge now scans the whole checkout.
+Rebuilding and re-gating produced 37 tasks instead of 24: 21 targets kept, 3
+dropped, 16 added, and 10 of the kept targets gained answers.
+
+**`.mts` files.** The remaining F1 gap is two Hono tasks whose importers include
+`.mts` benchmark files. The agent's inventory, the task builder and the gate now
+share one extension list (`SOURCE_SUFFIXES`, including `.mts`, `.cts`, `.mjs`,
+`.cjs`), so the agent may answer every file the index lists. Before this, an
+answer naming one would have been rejected whole.
+
+madge was rerun with those extensions, but madge 8 lists such files without
+parsing their imports: 0 of Hono's 29 have an edge, where codearch finds 52. The
+task set therefore did not change, and dependents that exist only through
+`.mts` files still score as wrong on those two tasks. Every episode stores the
+raw answer, so the agent result is reported both as scored and with the files
+madge cannot judge excluded.
+
+A second harness defect is fixed. The agent's system prompt said tests "do not
+qualify", while M1v2 ground truth counts them. Impact tasks now get
+`SYSTEM_IMPACT`. The M1 prompt stays byte-identical, and a test asserts it
+against the recorded M1 config.
+
+Not measured: whether an agent with tools uses the index. The M1v2 agent run is
+deferred.
+
+- **OpenRouter** refused the first call with HTTP 402: no credits, nothing spent.
+- **Free tiers could not stand in.**
+  - Google AI Studio: `gemini-3.1-flash-lite` stopped after one search, while
+    `gemini-3.6-flash` was slow, stalled on transport retries and overran its
+    output limit.
+  - NVIDIA API: `gpt-oss-20b` put its moves in the reasoning channel, and
+    `nemotron-3-super` wrote prose or exhausted the action budget.
+- **Details** are in `eval/README.md`, "Agent providers". The harness now
+  supports `--provider gemini`, so a later run needs only a working provider.
+
+72 Rust tests pass (63 before this work), and 38 Python tests.
+
+
+## M2 git co-change and confidence — implemented, delta measured, quality run gated
+
+Spec: `docs/superpowers/specs/2026-09-12-m2-cochange-confidence-design.md`.
+
+Stage 4 exists now (`src/git.rs`): one `git log` subprocess over the last
+2000 non-merge commits inside a 24-month window anchored on the last commit
+that touched mapped code. Per commit each pair earns `1 / (files - 1)`,
+commits over 50 files are dropped, credit decays with a 180-day half-life. A
+pair survives on 2+ commits, both files in the inventory, and not both tests.
+Weights normalize by the 99th percentile. Fusion is at the specified 0.55 in
+`graph.rs`; per-file churn replaces the `W_CHURN * 0.0` placeholder at 0.20.
+`--no-git` reproduces the import-only map. No git binary, no `.git`, or an
+unusable history degrades to empty and the map says so.
+
+Confidence is per cluster: `0.45·resolution + 0.35·stability + 0.20·agreement`
+over five seeded partitions with max-overlap matching, bands at 0.75 / 0.45.
+Two corrections landed during implementation. The window first anchored on the
+newest commit of any kind, which erased the code history of the archived
+typedi checkout (recent commits are docs/CI); it now anchors on the last
+commit touching mapped code. Agreement first measured Jaccard over the union,
+so one co-change pair switched the term on everywhere and quiet clusters
+scored 0 — manufactured doubt from absent evidence. It now measures confirmed
+co-change pairs over co-change pairs, and is undefined (renormalized away)
+where a cluster has none.
+
+**Delta** (`eval/cochange_delta.py`, `eval/results-cochange/`), `--no-git`
+against the default, all three checkouts:
+
+```text
+            commits   pairs   domains   confidence    grouped   grouped w/o import
+Hono        555       352     16 → 16   0.94 → 0.88   0         0
+Commerce    24        120     14 → 10   0.86 → 0.79   42        42
+TypeDI      5         1       6 → 6     0.97 → 0.97   0         0
+```
+
+Hono's 352 pairs move zero boundaries: the names differ only because churn
+reorders each cluster's top file, which the derived labeler names from.
+Commerce merges 14 domains into 10; all 42 newly grouped pairs lack an import
+edge — Next.js route segments (`app/[page]/layout.tsx` with `app/search/…`),
+the hidden-coupling case the signal exists for. Whether that merge is an
+improvement is undecided here. Commerce emits the required low-confidence
+region (criterion 4); hono and typedi render none, which is consistent with
+98–100% import resolution rather than banding that never fires.
+
+**Blind A/B** (`eval/cochange_review.py`): both maps rendered, arm provenance
+stripped behind `item-NNN` ids under a fixed seed, a model judging
+per-cluster coherence, scored by accept rate per arm. The harness runs end to
+end against the recorded fixture (`eval/cochange-review-fixture.json`, 4
+typedi items, 1 accept + 1 review per arm, delta +0.00 pp) — criterion 5 is
+met as a pipeline, not as a finding. The live run waits on provider credit,
+same gate as M1v2 criterion 4.
+
+102 Rust tests and 44 Python tests pass.

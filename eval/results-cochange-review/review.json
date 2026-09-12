@@ -1,0 +1,34 @@
+{
+  "reference_sha256": "79e3fde353a3d2c571abb06932d088dc2f99dbdd36d3a211548305a23ccf7cd4",
+  "review_model": "fixture",
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "cost": 0.0
+  },
+  "reviews": [
+    {
+      "id": "item-000",
+      "verdict": "accept",
+      "reason": "Interfaces, container classes and container-related types share one concern and one directory subtree."
+    },
+    {
+      "id": "item-001",
+      "verdict": "review",
+      "reason": "A source error file, the package index and unrelated issue test specs share no single concern beyond the container broadly; grab-bag grouping."
+    },
+    {
+      "id": "item-002",
+      "verdict": "accept",
+      "reason": "Interfaces, container classes and container-related types share one concern and one directory subtree."
+    },
+    {
+      "id": "item-003",
+      "verdict": "review",
+      "reason": "A source error file, the package index and unrelated issue test specs share no single concern beyond the container broadly; grab-bag grouping."
+    }
+  ],
+  "human_reviewed": false,
+  "candidate_outputs_visible_to_reviewer": false
+}

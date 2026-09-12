@@ -1,0 +1,101 @@
+[
+  {
+    "repo": "hono",
+    "cochange_pairs": 352,
+    "commits_read": 555,
+    "domains_without": 16,
+    "domains_with": 16,
+    "confidence_without": 0.9382833568260726,
+    "confidence_with": 0.8778795003247274,
+    "bands_without": {
+      "high": 16,
+      "medium": 0,
+      "low": 0
+    },
+    "bands_with": {
+      "high": 16,
+      "medium": 0,
+      "low": 0
+    },
+    "pairs_grouped": 0,
+    "pairs_separated": 0,
+    "grouped_with_import_edge": 0,
+    "grouped_without_import_edge": 0,
+    "hidden_examples": [],
+    "map_tokens_without": 3318,
+    "map_tokens_with": 3409
+  },
+  {
+    "repo": "commerce",
+    "cochange_pairs": 120,
+    "commits_read": 24,
+    "domains_without": 14,
+    "domains_with": 10,
+    "confidence_without": 0.8576925223214285,
+    "confidence_with": 0.7944456845238097,
+    "bands_without": {
+      "high": 10,
+      "medium": 3,
+      "low": 1
+    },
+    "bands_with": {
+      "high": 7,
+      "medium": 2,
+      "low": 1
+    },
+    "pairs_grouped": 42,
+    "pairs_separated": 0,
+    "grouped_with_import_edge": 0,
+    "grouped_without_import_edge": 42,
+    "hidden_examples": [
+      [
+        "app/[page]/layout.tsx",
+        "app/search/[collection]/opengraph-image.tsx"
+      ],
+      [
+        "app/[page]/layout.tsx",
+        "app/search/[collection]/page.tsx"
+      ],
+      [
+        "app/[page]/layout.tsx",
+        "app/search/children-wrapper.tsx"
+      ],
+      [
+        "app/[page]/layout.tsx",
+        "app/search/layout.tsx"
+      ],
+      [
+        "app/[page]/layout.tsx",
+        "app/search/loading.tsx"
+      ]
+    ],
+    "map_tokens_without": 2236,
+    "map_tokens_with": 1963
+  },
+  {
+    "repo": "typedi",
+    "cochange_pairs": 1,
+    "commits_read": 5,
+    "domains_without": 6,
+    "domains_with": 6,
+    "confidence_without": 0.9733952702702703,
+    "confidence_with": 0.9733952702702703,
+    "bands_without": {
+      "high": 6,
+      "medium": 0,
+      "low": 0
+    },
+    "bands_with": {
+      "high": 6,
+      "medium": 0,
+      "low": 0
+    },
+    "pairs_grouped": 0,
+    "pairs_separated": 0,
+    "grouped_with_import_edge": 0,
+    "grouped_without_import_edge": 0,
+    "hidden_examples": [],
+    "map_tokens_without": 1626,
+    "map_tokens_with": 1647
+  }
+]

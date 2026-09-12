@@ -2,7 +2,7 @@
 //!
 //! Job    Assemble output within a hard token budget.
 //! In     everything above
-//! Out    CODEBASE.md, .codearch/index.json
+//! Out    CODEBASE.md, .codearch/index.json, .codearch/imports.md
 //! Fails  Cannot fail. Budget overflow truncates by ascending importance.
 //!
 //! The budget is measured with a real tokenizer rather than estimated from
@@ -13,15 +13,23 @@
 //! the page traces to a deterministic stage, and the "Not Analyzed" section is
 //! mandatory: the honest boundary of the map is part of the map.
 
+use crate::confidence::{self, Band, ClusterConfidence};
 use crate::inventory::Inventory;
 use crate::label::{ClusterSummary, Label};
 use crate::parse::FileParse;
 use crate::profile::Profile;
 use crate::resolve::Resolution;
+use std::collections::HashMap;
 use std::sync::OnceLock;
 
 /// Files listed per domain, tried largest-first until the budget is met.
 const FILE_BUDGET_STEPS: &[usize] = &[8, 6, 5, 4, 3, 2, 1];
+
+/// Most-imported files named in the root map.
+pub const IMPORT_HUBS: usize = 8;
+
+/// Where the reverse import index lives, as the root map names it.
+pub const IMPORTS_REL: &str = ".codearch/imports.md";
 
 pub struct MapInput<'a> {
     pub inv: &'a Inventory,
@@ -30,6 +38,13 @@ pub struct MapInput<'a> {
     pub parsed: &'a [FileParse],
     pub summaries: &'a [ClusterSummary],
     pub labels: &'a [Label],
+    pub imports: &'a ImportsIndex,
+    pub hubs: &'a [(String, usize)],
+    /// One entry per summary, in the same order.
+    pub confidence: &'a [ClusterConfidence],
+    /// Co-change pairs stage 4 contributed. `None` means there was no usable
+    /// git history, which the map states rather than hides.
+    pub cochange_pairs: Option<usize>,
     pub budget: usize,
 }
 
@@ -66,11 +81,7 @@ fn build(input: &MapInput, per_domain: usize) -> String {
     let inv = input.inv;
     let mut s = String::new();
 
-    let title = input
-        .profile
-        .project_name
-        .clone()
-        .unwrap_or_else(|| dir_name(&inv.root));
+    let title = map_title(input.profile, inv);
     s.push_str(&format!("# Codebase Map — {title}\n\n"));
 
     s.push_str(&format!(
@@ -79,10 +90,13 @@ fn build(input: &MapInput, per_domain: usize) -> String {
         inv.total_loc(),
         estimate_source_tokens(inv)
     ));
+    let sizes: Vec<usize> = input.summaries.iter().map(|c| c.size()).collect();
+    let overall = confidence::global(input.confidence, &sizes);
     s.push_str(&format!(
-        "Import resolution: {:.0}% · {} domains\n\n",
+        "Import resolution: {:.0}% · {} domains · confidence: {}\n\n",
         input.res.resolution_rate * 100.0,
-        input.summaries.len()
+        input.summaries.len(),
+        Band::of(overall).label()
     ));
 
     s.push_str("## What This Is\n\n");
@@ -112,8 +126,43 @@ fn build(input: &MapInput, per_domain: usize) -> String {
     s.push_str("## Domains\n\n");
     for (i, sum) in input.summaries.iter().enumerate() {
         let label = &input.labels[i];
-        s.push_str(&format!("### {}\n\n", label.name));
+        let band = input
+            .confidence
+            .get(i)
+            .map(|c| c.band())
+            .unwrap_or(Band::High);
+        s.push_str(&format!(
+            "### {} · confidence {}\n\n",
+            label.name,
+            band.label()
+        ));
+
+        // Low confidence means the graph could not establish structure here.
+        // Listing the files by directory is honest; a summary and a dependency
+        // line would be the tool asserting exactly what it just said it does
+        // not know.
+        if band == Band::Low {
+            s.push_str(
+                "Structure could not be reliably determined for this region. \
+Files are listed by directory, with no claimed relationships.\n\n",
+            );
+            for (dir, files) in files_by_directory(inv, &sum.files, per_domain) {
+                s.push_str(&format!("- `{dir}` — {}\n", files.join(", ")));
+            }
+            if sum.files.len() > per_domain {
+                s.push_str(&format!(
+                    "- …and {} more files in this domain\n",
+                    sum.files.len() - per_domain
+                ));
+            }
+            s.push('\n');
+            continue;
+        }
+
         s.push_str(&format!("{}\n\n", label.summary));
+        if band == Band::Medium {
+            s.push_str("Relationships partially inferred.\n\n");
+        }
 
         if !sum.entry_points.is_empty() {
             s.push_str(&format!("Entry points: {}\n\n", sum.entry_points.join(", ")));
@@ -155,6 +204,8 @@ fn build(input: &MapInput, per_domain: usize) -> String {
         }
     }
 
+    s.push_str(&imports_section(input.hubs, input.imports));
+
     s.push_str("## Task Navigation\n\n");
     for (i, sum) in input.summaries.iter().enumerate() {
         let files: Vec<String> = sum
@@ -190,12 +241,44 @@ fn build(input: &MapInput, per_domain: usize) -> String {
             input.res.unresolved.len()
         ));
     }
-    s.push_str(
-        "- This map contains no execution flows and no git co-change signal; \
+    match input.cochange_pairs {
+        Some(pairs) => s.push_str(&format!(
+            "- This map contains no execution flows; relationships come from resolved imports, \
+{pairs} git co-change pairs and directory structure\n"
+        )),
+        None => s.push_str(
+            "- This map contains no execution flows and no git co-change signal; \
 relationships come from resolved imports and directory structure only\n",
-    );
+        ),
+    }
 
     s
+}
+
+/// Files grouped under their directory, keeping the importance order the
+/// summary already imposed. Used only by the low-confidence band.
+fn files_by_directory(inv: &Inventory, files: &[usize], limit: usize) -> Vec<(String, Vec<String>)> {
+    let mut order: Vec<String> = Vec::new();
+    let mut grouped: HashMap<String, Vec<String>> = HashMap::new();
+    for &f in files.iter().take(limit) {
+        let rec = inv.get(f);
+        let dir = if rec.dir().is_empty() { "." } else { rec.dir() };
+        let base = rec.rel.rsplit('/').next().unwrap_or(&rec.rel);
+        if !grouped.contains_key(dir) {
+            order.push(dir.to_string());
+        }
+        grouped
+            .entry(dir.to_string())
+            .or_default()
+            .push(format!("`{base}`"));
+    }
+    order
+        .into_iter()
+        .map(|d| {
+            let files = grouped.remove(&d).unwrap_or_default();
+            (d, files)
+        })
+        .collect()
 }
 
 fn file_symbols(parsed: &[FileParse], f: usize, n: usize) -> Option<String> {
@@ -239,11 +322,107 @@ fn dir_name(p: &std::path::Path) -> String {
         .unwrap_or_else(|| "repository".to_string())
 }
 
+pub fn map_title(profile: &Profile, inv: &Inventory) -> String {
+    profile
+        .project_name
+        .clone()
+        .unwrap_or_else(|| dir_name(&inv.root))
+}
+
+/// The reverse import index: written beside the root map, read on demand, and
+/// deliberately outside the root budget.
+pub struct ImportsIndex {
+    pub markdown: String,
+    /// Import edges listed.
+    pub imports: usize,
+    /// Files with at least one importer.
+    pub imported_files: usize,
+    pub tokens: usize,
+}
+
+/// Files with the most importers, most first, ties broken by path.
+pub fn import_hubs(paths: &[&str], in_edges: &[Vec<usize>], n: usize) -> Vec<(String, usize)> {
+    let mut hubs: Vec<(String, usize)> = in_edges
+        .iter()
+        .enumerate()
+        .filter(|(_, importers)| !importers.is_empty())
+        .map(|(f, importers)| (paths[f].to_string(), importers.len()))
+        .collect();
+    hubs.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+    hubs.truncate(n);
+    hubs
+}
+
+/// One line per imported file, so a text search for a path lands on the whole
+/// answer for it. Lines and importers are sorted by path, which keeps the file
+/// deterministic and confines a one-file change to the lines naming that file.
+pub fn import_index(
+    title: &str,
+    paths: &[&str],
+    in_edges: &[Vec<usize>],
+    resolution_rate: f64,
+    unresolved: usize,
+) -> ImportsIndex {
+    let mut lines: Vec<(&str, String)> = Vec::new();
+    let mut imports = 0;
+    for (f, importers) in in_edges.iter().enumerate() {
+        if importers.is_empty() {
+            continue;
+        }
+        let mut names: Vec<&str> = importers.iter().map(|&i| paths[i]).collect();
+        names.sort_unstable();
+        imports += names.len();
+        lines.push((paths[f], format!("{} ← {}", paths[f], names.join(", "))));
+    }
+    lines.sort_by(|a, b| a.0.cmp(b.0));
+
+    let mut s = format!("# Reverse Import Index — {title}\n\n");
+    s.push_str("Generated by Code Arch. For each file, every analyzed file that imports it.\n");
+    s.push_str(&format!(
+        "{imports} imports into {} files · import resolution {:.0}% · {unresolved} unresolved specifiers carry no edge.\n",
+        lines.len(),
+        resolution_rate * 100.0
+    ));
+    s.push_str("External packages are not listed. Files nothing imports are omitted.\n\n");
+    for (_, line) in &lines {
+        s.push_str(line);
+        s.push('\n');
+    }
+
+    let tokens = count_tokens(&s);
+    ImportsIndex {
+        markdown: s,
+        imports,
+        imported_files: lines.len(),
+        tokens,
+    }
+}
+
+/// The root map's pointer to the index, with the hubs as orientation.
+pub fn imports_section(hubs: &[(String, usize)], index: &ImportsIndex) -> String {
+    let mut s = String::from("## Imports\n\n");
+    if index.imports == 0 {
+        s.push_str("No internal imports were resolved, so there is no import index.\n\n");
+        return s;
+    }
+    s.push_str("Most-imported files (number of analyzed files importing each):\n\n");
+    for (path, count) in hubs {
+        s.push_str(&format!("- `{path}` — {count}\n"));
+    }
+    s.push_str(&format!(
+        "\nReverse import index: `{IMPORTS_REL}` lists, for every imported file, each analyzed \
+file that imports it ({} imports into {} files, ~{} tokens).\n\n",
+        index.imports, index.imported_files, index.tokens
+    ));
+    s
+}
+
 pub fn index_json(
     inv: &Inventory,
     res: &Resolution,
     summaries: &[ClusterSummary],
     labels: &[Label],
+    conf: &[ClusterConfidence],
     map_tokens: usize,
 ) -> String {
     let clusters: Vec<serde_json::Value> = summaries
@@ -257,6 +436,13 @@ pub fn index_json(
                 "files": s.files.iter().map(|&f| inv.get(f).rel.clone()).collect::<Vec<_>>(),
                 "depends_on": s.depends_on,
                 "depended_on_by": s.depended_on_by,
+                "confidence": conf.get(i).map(|c| serde_json::json!({
+                    "score": c.score,
+                    "band": c.band().label(),
+                    "resolution": c.resolution,
+                    "stability": c.stability,
+                    "agreement": c.agreement,
+                })),
             })
         })
         .collect();
@@ -266,6 +452,10 @@ pub fn index_json(
         "root": inv.root.to_string_lossy(),
         "files": inv.len(),
         "resolution_rate": res.resolution_rate,
+        "confidence": confidence::global(
+            conf,
+            &summaries.iter().map(|c| c.size()).collect::<Vec<_>>(),
+        ),
         "map_tokens": map_tokens,
         "clusters": clusters,
     });
@@ -300,5 +490,102 @@ mod tests {
         let short = count_tokens("hello world");
         let long = count_tokens(&"hello world ".repeat(50));
         assert!(long > short * 10);
+    }
+
+    /// `(importer, imported)` pairs to the `in_edges` shape `CodeGraph` holds.
+    fn in_edges(n: usize, pairs: &[(usize, usize)]) -> Vec<Vec<usize>> {
+        let mut v = vec![Vec::new(); n];
+        for &(from, to) in pairs {
+            v[to].push(from);
+        }
+        for row in &mut v {
+            row.sort_unstable();
+        }
+        v
+    }
+
+    fn index_lines(md: &str) -> Vec<&str> {
+        md.lines().filter(|l| l.contains(" ← ")).collect()
+    }
+
+    #[test]
+    fn hubs_rank_by_importer_count_then_path() {
+        let paths = ["b.ts", "a.ts", "c.ts", "d.ts"];
+        let edges = in_edges(4, &[(3, 0), (2, 0), (3, 1), (2, 1), (3, 2)]);
+        let hubs = import_hubs(&paths, &edges, 2);
+        assert_eq!(hubs, vec![("a.ts".to_string(), 2), ("b.ts".to_string(), 2)]);
+    }
+
+    #[test]
+    fn hubs_skip_files_nothing_imports() {
+        let paths = ["b.ts", "a.ts", "c.ts", "d.ts"];
+        let edges = in_edges(4, &[(3, 0), (2, 0), (3, 1), (2, 1), (3, 2)]);
+        let hubs = import_hubs(&paths, &edges, 10);
+        assert_eq!(hubs.len(), 3);
+        assert!(hubs.iter().all(|(p, _)| p != "d.ts"));
+    }
+
+    #[test]
+    fn index_sorts_lines_by_imported_path_and_importers_by_path() {
+        let paths = ["src/z.ts", "src/a.ts", "src/m.ts"];
+        let edges = in_edges(3, &[(0, 1), (2, 1), (1, 0)]);
+        let idx = import_index("t", &paths, &edges, 1.0, 0);
+        assert_eq!(
+            index_lines(&idx.markdown),
+            vec!["src/a.ts ← src/m.ts, src/z.ts", "src/z.ts ← src/a.ts"]
+        );
+    }
+
+    #[test]
+    fn index_omits_files_nothing_imports() {
+        let paths = ["src/z.ts", "src/a.ts", "src/m.ts"];
+        let edges = in_edges(3, &[(0, 1), (2, 1), (1, 0)]);
+        let idx = import_index("t", &paths, &edges, 1.0, 0);
+        assert!(!idx.markdown.lines().any(|l| l.starts_with("src/m.ts ←")));
+    }
+
+    #[test]
+    fn index_header_states_counts_and_what_is_missing() {
+        let paths = ["src/z.ts", "src/a.ts", "src/m.ts"];
+        let edges = in_edges(3, &[(0, 1), (2, 1), (1, 0)]);
+        let idx = import_index("hono", &paths, &edges, 0.98, 19);
+        assert_eq!((idx.imports, idx.imported_files), (3, 2));
+        assert!(idx.markdown.starts_with("# Reverse Import Index — hono\n"));
+        assert!(idx.markdown.contains("3 imports into 2 files"));
+        assert!(idx.markdown.contains("import resolution 98%"));
+        assert!(idx.markdown.contains("19 unresolved specifiers carry no edge"));
+        assert_eq!(idx.tokens, count_tokens(&idx.markdown));
+    }
+
+    #[test]
+    fn index_without_edges_is_a_header_only() {
+        let paths = ["a.ts", "b.ts"];
+        let idx = import_index("t", &paths, &in_edges(2, &[]), 0.0, 0);
+        assert_eq!(idx.imports, 0);
+        assert!(index_lines(&idx.markdown).is_empty());
+        assert!(idx.markdown.contains("0 imports into 0 files"));
+    }
+
+    #[test]
+    fn section_lists_hubs_and_points_to_the_index() {
+        let paths = ["src/z.ts", "src/a.ts", "src/m.ts"];
+        let edges = in_edges(3, &[(0, 1), (2, 1), (1, 0)]);
+        let idx = import_index("t", &paths, &edges, 1.0, 0);
+        let s = imports_section(&import_hubs(&paths, &edges, 8), &idx);
+        assert!(s.starts_with("## Imports\n"));
+        assert!(s.contains("- `src/a.ts` — 2\n"));
+        assert!(s.contains("- `src/z.ts` — 1\n"));
+        assert!(s.contains("`.codearch/imports.md`"));
+        assert!(s.contains(&format!("(3 imports into 2 files, ~{} tokens)", idx.tokens)));
+    }
+
+    #[test]
+    fn section_without_imports_names_no_file() {
+        let paths = ["a.ts", "b.ts"];
+        let edges = in_edges(2, &[]);
+        let idx = import_index("t", &paths, &edges, 0.0, 0);
+        let s = imports_section(&import_hubs(&paths, &edges, 8), &idx);
+        assert!(s.contains("No internal imports were resolved, so there is no import index."));
+        assert!(!s.contains("imports.md"));
     }
 }

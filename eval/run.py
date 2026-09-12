@@ -12,6 +12,9 @@ ROOT = Path(__file__).resolve().parent
 CRATE = ROOT.parent
 STOP = set('a an the to of in at by and or for with from is this that'.split())
 BOILERPLATE = set('file files under at the repository root key symbols uses'.split())
+# Every module extension codearch analyzes. The agent, the task builder and the
+# gate must agree, or the index can list a dependent the agent may not answer.
+SOURCE_SUFFIXES = frozenset({'.ts','.tsx','.js','.jsx','.mts','.cts','.mjs','.cjs'})
 
 
 @lru_cache(maxsize=100000)
@@ -38,16 +41,22 @@ def safe_file(root, rel):
 
 class Session:
     """Tool outputs are the only observations supplied to either policy."""
-    def __init__(self, source, query, map_text, max_actions=12):
+    def __init__(self, source, query, map_text, max_actions=12, map_files=None):
         self.source = source
         self.query = query
-        self.paths = sorted(p.relative_to(source).as_posix() for p in source.rglob('*') if p.is_file() and p.suffix in {'.ts','.tsx','.js','.jsx'} and '.git' not in p.parts)
+        self.paths = sorted(p.relative_to(source).as_posix() for p in source.rglob('*') if p.is_file() and p.suffix in SOURCE_SUFFIXES and '.git' not in p.parts)
+        # On-demand files the map points at (e.g. .codearch/imports.md). Served
+        # by exact path, and only to the arm that was given the map.
+        self.map_files = dict(map_files or {})
         self.trace = []
         self.opened = set()
         self.searches = 0
         self.answer = []
         self.max_actions = max_actions
-        self.observe('task', {'query': query, 'files': self.paths, 'map': map_text})
+        task = {'query': query, 'files': self.paths, 'map': map_text}
+        if self.map_files:
+            task['map_files'] = sorted(self.map_files)
+        self.observe('task', task)
 
     def observe(self, kind, value):
         self.trace.append({'kind':kind, 'content':json.dumps(value, ensure_ascii=False)})
@@ -57,10 +66,14 @@ class Session:
         kind = action['tool']
         if kind == 'open':
             rel = action['path']
-            if rel not in self.paths:
+            if rel in self.map_files:
+                self.opened.add(rel)
+                self.observe('open', {'path':rel, 'source':self.map_files[rel]})
+            elif rel in self.paths:
+                self.opened.add(rel)
+                self.observe('open', {'path':rel, 'source':safe_file(self.source,rel).read_text(encoding='utf-8')})
+            else:
                 raise ValueError('Only inventoried source files may be opened')
-            self.opened.add(rel)
-            self.observe('open', {'path':rel, 'source':safe_file(self.source,rel).read_text(encoding='utf-8')})
         elif kind == 'search':
             self.searches += 1
             query = action['query']

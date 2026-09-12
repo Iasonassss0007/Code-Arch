@@ -232,26 +232,133 @@ The replacement asks for transitive impact -- "the behavior of X is changing,
 what else needs review?" -- which no path match reveals and which a grep-only
 agent can assemble only by walking the chain a round at a time.
 
-    npx --yes madge@8 --json --extensions ts,tsx,js,jsx repos/<r>/src > oracle/<r>.json
+    npx --yes madge@8 --json --extensions ts,tsx,js,jsx,mts,cts,mjs,cjs repos/<r> > oracle/<r>.json
     python build_tasks_nav.py --out tasks-nav.json --per-repo 500
     python gate_tasks_nav.py --tasks tasks-nav.json --out tasks-nav-gated.json
     python run_agent.py --tasks tasks-nav-gated.json --out results-nav
 
 Ground truth comes from madge, a third-party dependency-graph tool, so codearch
-is not graded against its own resolver.
+is not graded against its own resolver. madge scans the whole checkout, not
+just `src/`. The task asks for every dependent, and the agent may answer any
+inventoried path. A `src/`-only oracle therefore marked correct answers in
+benchmarks and tests as wrong. That was the first oracle, replaced 2026-09-11.
+
+One known gap remains. madge 8 lists `.mts`/`.mjs` files but does not parse
+their imports: 0 of Hono's 29 such files have an edge, while codearch finds 52.
+Dependents reachable only through those files are missing from ground truth.
+In the ceiling this affects 2 of 37 tasks.
 
 **Every task must beat a free adversary.** `gate_tasks_nav.py` gives two
 heuristics the query and the path inventory -- nothing else -- and the answer's
 cardinality, then admits a task only if both score F1 <= 0.35. `path_guess`
 ranks files by shared path tokens; `hub_guess` returns the most-imported files.
-Of 81 candidates, 24 survive (mean adversary F1 0.11, max 0.33).
+Of 81 candidates, 37 survive (mean adversary F1 0.13, max 0.33). The first
+gated set, built from the `src/`-only oracle, kept 24.
 
 Scoring is set F1, not exact match: answers hold 2-20 files, and exact match
 would floor every arm at zero -- the mirror of the ceiling effect that broke
 the first run.
 
-Known limits: typedi (21 graph nodes) contributes one task, because in a
-repository that small the most-imported files *are* the answer and `hub_guess`
-wins by construction. Small repositories cannot host this task type. Test files
+Known limits: typedi (39 graph nodes) contributes only four tasks. In a
+repository that small the most-imported files are often the answer, so
+`hub_guess` wins by construction. Small repositories host few tasks of this type. Test files
 count as legitimate dependents. Impact is one verb; flow and
 convention-indirection tasks are not built yet.
+
+### Reverse import index: ceiling and harness changes
+
+    python check_import_index.py --tasks tasks-nav-gated.json --out results-nav-ceiling
+
+This walks `.codearch/imports.md` from each task's target, with no model
+involved. Current result on the 37 tasks: recall 1.000 on every task, and mean
+F1 0.981. See `results-nav-ceiling/report.md` for per-task rows.
+
+Against the earlier `src/`-only oracle, the same check scored F1 0.873. That gap
+was the oracle's fault, not the index's. The index found real dependents in
+Hono's benchmarks and TypeDI's `test/` that madge had never scanned, and they
+counted as wrong answers. That is why madge now scans the whole checkout.
+
+`run_agent.py` changes:
+
+- It generates maps with `--codearch-dir` into a temp directory, so pinned
+  checkouts stay clean.
+- It serves `.codearch/imports.md` to the `with_map` arm only, through
+  `Session(map_files=...)`.
+- `kind: impact` tasks get `SYSTEM_IMPACT`, which counts test files as
+  dependents. `SYSTEM` told the agent they do not qualify.
+
+`SYSTEM` itself is unchanged, so M1's prompt reproduces. A rerun of M1 with
+today's binary still serves the new map and index, though, so it is not the
+recorded M1 condition.
+
+### Agent providers
+
+    python run_agent.py --tasks tasks-nav-gated.json --out results-nav --provider gemini --model gemini-3.6-flash
+
+The two providers are:
+
+- `--provider openrouter` is the default, using `OPENROUTER_API_KEY` and
+  Qwen3.5 Flash. M1 ran on it.
+- `--provider gemini` uses the Google AI Studio free tier (`GEMINI_API_KEY`,
+  `gemini_agent.py`). Usage is recorded at cost 0.0. Google's free-tier terms
+  let submitted content be used to improve Google's products. The benchmark
+  sends public repository code, the generated map and the index.
+
+Only models whose settings were probed live are accepted (`THINKING` in
+`gemini_agent.py`):
+
+- `gemini-2.5-flash` is closed to new users.
+- `gemini-3.6-flash` rejects a zero thinking budget, so it runs with
+  `thinkingLevel: minimal`.
+- `gemini-3.1-flash-lite` runs with thinking off.
+
+Calls are spaced 6.5 s apart (`CODEARCH_GEMINI_MIN_INTERVAL`). 429, 500 and
+503 responses and timeouts are retried with backoff; anything that persists
+stops the run as a provider failure, and `--resume` continues it.
+
+Three live-probe findings are built in:
+
+- **Reply schema.** JSON mode alone let `gemini-3.6-flash` answer
+  `{"action": ...}` instead of `{"tool": ...}`, so requests carry a
+  `responseSchema` for the action shape.
+- **Reply limit.** 512 output tokens, inherited from M1's one-file answers,
+  cut off a 19-file answer mid-JSON. Raising the Gemini limit to 2048 did not
+  fix it: the next attempt generated 2,056 tokens for an answer that needs
+  roughly 300 and was cut off again (probably a repetition loop; not verified).
+  `openrouter_agent.py` still uses 512 and would truncate impact answers too.
+- **Failure detail.** An unparseable reply records its `finishReason` and a
+  text excerpt in the checkpoint.
+
+`gemini-3.1-flash-lite` answered in about a second but explored almost nothing.
+In three practice episodes it ran one search, then answered, never opening the
+index (F1 0.10 on a 19-file task). A benchmark on it measures an agent that
+stops early, not the map.
+
+`gemini-3.6-flash` explores properly: it searched, opened the index and began
+listing correct files. But neither practice episode on the 19-file task
+produced a scoreable answer:
+
+- **With the map**, 168 s: the answer was cut off at the output limit, as above.
+- **Without the map**, 2,245 s: calls took 10-65 s each, then one call stalled
+  through every transport retry and failed.
+
+At that speed and reliability, 148 episodes would take well over 12 hours with
+repeated stalls. As of 2026-09-11 the free tier is not a workable agent for
+M1v2.
+
+The NVIDIA API free tier (`integrate.api.nvidia.com`, OpenAI-compatible) was
+probed the same day. No adapter was built, because no model produced valid
+actions:
+
+- `openai/gpt-oss-20b` answered a one-hop index lookup correctly in 8.8 s. In
+  real episodes it returned empty `content`, with its move written inside
+  `reasoning_content`, often without the `tool` key. That happened with JSON
+  mode, without it, and with `reasoning_effort: low`.
+- `nvidia/nemotron-3-super-120b-a12b` did the same lookup correctly in 13.3 s,
+  but ignored JSON mode in episodes: it wrote prose into `content` until it hit
+  the 4096-token limit, after 168 s. The endpoint rejects
+  `nvext.guided_json` (HTTP 400, unknown field), and it sometimes answers 503
+  "overloaded".
+- `deepseek-ai/deepseek-v4-flash-0731` timed out on a 10k-token prompt.
+- `mistral-large-2-instruct` and `kimi-k2.6` are listed but return 404 for a
+  free account.
