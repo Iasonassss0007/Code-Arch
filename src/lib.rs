@@ -132,7 +132,7 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     let inv = inventory::collect(&opts.root)?;
     if inv.is_empty() {
         anyhow::bail!(
-            "no JavaScript or TypeScript source files found under {}",
+            "no JavaScript, TypeScript or Python source files found under {}",
             opts.root.display()
         );
     }
