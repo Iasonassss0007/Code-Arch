@@ -8,3 +8,5 @@ __pycache__/
 /models/
 research/codearch-representation/experiments/repos/
 research/codearch-representation/experiments/incr_work/
+# Local session transcripts accidentally saved under eval/
+eval/*.txt

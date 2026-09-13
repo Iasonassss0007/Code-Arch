@@ -119,12 +119,13 @@ because it currently wins.
 
 ## Status
 
-The pipeline is complete and tested. What it produces has been measured, and
-the results are reported in `code_arch_architecture.md` rather than summarized
-favourably here — including a negative one: on a 24-task file-location
-benchmark, supplying the full map did not improve a coding agent's accuracy and
-roughly doubled token use. That benchmark could not measure the harder claim,
-and a replacement targeting transitive-impact questions is built but not yet
-run.
+M0–M5 are built and tested: 160 Rust tests + 44 Python tests pass.
+M5 splits a 4,367-file React checkout from a 236,702-token flat map to a
+2,957-token root plus domain files, with warm re-runs in ~10s.
+What the maps are worth is reported in `code_arch_architecture.md` rather
+than summarized favourably here — including a negative one: on a 24-task
+file-location benchmark, supplying the full map did not improve a coding
+agent's accuracy and roughly doubled token use. The M1v2 agent run and the
+transitive-impact replacement are built but still gated on provider credit.
 
 Treat this as a working tool whose central benefit is still unproven.
