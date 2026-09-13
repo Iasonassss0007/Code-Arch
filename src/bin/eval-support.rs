@@ -107,7 +107,7 @@ Rebuild with: cargo build --features llm"
                 taken.push(label.name.clone());
                 labels.push(json!({"id": c["id"], "name": label.name, "summary": label.summary}));
             }
-            json!({"labels": labels, "fell_back": labeler.fell_back()})
+            json!({"labels": labels, "fell_back": labeler.fell_back(), "summary_fell_back": labeler.summary_fell_back()})
         }
         _ => anyhow::bail!("unknown operation"),
     };

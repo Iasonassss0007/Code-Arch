@@ -1136,3 +1136,56 @@ the M4 rename line, which predates M5. Fixtures, M1 harness and ceiling are
 outside the split trigger by construction (flat fits) and untouched.
 
 160 Rust tests (143 before) and 44 Python tests pass.
+
+
+## M6-lite label guard — summary grounding closed, stemming fixed, model still loses
+
+Spec: `docs/superpowers/specs/2026-09-13-m6-lite-label-guard-design.md`.
+Closes the recorded defect (`validate.rs` checked the name only) and the
+hono-2 stemming artifact, on the same frozen 20 clusters and pinned model.
+
+**Guard.** `check_summary()`: every non-stopword summary token must trace to
+evidence or a 9-word boilerplate allowance mirroring the scorer, so the guard
+is never more permissive than the metric. Name reject → full derived
+fallback (unchanged); summary reject → generated name kept, derived sentence
+(`derive_summary` is a free function — no refactor). New `summary_fell_back`
+counter plumbed through the trait, report, `main.rs`, and additive
+eval-support JSON. Cache `FORMAT` bumped to 2: labels stored under the
+name-only guard regenerate. The guard is LLM-only, so the derived path is
+byte-identical by construction.
+
+**Stemming.** Two rules (`ies` → `y`, trailing `s` unless `ss`/`us`/`is`,
+len > 3) in both Rust `tokenize` and Python `words()`. This versions the
+metric: v1 numbers below stay on record; the sweep re-scores both arms with
+identical v2 code in one invocation. Known over-strip, documented in a test:
+`cors` → `cor` (Porter does the same); both sides stem, so matching still
+holds. Collision check is now stem-insensitive to match the scorer.
+
+**Measured** (v2, same model, same clusters; v1 in parens for the record):
+
+| Metric | Derived v2 (v1) | Model v2 (v1) |
+|---|---:|---:|
+| Name specificity | 75% (75%) | 60% (55%) |
+| Lexical groundedness, name + summary | 90% (90%) | 100% (25%) |
+| Sibling collisions | 0% (0%) | 0% (0%) |
+| Name fallbacks | — | 0 of 20 |
+| Summary fallbacks | — | 15 of 20 |
+
+Stemming moved exactly the predicted point (hono-2 `Router` now matches
+`Routers`); the derived baseline did not move at all. The 100% model
+groundedness is guard-assisted and must be read with the 15/20 beside it:
+three-quarters of the model's sentences were replaced by the derived
+template. That exceeds the spec's ~50% strictness tripwire, and the decision
+is **not** to loosen: the v1 analysis already showed the model's summaries
+are accurate-but-fluent ("a better summary scores worse"), and admitting
+connective words (`handles`, `responsible`) would buy fluency, not truth.
+The lexical definition cannot distinguish fluent-truth from fluent-invention,
+which is exactly why the template is the safe sentence. The sharp next step
+is Decision 1's escape hatch — slot-templated summaries with model-filled
+slots — not a bigger model. `--labeler derived` stays the default.
+
+166 Rust tests (160 before) and 44 Python tests pass. Report artifacts
+`eval/labels-llm-report.md`/`.json` are now the v2 record (metric v2 +
+`summary_fell_back`); reproduce with `python eval/score_llm_labels.py`
+against a binary built `--features llm` (VS-bundled cmake on PATH,
+`LIBCLANG_PATH` set; CPU minutes).

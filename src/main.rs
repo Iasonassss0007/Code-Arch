@@ -154,6 +154,12 @@ fn main() -> Result<()> {
             report.labels_fell_back, report.domains
         );
     }
+    if report.labels_summary_fell_back > 0 {
+        println!(
+            "Summary fallbacks:   {} of {} domains (name kept, sentence derived)",
+            report.labels_summary_fell_back, report.domains
+        );
+    }
     println!();
     println!("Generated:");
     println!("  {}", report.out_path.display());

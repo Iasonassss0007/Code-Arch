@@ -29,6 +29,39 @@ pub enum Rejection {
     TooLong,
     Collision,
     Ungrounded,
+    UngroundedSummary,
+}
+
+/// Stopwords ignored by the summary check. Mirrors `STOP` in `eval/run.py`;
+/// stemming leaves every member unchanged (`this` is held by the `is` rule),
+/// so the two lists stay in sync by construction.
+const STOP: &[&str] = &[
+    "a", "an", "the", "to", "of", "in", "at", "by", "and", "or", "for", "with", "from", "is",
+    "this", "that",
+];
+
+/// Connective vocabulary a fluent summary may use beyond the evidence.
+/// Mirrors `BOILERPLATE` in `eval/run.py`, pre-stemmed (`files` → `file`,
+/// `symbols` → `symbol`, `uses` → `use`) because both sides of the check stem.
+const SUMMARY_BOILERPLATE: &[&str] = &[
+    "file", "under", "at", "the", "repository", "root", "key", "symbol", "use",
+];
+
+/// Plural normalization shared by the guard and (in Python) the scorer. Two
+/// rules only: `ies` → `y`, and a trailing `s` unless the word ends in
+/// `ss`/`us`/`is`, for words longer than 3 characters. The `is` rule holds
+/// `analysis`/`thesis`/`crisis`; the known over-strip is `news` → `new`.
+/// Both sides stem, so an error can only accept, never reject.
+fn stem(t: &str) -> String {
+    if t.len() > 3 {
+        if let Some(base) = t.strip_suffix("ies") {
+            return format!("{base}y");
+        }
+        if t.ends_with('s') && !t.ends_with("ss") && !t.ends_with("us") && !t.ends_with("is") {
+            return t[..t.len() - 1].to_string();
+        }
+    }
+    t.to_string()
 }
 
 /// Split a string into lowercase word tokens, breaking on path separators,
@@ -55,7 +88,7 @@ pub fn tokenize(s: &str) -> Vec<String> {
     if !cur.is_empty() {
         out.push(cur);
     }
-    out
+    out.into_iter().map(|t| stem(&t)).collect()
 }
 
 /// Every token the cluster's own deterministic evidence can vouch for,
@@ -107,11 +140,41 @@ pub fn check(name: &str, s: &ClusterSummary, siblings: &[String]) -> Result<(), 
     if trimmed.chars().count() > MAX_NAME_CHARS {
         return Err(Rejection::TooLong);
     }
-    if siblings.iter().any(|s| s.eq_ignore_ascii_case(trimmed)) {
+    // Stem-insensitive, matching the scorer's `words(a) == words(b)`: `Router`
+    // against a sibling `Routers` collides even though the strings differ.
+    let norm = normalized(trimmed);
+    if siblings.iter().any(|sib| normalized(sib) == norm) {
         return Err(Rejection::Collision);
     }
     if !is_grounded(trimmed, s) {
         return Err(Rejection::Ungrounded);
+    }
+    Ok(())
+}
+
+/// Sorted stemmed tokens: the comparison form for names on both sides.
+fn normalized(name: &str) -> Vec<String> {
+    let mut v = tokenize(name);
+    v.sort();
+    v
+}
+
+/// The summary guard. Every non-stopword token must trace to the cluster's
+/// own evidence or the boilerplate allowance — the same rule the scorer
+/// applies, so the guard is never more permissive than the metric.
+pub fn check_summary(summary: &str, s: &ClusterSummary) -> Result<(), Rejection> {
+    let trimmed = summary.trim();
+    if trimmed.is_empty() {
+        return Err(Rejection::Empty);
+    }
+    let evidence = evidence_tokens(s);
+    for t in tokenize(trimmed) {
+        if STOP.contains(&t.as_str()) {
+            continue;
+        }
+        if !evidence.contains(&t) && !SUMMARY_BOILERPLATE.contains(&t.as_str()) {
+            return Err(Rejection::UngroundedSummary);
+        }
     }
     Ok(())
 }
@@ -190,7 +253,17 @@ mod tests {
     #[test]
     fn tokenize_splits_paths_and_camel_case() {
         assert_eq!(tokenize("src/middleware"), vec!["src", "middleware"]);
-        assert_eq!(tokenize("applyCors"), vec!["apply", "cors"]);
+        assert_eq!(tokenize("applyAuth"), vec!["apply", "auth"]);
+    }
+
+    /// Known over-strip, documented not hidden: the acronym `cors` ends in a
+    /// plural-shaped `s`, so it stems to `cor`. Harmless because evidence and
+    /// candidate stem together — `Cors` still matches `applyCors` — but the
+    /// literal expectation belongs here, not silently inside the split test.
+    #[test]
+    fn tokenize_over_strips_cors_like_porter() {
+        assert_eq!(tokenize("applyCors"), vec!["apply", "cor"]);
+        assert!(is_grounded("Cors", &summary()));
     }
 
     #[test]
@@ -314,5 +387,39 @@ mod tests {
     #[test]
     fn empty_reply_yields_none() {
         assert!(parse_response("").is_none());
+    }
+
+    #[test]
+    fn tokenize_stems_plurals_but_holds_special_cases() {
+        assert_eq!(tokenize("routers"), vec!["router"]);
+        assert_eq!(tokenize("services"), vec!["service"]);
+        assert_eq!(tokenize("utilities"), vec!["utility"]);
+        assert_eq!(tokenize("class"), vec!["class"]);
+        assert_eq!(tokenize("status"), vec!["status"]);
+        assert_eq!(tokenize("analysis"), vec!["analysis"]);
+    }
+
+    #[test]
+    fn plural_of_a_sibling_name_collides() {
+        let taken = vec!["Routers".to_string()];
+        assert_eq!(check("Router", &summary(), &taken), Err(Rejection::Collision));
+    }
+
+    #[test]
+    fn grounded_summary_is_accepted() {
+        assert_eq!(check_summary("Cors and middleware under src", &summary()), Ok(()));
+    }
+
+    #[test]
+    fn summary_naming_unlisted_technology_is_rejected() {
+        assert_eq!(
+            check_summary("Cors middleware with unicorns", &summary()),
+            Err(Rejection::UngroundedSummary)
+        );
+    }
+
+    #[test]
+    fn empty_summary_is_rejected() {
+        assert_eq!(check_summary("   ", &summary()), Err(Rejection::Empty));
     }
 }

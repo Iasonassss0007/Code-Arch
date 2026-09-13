@@ -1,13 +1,13 @@
 # Local model vs derived labeler
 
-Model: `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`. 20 frozen reference clusters. 0 of 20 fell back to the derived name (generation failure, ungrounded output, collision, or bad length).
+Model: `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`. 20 frozen reference clusters. 0 of 20 fell back to the derived name (generation failure, ungrounded output, collision, or bad length); 15 kept the generated name with a derived summary (summary guard).
 
 Higher is better for specificity and groundedness; lower is better for collisions. References are model-reviewed, not human ground truth, so these numbers compare two labelers against a fixed standard rather than establishing absolute quality.
 
 | Metric | Derived | Local model |
 |---|---:|---:|
-| Name specificity | 75% | 55% |
-| Lexical groundedness | 90% | 25% |
+| Name specificity | 75% | 60% |
+| Lexical groundedness | 90% | 100% |
 | Sibling collisions | 0% | 0% |
 
 ## Per-cluster names

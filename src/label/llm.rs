@@ -25,7 +25,7 @@ use llama_cpp_2::model::{AddBos, LlamaChatMessage, LlamaModel, Special};
 use llama_cpp_2::sampling::LlamaSampler;
 
 use super::validate;
-use super::{ClusterSummary, DerivedLabeler, Label, Labeler};
+use super::{ClusterSummary, DerivedLabeler, Label, Labeler, derive_summary};
 
 /// Output shape, enforced at the sampler rather than checked after the fact.
 ///
@@ -52,6 +52,7 @@ pub struct LlmLabeler {
     fallback: DerivedLabeler,
     generated: Cell<usize>,
     fell_back: Cell<usize>,
+    summary_fell_back: Cell<usize>,
 }
 
 impl LlmLabeler {
@@ -70,6 +71,7 @@ impl LlmLabeler {
             fallback: DerivedLabeler,
             generated: Cell::new(0),
             fell_back: Cell::new(0),
+            summary_fell_back: Cell::new(0),
         })
     }
 
@@ -81,6 +83,11 @@ impl LlmLabeler {
     /// Clusters that fell back to the derived name, for any reason.
     pub fn fell_back(&self) -> usize {
         self.fell_back.get()
+    }
+
+    /// Generated names kept with a derived summary.
+    pub fn summary_fell_back(&self) -> usize {
+        self.summary_fell_back.get()
     }
 
     fn generate(&self, prompt: &str) -> Result<String> {
@@ -156,8 +163,22 @@ impl Labeler for LlmLabeler {
             return self.derived(s, siblings);
         }
 
+        // A good name with an ungrounded sentence keeps the name: the honest
+        // sentence is the derived template, not a model invention.
+        if validate::check_summary(&summary, s).is_err() {
+            self.summary_fell_back.set(self.summary_fell_back.get() + 1);
+            return Label {
+                name,
+                summary: derive_summary(s),
+            };
+        }
+
         self.generated.set(self.generated.get() + 1);
         Label { name, summary }
+    }
+
+    fn summary_fell_back(&self) -> usize {
+        self.summary_fell_back.get()
     }
 }
 
