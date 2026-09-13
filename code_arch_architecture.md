@@ -633,7 +633,11 @@ the package tsconfig alias is unresolvable, and same-dir `from models
 import` falls through to external because package dirs are not resolver
 roots. Domains still split sensibly by directory at medium confidence —
 degradation, not collapse. Slices: (1) this diagnosis [done];
-(2) per-package manifest discovery; (3) per-package resolver roots;
+(2) per-package manifest discovery [done — `workspaces` + pnpm patterns merge
+package deps, tsconfig aliases (rebased, first-wins), and baseUrls
+(`extra_base_urls`) into one profile; the mono fixture now reports
+React · Flask at 100% import resolution with web+shared merged high].
+(3) per-package resolver roots (`models` still files as external);
 (4) per-package entry points.
 
 Whether "Task Navigation" should be generated per repository or derived from

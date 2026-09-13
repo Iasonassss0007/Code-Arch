@@ -68,6 +68,9 @@ pub struct PathMappings {
     pub base_url: Option<String>,
     /// tsconfig `compilerOptions.paths`, alias pattern -> replacement patterns.
     pub paths: Vec<(String, Vec<String>)>,
+    /// Package-level baseUrls rebased to repository-relative form (slice 2).
+    /// Tried in order after `base_url`; first hit wins.
+    pub extra_base_urls: Vec<String>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -81,6 +84,10 @@ pub struct Profile {
     pub has_tsconfig: bool,
     /// Declared entry points from package.json `main`/`bin`.
     pub manifest_entries: Vec<String>,
+    /// Workspace package dirs (repository-relative, sorted), from `workspaces`
+    /// or `pnpm-workspace.yaml`. Empty for single-package repos: no behavior
+    /// change there. Slice 3 will hang per-package resolver roots off this.
+    pub package_dirs: Vec<String>,
 }
 
 impl Profile {
@@ -107,43 +114,27 @@ impl Profile {
 pub fn detect(inv: &Inventory) -> Profile {
     let mut p = Profile::default();
 
-    if let Some(raw) = read_json(&inv.root.join("package.json")) {
-        p.has_package_json = true;
-        p.project_name = raw
-            .get("name")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        p.description = raw
-            .get("description")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-
-        for key in ["dependencies", "devDependencies", "peerDependencies"] {
-            if let Some(obj) = raw.get(key).and_then(|v| v.as_object()) {
-                for name in obj.keys() {
-                    p.deps.insert(name.clone());
-                }
-            }
-        }
-
-        if let Some(main) = raw.get("main").and_then(|v| v.as_str()) {
-            p.manifest_entries.push(normalize_rel(main));
-        }
-        match raw.get("bin") {
-            Some(serde_json::Value::String(s)) => p.manifest_entries.push(normalize_rel(s)),
-            Some(serde_json::Value::Object(o)) => {
-                for v in o.values() {
-                    if let Some(s) = v.as_str() {
-                        p.manifest_entries.push(normalize_rel(s));
-                    }
-                }
-            }
-            _ => {}
-        }
+    let root_raw = read_json(&inv.root.join("package.json"));
+    if let Some(raw) = root_raw.as_ref() {
+        read_package_json(raw, "", &mut p);
     }
-
     read_pyproject(&inv.root, &mut p);
     read_requirements(&inv.root, &mut p);
+    read_tsconfig(&inv.root, "", &mut p);
+
+    // Slice 2: workspace packages merge into the same profile, rebased to
+    // repository-relative form. Root is read first so it wins every
+    // first-wins rule (alias patterns, baseUrl, name/description).
+    p.package_dirs = discover_packages(&inv.root, root_raw.as_ref());
+    for pkg in p.package_dirs.clone() {
+        let dir = inv.root.join(&pkg);
+        if let Some(raw) = read_json(&dir.join("package.json")) {
+            read_package_json(&raw, &pkg, &mut p);
+        }
+        read_pyproject(&dir, &mut p);
+        read_requirements(&dir, &mut p);
+        read_tsconfig(&dir, &pkg, &mut p);
+    }
 
     for (dep, display) in FRAMEWORKS {
         if p.deps.contains(*dep) && !p.frameworks.iter().any(|f| f == display) {
@@ -158,9 +149,61 @@ pub fn detect(inv: &Inventory) -> Profile {
         p.frameworks.push("Django".to_string());
     }
 
+    p
+}
+
+/// The root `package.json` block, generalized over directories. `prefix` is
+/// the package dir repository-relative, or empty for the root: manifest
+/// entries rebase through it, while name/description only fill when the root
+/// left them absent.
+fn read_package_json(raw: &serde_json::Value, prefix: &str, p: &mut Profile) {
+    p.has_package_json = true;
+    if p.project_name.is_none() {
+        p.project_name = raw
+            .get("name")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+    }
+    if p.description.is_none() {
+        p.description = raw
+            .get("description")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+    }
+
+    for key in ["dependencies", "devDependencies", "peerDependencies"] {
+        if let Some(obj) = raw.get(key).and_then(|v| v.as_object()) {
+            for name in obj.keys() {
+                p.deps.insert(name.clone());
+            }
+        }
+    }
+
+    if let Some(main) = raw.get("main").and_then(|v| v.as_str()) {
+        p.manifest_entries.push(rebase(prefix, main));
+    }
+    match raw.get("bin") {
+        Some(serde_json::Value::String(s)) => p.manifest_entries.push(rebase(prefix, s)),
+        Some(serde_json::Value::Object(o)) => {
+            for v in o.values() {
+                if let Some(s) = v.as_str() {
+                    p.manifest_entries.push(rebase(prefix, s));
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// The root tsconfig block, generalized the same way. Package baseUrls cannot
+/// share the single `base_url` slot, so they append to `extra_base_urls`;
+/// package alias targets rebase to repository-relative form. Duplicate alias
+/// patterns keep the first registration (root before packages, packages in
+/// sorted order).
+fn read_tsconfig(dir: &Path, prefix: &str, p: &mut Profile) {
     // tsconfig.json is very often JSONC, so it cannot go through serde directly.
     for candidate in ["tsconfig.json", "jsconfig.json"] {
-        let path = inv.root.join(candidate);
+        let path = dir.join(candidate);
         if !path.exists() {
             continue;
         }
@@ -175,16 +218,31 @@ pub fn detect(inv: &Inventory) -> Profile {
             continue;
         };
         if let Some(b) = co.get("baseUrl").and_then(|v| v.as_str()) {
-            p.mappings.base_url = Some(normalize_rel(b));
+            // Root keeps its exact historical value ("." stays ".").
+            let rebased = if prefix.is_empty() {
+                normalize_rel(b)
+            } else {
+                rebase(prefix, b)
+            };
+            if prefix.is_empty() {
+                p.mappings.base_url = Some(rebased);
+            } else if Some(&rebased) != p.mappings.base_url.as_ref()
+                && !p.mappings.extra_base_urls.contains(&rebased)
+            {
+                p.mappings.extra_base_urls.push(rebased);
+            }
         }
         if let Some(paths) = co.get("paths").and_then(|v| v.as_object()) {
             for (alias, targets) in paths {
+                if p.mappings.paths.iter().any(|(a, _)| a == alias) {
+                    continue;
+                }
                 let list: Vec<String> = targets
                     .as_array()
                     .map(|a| {
                         a.iter()
                             .filter_map(|t| t.as_str())
-                            .map(normalize_rel)
+                            .map(|t| rebase(prefix, t))
                             .collect()
                     })
                     .unwrap_or_default();
@@ -195,8 +253,141 @@ pub fn detect(inv: &Inventory) -> Profile {
         }
         break;
     }
+}
 
-    p
+/// Join a package dir and a manifest-relative target, lexically normalizing
+/// `.`/`..`. `rebase("packages/web", "../shared/*")` is
+/// `packages/shared/*`; `rebase("", x)` matches `normalize_rel(x)` except
+/// that `"."` maps to `""` (the resolver treats both as the root).
+/// A `..` that escapes the root collapses to root-relative rather than
+/// failing: the lookup that follows simply misses.
+fn rebase(pkg: &str, target: &str) -> String {
+    let mut parts: Vec<&str> = Vec::new();
+    for seg in pkg.split('/').chain(target.split('/')) {
+        match seg {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            s => parts.push(s),
+        }
+    }
+    normalize_rel(&parts.join("/"))
+}
+
+/// Workspace package dirs, repository-relative and sorted. Sources, in order:
+/// root `package.json` `workspaces` (array or `{packages: [...]}`), then
+/// `pnpm-workspace.yaml` `packages:` entries (line-scanned, same precedent as
+/// `read_requirements`). Only `*` (single segment) globs expand; `!`
+/// negations are ignored. A dir counts only if it holds at least one
+/// manifest, so a stale glob cannot invent packages. Capped at 64.
+fn discover_packages(root: &Path, raw: Option<&serde_json::Value>) -> Vec<String> {
+    let mut patterns: Vec<String> = Vec::new();
+    if let Some(r) = raw {
+        match r.get("workspaces") {
+            Some(serde_json::Value::Array(a)) => {
+                for v in a {
+                    if let Some(s) = v.as_str() {
+                        patterns.push(s.to_string());
+                    }
+                }
+            }
+            Some(serde_json::Value::Object(o)) => {
+                if let Some(a) = o.get("packages").and_then(|v| v.as_array()) {
+                    for v in a {
+                        if let Some(s) = v.as_str() {
+                            patterns.push(s.to_string());
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    patterns.extend(read_pnpm_workspaces(root));
+
+    let mut out: Vec<String> = Vec::new();
+    for pat in patterns {
+        if pat.starts_with('!') {
+            continue;
+        }
+        if let Some((head, _)) = pat.split_once('*') {
+            let base = root.join(head);
+            let Ok(entries) = std::fs::read_dir(&base) else {
+                continue;
+            };
+            for e in entries.flatten() {
+                let path = e.path();
+                if path.is_dir() && has_manifest(&path) {
+                    out.push(normalize_rel(&rel_of(root, &path)));
+                }
+            }
+        } else {
+            let path = root.join(&pat);
+            if path.is_dir() && has_manifest(&path) {
+                out.push(normalize_rel(&pat));
+            }
+        }
+        if out.len() >= 64 {
+            break;
+        }
+    }
+    out.sort();
+    out.dedup();
+    out.truncate(64);
+    out
+}
+
+/// Minimal `pnpm-workspace.yaml` subset: the `packages:` list. Anything else
+/// in the file is ignored.
+fn read_pnpm_workspaces(root: &Path) -> Vec<String> {
+    let Ok(text) = std::fs::read_to_string(root.join("pnpm-workspace.yaml")) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    let mut in_section = false;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if !line.starts_with([' ', '\t', '-']) {
+            in_section = trimmed == "packages:";
+            continue;
+        }
+        if in_section {
+            if let Some(pat) = trimmed.strip_prefix("- ") {
+                out.push(pat.trim_matches(|c| c == '"' || c == '\'').to_string());
+            }
+        }
+    }
+    out
+}
+
+/// At least one manifest the profiler can read.
+fn has_manifest(dir: &Path) -> bool {
+    for f in ["package.json", "pyproject.toml", "tsconfig.json", "jsconfig.json"] {
+        if dir.join(f).is_file() {
+            return true;
+        }
+    }
+    std::fs::read_dir(dir)
+        .map(|entries| {
+            entries.flatten().any(|e| {
+                e.file_name()
+                    .to_str()
+                    .map(|n| n.starts_with("requirements") && n.ends_with(".txt"))
+                    .unwrap_or(false)
+            })
+        })
+        .unwrap_or(false)
+}
+
+/// Repository-relative slash path for a path under root.
+fn rel_of(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .map(|r| r.to_string_lossy().replace('\\', "/"))
+        .unwrap_or_else(|_| path.to_string_lossy().replace('\\', "/"))
 }
 
 /// `pyproject.toml`, parsed as the subset that matters: `[project] name`,
@@ -818,5 +1009,111 @@ mod tests {
         assert_eq!(next_app_kind("sitemap.ts"), Some("sitemap"));
         // Non-convention files still yield nothing.
         assert_eq!(next_app_kind("search/grid.tsx"), None);
+    }
+
+    fn test_inventory_at(root: std::path::PathBuf, rels: &[&str]) -> Inventory {
+        use crate::types::{FileClass, FileRecord, Language};
+        Inventory {
+            root,
+            files: rels
+                .iter()
+                .enumerate()
+                .map(|(id, rel)| FileRecord {
+                    id,
+                    rel: (*rel).into(),
+                    abs: std::path::PathBuf::from(rel),
+                    language: Language::from_path(std::path::Path::new(rel))
+                        .unwrap_or(Language::Ts),
+                    bytes: 10,
+                    loc: 1,
+                    class: FileClass::Source,
+                })
+                .collect(),
+            skipped: Vec::new(),
+            excluded: Default::default(),
+        }
+    }
+
+    fn write_tree(path: &std::path::Path, content: &str) {
+        use std::io::Write;
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let mut f = std::fs::File::create(path).unwrap();
+        write!(f, "{content}").unwrap();
+    }
+
+    #[test]
+    fn rebase_joins_and_normalizes() {
+        assert_eq!(rebase("packages/web", "../shared/*"), "packages/shared/*");
+        assert_eq!(rebase("packages/web", "."), "packages/web");
+        assert_eq!(rebase("", "dist/index.js"), "dist/index.js");
+        assert_eq!(rebase("pkg", "./main.js"), "pkg/main.js");
+    }
+
+    #[test]
+    fn workspaces_merge_package_manifests() {
+        let dir = std::env::temp_dir().join(format!("codearch-mono-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(
+            &dir.join("package.json"),
+            r#"{"name":"mono","private":true,"workspaces":["packages/*"]}"#,
+        );
+        write_tree(
+            &dir.join("packages/web/package.json"),
+            r#"{"name":"web","dependencies":{"react":"18.0.0"}}"#,
+        );
+        write_tree(
+            &dir.join("packages/web/tsconfig.json"),
+            r#"{"compilerOptions":{"baseUrl":".","paths":{"@shared/*":["../shared/*"]}}}"#,
+        );
+        write_tree(
+            &dir.join("packages/api/pyproject.toml"),
+            "[project]\nname = \"api\"\ndependencies = [\"flask\"]\n",
+        );
+        let p = detect(&test_inventory_at(dir.clone(), &[]));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(
+            p.package_dirs,
+            vec!["packages/api".to_string(), "packages/web".to_string()]
+        );
+        assert!(p.frameworks.contains(&"React".to_string()));
+        assert!(p.frameworks.contains(&"Flask".to_string()));
+        assert!(p.mappings.paths.contains(&(
+            "@shared/*".to_string(),
+            vec!["packages/shared/*".to_string()]
+        )));
+        assert!(p.mappings.extra_base_urls.contains(&"packages/web".to_string()));
+        assert_eq!(p.project_name.as_deref(), Some("mono"));
+    }
+
+    #[test]
+    fn pnpm_workspaces_discover_packages() {
+        let dir =
+            std::env::temp_dir().join(format!("codearch-pnpm-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(&dir.join("pnpm-workspace.yaml"), "packages:\n  - 'apps/*'\n");
+        write_tree(
+            &dir.join("apps/blog/package.json"),
+            r#"{"name":"blog","dependencies":{"next":"14.0.0"}}"#,
+        );
+        let p = detect(&test_inventory_at(dir.clone(), &[]));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(p.package_dirs, vec!["apps/blog".to_string()]);
+        assert!(p.frameworks.contains(&"Next.js".to_string()));
+    }
+
+    #[test]
+    fn stale_glob_invents_no_packages() {
+        let dir =
+            std::env::temp_dir().join(format!("codearch-stale-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(
+            &dir.join("package.json"),
+            r#"{"name":"mono","private":true,"workspaces":["packages/*"]}"#,
+        );
+        write_tree(&dir.join("packages/empty/README.md"), "nothing to read here\n");
+        let p = detect(&test_inventory_at(dir.clone(), &[]));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(p.package_dirs.is_empty());
+        assert!(p.frameworks.is_empty());
     }
 }
