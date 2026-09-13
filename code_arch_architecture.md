@@ -520,7 +520,7 @@ M6   Model evaluation sweep and the LoRA fine-tune path from the core idea.
 
 ---
 
-## Implementation Status — M0 complete
+## Implementation Status — M5 complete
 
 M0 is built and runs end to end: `codearch <path>` produces `CODEBASE.md` and
 `.codearch/index.json`. 44 unit tests pass. Verified on two real repositories —
