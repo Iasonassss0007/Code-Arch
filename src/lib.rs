@@ -295,7 +295,7 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     timer.done("parse");
 
     // 3 — Resolve
-    let res = resolve::resolve_all(&inv, &parsed, &profile.mappings);
+    let res = resolve::resolve_all(&inv, &parsed, &profile.mappings, &profile.package_dirs);
     timer.done("resolve");
 
     // 4 — Git signals. Absent history is a degraded run, not a failed one.

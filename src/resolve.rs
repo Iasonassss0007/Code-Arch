@@ -128,7 +128,12 @@ fn insert_ranked(
     }
 }
 
-pub fn resolve_all(inv: &Inventory, parsed: &[FileParse], mappings: &PathMappings) -> Resolution {
+pub fn resolve_all(
+    inv: &Inventory,
+    parsed: &[FileParse],
+    mappings: &PathMappings,
+    package_dirs: &[String],
+) -> Resolution {
     let index = FileIndex::build(inv);
     let mut out = Resolution {
         file_externals: vec![Vec::new(); inv.len()],
@@ -137,7 +142,7 @@ pub fn resolve_all(inv: &Inventory, parsed: &[FileParse], mappings: &PathMapping
     let mut seen: HashSet<(FileId, FileId)> = HashSet::new();
     let mut internal_attempts = 0usize;
     let mut internal_hits = 0usize;
-    let py_roots = python_roots(inv);
+    let py_roots = python_roots(inv, package_dirs);
 
     for p in parsed {
         let from = p.file;
@@ -275,7 +280,13 @@ fn resolve_bare(spec: &str, mappings: &PathMappings, index: &FileIndex) -> Optio
 /// `src/` when a src-layout package is detected (`src/*/__init__.py`
 /// exists). A stray `src/` dir with no packages adds a harmless extra root:
 /// lookups miss and fall through to external.
-fn python_roots(inv: &Inventory) -> Vec<String> {
+/// Slice 3: workspace package dirs join the roots when they hold Python —
+/// in a monorepo the package dir, not the repository root, is the import
+/// anchor, and without it same-package absolute imports file as third-party.
+/// TS package dirs never qualify (no `.py` underneath); extra roots only add
+/// miss-and-fall-through lookups, and a repo file still beats the package
+/// heuristic under the accepted-collision rule.
+fn python_roots(inv: &Inventory, package_dirs: &[String]) -> Vec<String> {
     let mut roots = vec![String::new()];
     if inv
         .files
@@ -283,6 +294,14 @@ fn python_roots(inv: &Inventory) -> Vec<String> {
         .any(|f| f.rel.starts_with("src/") && f.rel.ends_with("/__init__.py"))
     {
         roots.push("src".to_string());
+    }
+    for pkg in package_dirs {
+        let prefix = format!("{pkg}/");
+        if inv.files.iter().any(|f| f.rel.starts_with(&prefix) && f.rel.ends_with(".py"))
+            && !roots.contains(pkg)
+        {
+            roots.push(pkg.clone());
+        }
     }
     roots
 }
@@ -614,7 +633,7 @@ mod tests {
         // `components/grid` is package-shaped (lowercase head) and used to be
         // filed as external before the alias/baseUrl table was consulted.
         let inv = inventory(&["app/search/page.tsx", "components/grid/index.tsx"]);
-        let res = resolve_all(&inv, &[parsed(0, &["components/grid"])], &base_url_mappings());
+        let res = resolve_all(&inv, &[parsed(0, &["components/grid"])], &base_url_mappings(), &[]);
         assert_eq!(res.edges, vec![(0, 1)]);
         assert!(res.unresolved.is_empty());
         assert!((res.resolution_rate - 1.0).abs() < 1e-9);
@@ -623,7 +642,7 @@ mod tests {
     #[test]
     fn missing_bare_import_is_still_external_not_unresolved() {
         let inv = inventory(&["app/search/page.tsx"]);
-        let res = resolve_all(&inv, &[parsed(0, &["react"])], &base_url_mappings());
+        let res = resolve_all(&inv, &[parsed(0, &["react"])], &base_url_mappings(), &[]);
         assert!(res.edges.is_empty());
         assert!(res.unresolved.is_empty());
         assert_eq!(res.externals.get("react"), Some(&1));
@@ -637,6 +656,7 @@ mod tests {
             &inv,
             &[parsed(0, &["Components/Missing"])],
             &base_url_mappings(),
+            &[],
         );
         assert_eq!(res.unresolved.len(), 1);
     }
@@ -649,7 +669,7 @@ mod tests {
             paths: Vec::new(),
             extra_base_urls: vec!["packages/web".into()],
         };
-        let res = resolve_all(&inv, &[parsed(0, &["src/b"])], &m);
+        let res = resolve_all(&inv, &[parsed(0, &["src/b"])], &m, &[]);
         assert_eq!(res.edges, vec![(0, 1)]);
         assert!(res.unresolved.is_empty());
     }
@@ -662,17 +682,19 @@ mod tests {
             paths: vec![("@shared/*".into(), vec!["packages/shared/*".into()])],
             ..Default::default()
         };
-        let res = resolve_all(&inv, &[parsed(0, &["@shared/util"])], &m);
+        let res = resolve_all(&inv, &[parsed(0, &["@shared/util"])], &m, &[]);
         assert_eq!(res.edges, vec![(0, 1)]);
         assert!(res.unresolved.is_empty());
     }
 
     #[test]
-    fn relative_specs_bypass_the_probe_unchanged() {        let inv = inventory(&["src/a.ts", "src/b.ts"]);
+    fn relative_specs_bypass_the_probe_unchanged() {
+        let inv = inventory(&["src/a.ts", "src/b.ts"]);
         let res = resolve_all(
             &inv,
             &[parsed(0, &["./b"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.edges, vec![(0, 1)]);
     }
@@ -684,6 +706,7 @@ mod tests {
             &inv,
             &[parsed(2, &[".models"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.edges, vec![(2, 1)]);
         assert!((res.resolution_rate - 1.0).abs() < 1e-9);
@@ -692,7 +715,7 @@ mod tests {
     #[test]
     fn python_bare_from_dot_import_targets_the_package_init() {
         let inv = inventory(&["pkg/__init__.py", "pkg/views.py"]);
-        let res = resolve_all(&inv, &[parsed(1, &["."])], &PathMappings::default());
+        let res = resolve_all(&inv, &[parsed(1, &["."])], &PathMappings::default(), &[]);
         assert_eq!(res.edges, vec![(1, 0)]);
     }
 
@@ -703,6 +726,7 @@ mod tests {
             &inv,
             &[parsed(1, &["..shared"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.edges, vec![(1, 2)]);
     }
@@ -716,6 +740,7 @@ mod tests {
             &inv,
             &[parsed(2, &["pkg.mod"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.edges, vec![(2, 1)]);
     }
@@ -727,6 +752,7 @@ mod tests {
             &inv,
             &[parsed(2, &["pkg.mod"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.edges, vec![(2, 1)]);
     }
@@ -738,6 +764,7 @@ mod tests {
             &inv,
             &[parsed(1, &[".mod"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.edges, vec![(1, 0)]);
     }
@@ -749,6 +776,7 @@ mod tests {
             &inv,
             &[parsed(0, &["os", "sqlalchemy.orm", "__future__"])],
             &PathMappings::default(),
+            &[],
         );
         assert!(res.edges.is_empty());
         assert!(res.unresolved.is_empty());
@@ -766,6 +794,7 @@ mod tests {
             &inv,
             &[parsed(0, &[".missing"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.unresolved.len(), 1);
         assert!(res.resolution_rate < 1.0);
@@ -778,6 +807,7 @@ mod tests {
             &inv,
             &[parsed(0, &["django-include:app.urls"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.edges, vec![(0, 1)]);
     }
@@ -789,7 +819,38 @@ mod tests {
             &inv,
             &[parsed(0, &["django-include:blog.urls"])],
             &PathMappings::default(),
+            &[],
         );
         assert_eq!(res.unresolved.len(), 1);
+    }
+
+    #[test]
+    fn python_package_dir_is_an_import_root() {
+        // Monorepo slice 3: `models` from `packages/api/app.py` is an
+        // absolute same-package import, not the third-party `models`.
+        let inv = inventory(&["packages/api/app.py", "packages/api/models.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["models"])],
+            &PathMappings::default(),
+            &["packages/api".to_string()],
+        );
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert!(res.unresolved.is_empty());
+        assert!(res.externals.is_empty());
+    }
+
+    #[test]
+    fn python_package_root_ignored_without_package_python() {
+        // A TS-only package dir adds no root: `models` still files external.
+        let inv = inventory(&["packages/api/app.py", "packages/api/models.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["models"])],
+            &PathMappings::default(),
+            &["packages/web".to_string()],
+        );
+        assert!(res.edges.is_empty());
+        assert_eq!(res.externals.get("models"), Some(&1));
     }
 }

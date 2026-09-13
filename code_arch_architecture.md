@@ -637,7 +637,10 @@ degradation, not collapse. Slices: (1) this diagnosis [done];
 package deps, tsconfig aliases (rebased, first-wins), and baseUrls
 (`extra_base_urls`) into one profile; the mono fixture now reports
 React · Flask at 100% import resolution with web+shared merged high].
-(3) per-package resolver roots (`models` still files as external);
+(3) per-package resolver roots [done — package dirs holding Python join the
+import roots (`resolve_all` takes `package_dirs`; TS-only dirs filtered by
+`.py` presence); the mono fixture now resolves all 3 imports with an
+app → models flow, and the `models`-as-external line is gone];
 (4) per-package entry points.
 
 Whether "Task Navigation" should be generated per repository or derived from
