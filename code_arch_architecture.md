@@ -1247,3 +1247,71 @@ slots — not a bigger model. `--labeler derived` stays the default.
 `summary_fell_back`); reproduce with `python eval/score_llm_labels.py`
 against a binary built `--features llm` (VS-bundled cmake on PATH,
 `LIBCLANG_PATH` set; CPU minutes).
+
+
+## M6 multi-model sweep — derived still wins, code-pretraining claim holds directionally
+
+Spec: `docs/superpowers/specs/2026-09-13-m6-model-sweep-design.md`.
+Registry: `eval/models-sweep.json`. Harness: `python eval/score_sweep.py`,
+which scores the derived baseline plus every downloaded model in one
+invocation by identical v2 code (prompt v2, name + summary guard, stemmed
+metric). `score_llm_labels.py` stays untouched as the single-model M6-lite
+record. Winner rule stated before the run: specificity, then fewer summary
+fallbacks, then smaller file.
+
+**Measured** (20 frozen clusters, CPU wall time beside quality):
+
+| Model | Specificity | Groundedness | Collisions | Name FB | Summary FB | Time |
+|---|---:|---:|---:|---:|---:|---:|
+| derived (baseline) | 75% (15/20) | 90% | 0% | — | — | 0.4s |
+| qwen25-coder-1.5b | 60% (12/20) | 100% | 0% | 0/20 | 15/20 | 92s |
+| llama32-1b | 50% (10/20) | 90% | 0% | 0/20 | 9/20 | 57s |
+| qwen25-coder-0.5b | 20% (4/20) | 80% | 10% | 0/20 | 15/20 | 57s |
+| gemma2-2b-it | 20% (4/20) | 35% | 0% | 0/20 | 14/20 | 120s |
+
+Rule winner: `qwen25-coder-1.5b`, gap to derived **−15 pp**.
+No candidate beats the baseline, so `--labeler derived` stays the default
+and Qwen-1.5B stays the opt-in LLM. That is the M6 exit — model choice from
+numbers, and the numbers say don't switch.
+
+Three findings, each read with the metric's known shape (M0.5: name+summary
+groundedness is template-conformity, not hallucination rate):
+
+- **The code-pretraining ranking holds.** Both code-native models beat the
+  general 2B model, which is the largest file in the sweep and the worst
+  score. Gemma's 35% groundedness is one word: `subsystem` appears in 12 of
+  its summaries and in no evidence list. Whether that is disobedience or
+  phrasing habit, the lexical bar is the same bar the guard enforces, and the
+  general model clears it least.
+- **0.5B is below usable.** 20% specificity with 2 sibling collisions.
+  A LoRA fine-tune on this base must recover ~40 pp to reach the incumbent
+  and ~55 pp to reach derived — that is now the bar, stated before any
+  training spend. Training itself is deferred (needs a teacher model, GPU
+  time, harvested multi-repo pairs); the concrete artifact is
+  `eval/build_lora_pairs.py`, which exports the frozen set as 48
+  `{input, completion}` JSONL pairs in the exact shape the labeler consumes,
+  prompts stored structured so rendering cannot drift from `build_prompt`.
+- **Miss sets differ.** Llama names hono-9 `ETag` correctly where the
+  incumbent answers `Middleware`; its misses (hono-4/5, commerce-3/5/7) are
+  mostly not Qwen's (hono-7/8/9). It is also the fastest model arm at 57s
+  with the fewest summary fallbacks (9/20). Nothing here overturns the
+  decision, but a future ensemble or per-cluster model selection has
+  something to work with — recorded, not pursued.
+
+Excluded with reason: CodeGemma 2B ships base-only (instruct exists at 7B),
+so there is no chat template for `LlmLabeler::generate` to format through.
+Running it needs a separate base-model prompting path — out of scope.
+
+Caveats, same as ever: 20 clusters cannot separate close models with
+authority — counts sit beside percentages in the report so a 1-cluster gap
+reads as one cluster. References are model-reviewed, not human ground truth.
+CodeGemma-7B-it and Qwen2.5-Coder-3B were not swept (CPU budget); the sweep
+re-runs with one command once files land in `models/`.
+
+Auditable artifacts: `eval/labels-sweep-report.md`/`.json` (per-model rows,
+fallback rates, timing, winner, gap), `eval/models-sweep.json` (registry
+with reproduce commands), `eval/lora-pairs.jsonl` (48 seed pairs).
+Reproduce: `cargo build --features llm`, then `python eval/score_sweep.py`.
+192 Rust tests and 52 Python tests pass (M6 adds the 8 hermetic Python
+sweep/LoRA tests; the Rust count grew past the M6-lite 166 through the
+monorepo/xlang slices, none added by M6 itself).
