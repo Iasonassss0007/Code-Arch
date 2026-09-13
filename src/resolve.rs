@@ -255,6 +255,19 @@ fn resolve_bare(spec: &str, mappings: &PathMappings, index: &FileIndex) -> Optio
         }
     }
 
+    // Workspace packages each carry their own baseUrl (slice 2). Tried in
+    // order after the root's; the profile keeps them sorted and deduplicated.
+    for base in &mappings.extra_base_urls {
+        let candidate = if base == "." || base.is_empty() {
+            spec.to_string()
+        } else {
+            format!("{base}/{spec}")
+        };
+        if let Some(id) = lookup(&candidate, index) {
+            return Some(id);
+        }
+    }
+
     None
 }
 
@@ -592,6 +605,7 @@ mod tests {
         PathMappings {
             base_url: Some(".".into()),
             paths: Vec::new(),
+            ..Default::default()
         }
     }
 
@@ -628,8 +642,33 @@ mod tests {
     }
 
     #[test]
-    fn relative_specs_bypass_the_probe_unchanged() {
-        let inv = inventory(&["src/a.ts", "src/b.ts"]);
+    fn extra_base_url_resolves_package_bare_imports() {
+        let inv = inventory(&["packages/web/src/a.ts", "packages/web/src/b.ts"]);
+        let m = PathMappings {
+            base_url: None,
+            paths: Vec::new(),
+            extra_base_urls: vec!["packages/web".into()],
+        };
+        let res = resolve_all(&inv, &[parsed(0, &["src/b"])], &m);
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert!(res.unresolved.is_empty());
+    }
+
+    #[test]
+    fn rebased_alias_target_resolves_across_packages() {
+        let inv = inventory(&["packages/web/src/index.ts", "packages/shared/util.ts"]);
+        let m = PathMappings {
+            base_url: None,
+            paths: vec![("@shared/*".into(), vec!["packages/shared/*".into()])],
+            ..Default::default()
+        };
+        let res = resolve_all(&inv, &[parsed(0, &["@shared/util"])], &m);
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert!(res.unresolved.is_empty());
+    }
+
+    #[test]
+    fn relative_specs_bypass_the_probe_unchanged() {        let inv = inventory(&["src/a.ts", "src/b.ts"]);
         let res = resolve_all(
             &inv,
             &[parsed(0, &["./b"])],
