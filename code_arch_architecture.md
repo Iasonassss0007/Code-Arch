@@ -626,6 +626,15 @@ Silent Tier 2/3 degradation    unresolved rate is a first-class metric that
 ```text
 Monorepos with several ecosystems in one tree — likely one profile and one
 graph per workspace package, joined at the top level, but unverified.
+Measured 2026-09-13 on `eval/fixtures/mono` (root workspaces + TS `web`
+with a tsconfig alias + Python `api`): the profile reads manifests at the
+root only, so React and Flask are both missed ("No frameworks identified"),
+the package tsconfig alias is unresolvable, and same-dir `from models
+import` falls through to external because package dirs are not resolver
+roots. Domains still split sensibly by directory at medium confidence —
+degradation, not collapse. Slices: (1) this diagnosis [done];
+(2) per-package manifest discovery; (3) per-package resolver roots;
+(4) per-package entry points.
 
 Whether "Task Navigation" should be generated per repository or derived from
 observed agent behavior over time. The latter is more useful and much harder.
