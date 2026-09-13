@@ -131,6 +131,9 @@ fn main() -> Result<()> {
     if report.split {
         println!("Split:               root routes to domain files");
     }
+    if report.contracts > 0 {
+        println!("API contracts:       {}", report.contracts);
+    }
     println!(
         "Flows:               {}",
         if report.flows_dropped {

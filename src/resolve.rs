@@ -616,6 +616,7 @@ mod tests {
                     line: 1,
                 })
                 .collect(),
+            urls: Vec::new(),
             partial: false,
         }
     }

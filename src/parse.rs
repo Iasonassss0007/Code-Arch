@@ -64,6 +64,10 @@ pub struct FileParse {
     pub file: FileId,
     pub symbols: Vec<Symbol>,
     pub refs: Vec<RawRef>,
+    /// URL-shaped contract evidence for the cross-language join (slice 2):
+    /// normalized paths (`api/users`), sorted and deduplicated. Stage 3
+    /// ignores these; `contract::join` matches them across languages.
+    pub urls: Vec<String>,
     /// The grammar reported at least one ERROR node.
     pub partial: bool,
 }
@@ -177,6 +181,8 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
     let root = tree.root_node();
     out.partial = root.has_error();
     visit(root, src, false, lang.is_python(), &mut out, 0);
+    out.urls.sort();
+    out.urls.dedup();
     out
 }
 
@@ -211,6 +217,17 @@ fn visit(node: Node, src: &str, in_export: bool, py: bool, out: &mut FileParse, 
                     specifier: spec,
                     line,
                 });
+            }
+            // Contract evidence (slice 2): the first string-valued call
+            // argument starting with `/`. `fetch`, axios-likes and router
+            // calls all carry the path first; dynamic URLs (templates,
+            // concatenation) are not string literals and stay out.
+            if let Some(raw) = ts_first_string_arg(node, src) {
+                if raw.starts_with('/') {
+                    if let Some(u) = normalize_url(&raw) {
+                        out.urls.push(u);
+                    }
+                }
             }
         }
 
@@ -262,6 +279,23 @@ fn visit_python(node: Node, src: &str, line: usize, out: &mut FileParse) {
         "call" => {
             if let Some(spec) = django_include_specifier(node, src) {
                 out.refs.push(RawRef { specifier: spec, line });
+            }
+            // Django `path('api/x/', …)`: same first-string convention as
+            // decorators, gated on the callee name.
+            if let Some(raw) = path_call_string(node, src) {
+                if let Some(u) = normalize_url(&raw) {
+                    out.urls.push(u);
+                }
+            }
+        }
+        // Route decorators (`@app.route('/api/x')`, `@bp.get('api/x')`):
+        // the contract path is the first string argument in every
+        // framework. No leading slash required — Django omits it.
+        "decorator" => {
+            if let Some(raw) = first_string_descendant(node, src) {
+                if let Some(u) = normalize_url(&raw) {
+                    out.urls.push(u);
+                }
             }
         }
         "function_definition" | "class_definition" => {
@@ -424,6 +458,93 @@ fn string_value(node: Node, src: &str) -> Option<String> {
     } else {
         None
     }
+}
+
+/// Normalize a URL-ish string to a joinable contract path, or `None` when
+/// the string is not URL-shaped. Leading/trailing slashes, query strings and
+/// fragments go; dynamic segments (`:id`, `<int:id>`, pure digits) collapse
+/// to `{}` so a concrete fetch matches its parameterized route. One surviving
+/// segment (`/health`) is not a contract — too collision-prone to join on.
+pub fn normalize_url(raw: &str) -> Option<String> {
+    let bare = raw.split(['?', '#']).next().unwrap_or(raw);
+    let mut segs: Vec<&str> = Vec::new();
+    for seg in bare.split('/') {
+        if seg.is_empty() {
+            continue;
+        }
+        if seg.starts_with(':')
+            || (seg.starts_with('<') && seg.ends_with('>'))
+            || seg.bytes().all(|b| b.is_ascii_digit())
+        {
+            segs.push("{}");
+        } else {
+            segs.push(seg);
+        }
+    }
+    if segs.len() < 2 {
+        return None;
+    }
+    Some(segs.join("/"))
+}
+
+/// First string-valued argument of a TS call, in source order.
+fn ts_first_string_arg(node: Node, src: &str) -> Option<String> {
+    let args = node.child_by_field_name("arguments")?;
+    let mut cursor = args.walk();
+    for child in args.named_children(&mut cursor) {
+        if child.kind() == "string" {
+            if let Some(s) = string_value(child, src) {
+                return Some(s);
+            }
+        }
+    }
+    None
+}
+
+/// First string literal under a node, in source order. The callee of a call
+/// is an identifier or attribute, never a string, so over a whole call node
+/// this is the first string argument — which is the route path by convention
+/// in every framework's decorators and `path()` calls.
+fn first_string_descendant(node: Node, src: &str) -> Option<String> {
+    let mut stack = vec![node];
+    while let Some(n) = stack.pop() {
+        if n.kind() == "string" {
+            if let Some(s) = string_value(n, src) {
+                return Some(s);
+            }
+            continue;
+        }
+        let mut cursor = n.walk();
+        let kids: Vec<_> = n
+            .children(&mut cursor)
+            .filter(|c| c.is_named())
+            .collect();
+        for k in kids.into_iter().rev() {
+            stack.push(k);
+        }
+    }
+    None
+}
+
+/// `path('api/x/', …)` / `re_path` / `url`: Django URLconfs without
+/// `include()`. Gated on the callee name so ordinary calls never contribute.
+fn path_call_string(node: Node, src: &str) -> Option<String> {
+    let mut cursor = node.walk();
+    let first = node.children(&mut cursor).find(|c| c.is_named())?;
+    let callee = match first.kind() {
+        "identifier" => first.utf8_text(src.as_bytes()).ok()?.to_string(),
+        "attribute" => first
+            .utf8_text(src.as_bytes())
+            .ok()?
+            .rsplit('.')
+            .next()?
+            .to_string(),
+        _ => return None,
+    };
+    if !matches!(callee.as_str(), "path" | "re_path" | "url") {
+        return None;
+    }
+    first_string_descendant(node, src)
 }
 
 /// Filters the noise that `variable_declarator` would otherwise flood in with.

@@ -31,7 +31,9 @@ use std::path::Path;
 /// wholesale rather than migrating it: caches are expendable, maps are not.
 /// v2: the M6-lite summary guard — labels stored under the name-only guard
 /// must regenerate, never serve.
-pub const FORMAT: u32 = 2;
+/// v3: `FileParse` gains `urls` — parses stored without contract evidence
+/// must re-parse, never serve stale.
+pub const FORMAT: u32 = 3;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StoredFile {
