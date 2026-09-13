@@ -641,7 +641,13 @@ React · Flask at 100% import resolution with web+shared merged high].
 import roots (`resolve_all` takes `package_dirs`; TS-only dirs filtered by
 `.py` presence); the mono fixture now resolves all 3 imports with an
 app → models flow, and the `models`-as-external line is gone];
-(4) per-package entry points.
+(4) per-package entry points [done — `route_hints` consults the file's scope:
+Next.js `app/`/`pages/` match scope-relative (package routes fire; a Django
+package can no longer label a neighbor's stray `urls.py`); generic and
+manifest entries stay global by design. Not byte-identical on the fixture,
+and honestly so: the package main `src/index.ts` now correctly fires as a
+Web entry with an index → shared flow. Root files keep the union
+approximation, stated not hidden].
 
 Whether "Task Navigation" should be generated per repository or derived from
 observed agent behavior over time. The latter is more useful and much harder.
