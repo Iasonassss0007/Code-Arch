@@ -111,9 +111,11 @@ Three consequences worth knowing before enabling it:
 - **Determinism becomes conditional.** Output is reproducible for a given model
   file and llama.cpp version, rather than unconditionally. `--labeler derived`
   keeps the stronger guarantee.
-- **It currently produces worse names.** Measured head-to-head against the
-  derived labeler on 20 frozen production clusters, Qwen2.5-Coder-1.5B scores
-  55% name specificity against the derived path's 75%. Its remaining failures
+ - **It currently produces worse names.** Measured head-to-head against the
+   derived labeler on 20 frozen production clusters, Qwen2.5-Coder-1.5B scores
+   60% name specificity against the derived path's 75% — and it is the best
+   of four swept models (Llama 3.2 1B at 50%, Qwen2.5-Coder-0.5B and Gemma 2
+   2B IT at 20%; reproduce with `python eval/score_sweep.py`). Its remaining failures
   are naming a cluster after one of its symbols (`Benchmarks Jsx` becomes
   `Content`) and, in one case, still preferring the parent directory to the leaf
   (`Etag` becomes `Middleware`). Every name it produces does trace back to the
@@ -127,7 +129,7 @@ because it currently wins.
 
 ## Status
 
-M0–M5 are built and tested: 160 Rust tests + 44 Python tests pass.
+M0–M6 are built and tested: 192 Rust tests + 52 Python tests pass.
 M5 splits a 4,367-file React checkout from a 236,702-token flat map to a
 2,957-token root plus domain files, with warm re-runs in ~10s.
 What the maps are worth is reported in `code_arch_architecture.md` rather

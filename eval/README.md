@@ -212,6 +212,35 @@ connective vocabulary, so the derived arm cannot fail the metric on prose while
 any free-text sentence must. It measures conformity to that template, not
 accuracy.
 
+## Multi-model sweep (M6)
+
+`score_sweep.py` scores the derived baseline plus every model in
+`models-sweep.json` whose GGUF file is present, in one invocation by identical
+v2 code. Missing files are skipped with the exact `hf download` command, never
+a failure. The winner rule (specificity, then fewer summary fallbacks, then
+smaller file) is fixed in the script, not chosen after seeing numbers.
+
+```powershell
+cargo build --features llm
+python eval/score_sweep.py [--models ID ...] [--models-dir DIR]
+```
+
+Writes `labels-sweep-report.md` and `.json` (table, fallback rates, CPU wall
+time per model, rule winner, gap to derived). Never touches
+`labels-real-report.*` or `labels-llm-report.*`. Measured result on four
+models: derived 75% still beats the best model (Qwen2.5-Coder-1.5B, 60%),
+so `derived` stays the default. See the M6 section of
+`code_arch_architecture.md` for the table and findings.
+
+`build_lora_pairs.py` exports the frozen clusters as `lora-pairs.jsonl`
+(`{input, completion}` in the labeler's exact shape, prompts stored
+structured so rendering cannot drift). The references carry acceptable names
+but no gold summaries, so this is the name-head seed format — summary
+supervision needs teacher distillation over harvested production clusters,
+which is deferred. Hermetic tests live in `test_sweep.py` (registry shape,
+winner rule, markdown rendering, pair export; no model, no build, no
+network).
+
 ## Exit status
 
 Actual paired LLM runs and a measured real-cluster labeling baseline now exist.
