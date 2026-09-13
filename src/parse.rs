@@ -59,7 +59,7 @@ const EXPORT_NODE: &str = "export_statement";
 /// Guards against pathological nesting; real code never approaches this.
 const MAX_DEPTH: usize = 400;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FileParse {
     pub file: FileId,
     pub symbols: Vec<Symbol>,
@@ -103,16 +103,63 @@ impl Default for Parsers {
 }
 
 pub fn parse_all(inv: &Inventory) -> Vec<FileParse> {
-    let mut out: Vec<FileParse> = inv
+    parse_all_cached(inv, &mut std::collections::HashMap::new())
+}
+
+/// Parse with a warm file cache. A hit reuses the stored parse with the
+/// *current* file id stamped on — stored ids go stale when files are added
+/// or removed, and an edge pointing at the wrong file is the failure this
+/// cache exists to never produce. Misses read, parse, hash and store.
+pub fn parse_all_cached(
+    inv: &Inventory,
+    files: &mut std::collections::HashMap<String, crate::cache::StoredFile>,
+) -> Vec<FileParse> {
+    use crate::cache::sha_hex;
+    let need: Vec<FileId> = inv
         .files
-        .par_iter()
-        .map_init(Parsers::new, |parsers, f| {
+        .iter()
+        .filter(|f| {
+            files
+                .get(&f.rel)
+                .map(|e| e.parse_hash != e.hash)
+                .unwrap_or(true)
+        })
+        .map(|f| f.id)
+        .collect();
+
+    if std::env::var_os("CODEARCH_TIME").is_some() {
+        eprintln!("time parse-cache     hits={} miss={}", inv.len() - need.len(), need.len());
+    }
+    let fresh: Vec<(FileId, FileParse, String)> = need        .par_iter()
+        .map_init(Parsers::new, |parsers, &id| {
+            let f = inv.get(id);
             let text = std::fs::read_to_string(&f.abs).unwrap_or_default();
-            parse_one(parsers, f.id, f.language, &text)
+            let mut parsed = parse_one(parsers, id, f.language, &text);
+            parsed.file = id;
+            (id, parsed, sha_hex(text.as_bytes()))
         })
         .collect();
-    out.sort_by_key(|p| p.file);
-    out
+
+    for (id, parsed, hash) in fresh {
+        let rel = inv.get(id).rel.clone();
+        if let Some(entry) = files.get_mut(&rel) {
+            entry.parse = parsed;
+            entry.parse_hash = hash.clone();
+            entry.hash = hash;
+        }
+    }
+
+    inv.files
+        .iter()
+        .map(|f| {
+            let mut p = files
+                .get(&f.rel)
+                .map(|e| e.parse.clone())
+                .unwrap_or_default();
+            p.file = f.id;
+            p
+        })
+        .collect()
 }
 
 pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -> FileParse {

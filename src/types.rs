@@ -4,8 +4,9 @@ use std::path::{Path, PathBuf};
 
 pub type FileId = usize;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
 pub enum Language {
+    #[default]
     Ts,
     Tsx,
     Js,
@@ -45,8 +46,9 @@ impl Language {
 }
 
 /// How a file is treated by the pipeline. Only `Source` and `Test` reach the graph.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
 pub enum FileClass {
+    #[default]
     Source,
     Test,
     Config,
@@ -104,7 +106,7 @@ impl FileRecord {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum SymbolKind {
     Function,
     Class,
@@ -130,7 +132,7 @@ impl SymbolKind {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Symbol {
     pub name: String,
     pub kind: SymbolKind,
@@ -139,7 +141,7 @@ pub struct Symbol {
 }
 
 /// A module specifier as written in source, before resolution.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RawRef {
     pub specifier: String,
     pub line: usize,

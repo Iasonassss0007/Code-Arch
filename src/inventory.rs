@@ -5,9 +5,11 @@
 //! Out    Inventory { files, excluded }
 //! Fails  Unreadable path -> skipped and counted, never fatal.
 
+use crate::cache::{StoredFile, sha_hex};
 use crate::types::{FileClass, FileRecord, Language};
 use anyhow::{Context, Result};
 use ignore::WalkBuilder;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 /// Directories never worth walking. Most are gitignored already; this catches
@@ -96,16 +98,34 @@ impl Inventory {
 }
 
 pub fn collect(root: &Path) -> Result<Inventory> {
+    collect_cached(root, &mut HashMap::new())
+}
+
+/// Canonicalized root with the extended-length prefix stripped for display.
+/// Exposed so the runner resolves the codearch directory (and its cache)
+/// before inventory runs: the cache must be loaded to skip inventory reads.
+pub fn canonical_root(root: &Path) -> Result<PathBuf> {
     let root = root
         .canonicalize()
         .with_context(|| format!("cannot open repository root {}", root.display()))?;
-    // Windows canonicalization yields a \\?\ extended-length prefix, which is
-    // correct but unreadable in output. Strip it for display purposes.
-    let root = strip_unc_prefix(root);
+    Ok(strip_unc_prefix(root))
+}
+
+/// Inventory with a warm file cache. On (mtime, size) match the file is not
+/// read at all: location count, class, language and content hash are reused
+/// and the parse stage below hits without touching disk. `files` is updated
+/// in place — refreshed shells for new/changed files, pruned of deleted ones
+/// — so the caller saves the same map it ran with.
+pub fn collect_cached(
+    root: &Path,
+    files: &mut HashMap<String, StoredFile>,
+) -> Result<Inventory> {
+    let root = canonical_root(root)?;
 
     let mut stats = ExcludeStats::default();
     let mut analyzed: Vec<FileRecord> = Vec::new();
     let mut skipped: Vec<FileRecord> = Vec::new();
+    let mut read_stats = (0usize, 0usize); // (stat-hits, disk reads)
 
     let walker = WalkBuilder::new(&root)
         .hidden(true)
@@ -156,6 +176,35 @@ pub fn collect(root: &Path) -> Result<Inventory> {
             continue;
         }
 
+        let mtime_ns = meta
+            .modified()
+            .ok()
+            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+            .map(|d| d.as_nanos() as u64);
+
+        // Warm cache: same stat signature reuses everything without reading.
+        if let (Some(mtime), Some(stored)) = (mtime_ns, files.get(&rel)) {
+            if stored.mtime_ns == mtime && stored.size == bytes {
+                let record = FileRecord {
+                    id: 0, // assigned below
+                    rel: rel.clone(),
+                    abs,
+                    language: stored.language,
+                    bytes,
+                    loc: stored.loc,
+                    class: stored.class,
+                };
+                count_class(&mut stats, stored.class);
+                if stored.class.is_analyzed() {
+                    analyzed.push(record);
+                } else {
+                    skipped.push(record);
+                }
+                read_stats.0 += 1;
+                continue;
+            }
+        }
+
         let text = match std::fs::read_to_string(&abs) {
             Ok(t) => t,
             Err(_) => {
@@ -163,16 +212,39 @@ pub fn collect(root: &Path) -> Result<Inventory> {
                 continue;
             }
         };
+        read_stats.1 += 1;
 
         let loc = text.lines().count();
         let class = classify(&rel, &text);
+        count_class(&mut stats, class);
 
-        match class {
-            FileClass::Generated => stats.generated += 1,
-            FileClass::Config => stats.config += 1,
-            FileClass::Vendored => stats.declarations += 1,
-            _ => {}
-        }
+        // Refresh the cache shell. The parse stage fills `parse` below;
+        // anything the run aborts before that keeps the old entry, since a
+        // half-refreshed cache must never poison the next run... except it
+        // would: a crash between inventory and parse leaves a shell with a
+        // fresh hash but a stale parse. `parse_hash` distinguishes them —
+        // only a matching pair is a hit.
+        let hash = sha_hex(text.as_bytes());
+        files
+            .entry(rel.clone())
+            .and_modify(|e| {
+                e.mtime_ns = mtime_ns.unwrap_or(0);
+                e.size = bytes;
+                e.hash = hash.clone();
+                e.loc = loc;
+                e.class = class;
+                e.language = language;
+            })
+            .or_insert_with(|| StoredFile {
+                mtime_ns: mtime_ns.unwrap_or(0),
+                size: bytes,
+                hash,
+                loc,
+                class,
+                language,
+                parse: crate::parse::FileParse::default(),
+                parse_hash: String::new(),
+            });
 
         let record = FileRecord {
             id: 0, // assigned below
@@ -198,12 +270,35 @@ pub fn collect(root: &Path) -> Result<Inventory> {
         f.id = i;
     }
 
+    // Deleted files leave the cache so it cannot grow without bound... it is
+    // still bounded by repo size either way, but stale entries are pure dead
+    // weight on the next load.
+    let live: std::collections::HashSet<&str> = analyzed
+        .iter()
+        .chain(skipped.iter())
+        .map(|f| f.rel.as_str())
+        .collect();
+    let dropped = files.len().saturating_sub(live.len());
+    files.retain(|rel, _| live.contains(rel.as_str()));
+    if std::env::var_os("CODEARCH_TIME").is_some() {
+        eprintln!("time inventory-cache hits={} reads={} dropped={}", read_stats.0, read_stats.1, dropped);
+    }
+
     Ok(Inventory {
         root,
         files: analyzed,
         skipped,
         excluded: stats,
     })
+}
+
+fn count_class(stats: &mut ExcludeStats, class: FileClass) {
+    match class {
+        FileClass::Generated => stats.generated += 1,
+        FileClass::Config => stats.config += 1,
+        FileClass::Vendored => stats.declarations += 1,
+        _ => {}
+    }
 }
 
 fn strip_unc_prefix(p: PathBuf) -> PathBuf {

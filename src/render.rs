@@ -16,6 +16,7 @@
 use crate::confidence::{self, Band, ClusterConfidence};
 use crate::flows::Flow;
 use crate::inventory::Inventory;
+use crate::split::{CoarseUnit, UnitKind};
 use crate::label::{ClusterSummary, Label};
 use crate::parse::FileParse;
 use crate::profile::Profile;
@@ -268,21 +269,7 @@ Files are listed by directory, with no claimed relationships.\n\n",
     s.push('\n');
 
     s.push_str("## Not Analyzed\n\n");
-    let e = &inv.excluded;
-    s.push_str(&format!(
-        "- Excluded files: {} generated, {} type declarations, {} config, {} oversized, {} unreadable\n",
-        e.generated, e.declarations, e.config, e.too_large, e.unreadable
-    ));
-    s.push_str(&format!(
-        "- Vendor and build directories were not walked; {} files in unsupported languages were ignored\n",
-        e.non_supported
-    ));
-    if !input.res.unresolved.is_empty() {
-        s.push_str(&format!(
-            "- {} import specifiers could not be resolved to a file and carry no edge in this map\n",
-            input.res.unresolved.len()
-        ));
-    }
+    s.push_str(&analyzed_boundary(input));
     let flows_shown = with_flows && input.flows.iter().any(|f| !f.is_empty());
     let relations = match input.cochange_pairs {
         Some(pairs) => format!(
@@ -300,6 +287,29 @@ Files are listed by directory, with no claimed relationships.\n\n",
         s.push_str(&format!("- This map contains no execution flows; {relations}\n"));
     }
 
+    s
+}
+
+/// The honest boundary, shared by the flat map, the split root and domain
+/// files: what was excluded and what could not be resolved. Extracted so
+/// all three state it identically; the caveats below it differ per page.
+fn analyzed_boundary(input: &MapInput) -> String {
+    let e = &input.inv.excluded;
+    let mut s = String::new();
+    s.push_str(&format!(
+        "- Excluded files: {} generated, {} type declarations, {} config, {} oversized, {} unreadable\n",
+        e.generated, e.declarations, e.config, e.too_large, e.unreadable
+    ));
+    s.push_str(&format!(
+        "- Vendor and build directories were not walked; {} files in unsupported languages were ignored\n",
+        e.non_supported
+    ));
+    if !input.res.unresolved.is_empty() {
+        s.push_str(&format!(
+            "- {} import specifiers could not be resolved to a file and carry no edge in this map\n",
+            input.res.unresolved.len()
+        ));
+    }
     s
 }
 
@@ -473,6 +483,7 @@ pub fn index_json(
     conf: &[ClusterConfidence],
     flows: &[Vec<Flow>],
     map_tokens: usize,
+    hierarchy: Option<serde_json::Value>,
 ) -> String {
     let clusters: Vec<serde_json::Value> = summaries
         .iter()
@@ -510,7 +521,7 @@ pub fn index_json(
         })
         .collect();
 
-    let value = serde_json::json!({
+    let mut value = serde_json::json!({
         "version": 1,
         "root": inv.root.to_string_lossy(),
         "files": inv.len(),
@@ -522,6 +533,12 @@ pub fn index_json(
         "map_tokens": map_tokens,
         "clusters": clusters,
     });
+    // Present only when split: flat consumers read `clusters` unchanged.
+    if let Some(h) = hierarchy {
+        if let Some(map) = value.as_object_mut() {
+            map.insert("hierarchy".to_string(), h);
+        }
+    }
 
     serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string())
 }
@@ -536,6 +553,358 @@ pub fn count_tokens(s: &str) -> usize {
         Some(b) => b.encode_with_special_tokens(s).len(),
         None => s.chars().count() / 4 + 1,
     }
+}
+
+/// Split hierarchy rendering (M5). The flat `build()` above is untouched so
+/// small-repo maps stay byte-identical; everything here only runs when the
+/// flat map exceeds budget.
+///
+/// [`SplitView`] bundles the coarse-level inputs, all aligned by coarse
+/// unit index. Fine-level inputs (summaries, labels, flows, confidence)
+/// arrive through the shared [`MapInput`].
+pub struct SplitView<'a> {
+    pub units: &'a [CoarseUnit],
+    /// Coarse summaries, aligned with units. Buckets carry a real summary
+    /// too (dirs/top_symbols feed routing terms); only the label differs.
+    pub summaries: &'a [ClusterSummary],
+    /// Coarse labels, aligned. Bucket labels are directory statements, not
+    /// model or derived names — see `bucket_label` in the runner.
+    pub labels: &'a [Label],
+    /// Routing terms per unit, aligned.
+    pub terms: &'a [Vec<String>],
+    /// Domain file slugs (`billing`), aligned.
+    pub slugs: &'a [String],
+    /// Per-unit domain token budgets, aligned.
+    pub budgets: &'a [usize],
+    /// Fine cluster id → coarse unit index.
+    pub parent: &'a [usize],
+    /// Display name per fine cluster, aligned by fine id. `None` renders the
+    /// cluster's files bare. The runner assigns names to connected clusters
+    /// of 2+ files; singletons and edgeless clusters list bare.
+    pub fine_labels: &'a [Option<String>],
+}
+
+/// Root map: overview, full units, bucket pointers, routing table. Must fit
+/// the root budget; routing terms truncate first (they are the flexible
+/// part), then bucket lines keep only the pointer.
+pub fn render_split_root(input: &MapInput, view: &SplitView) -> String {
+    let inv = input.inv;
+    let mut s = String::new();
+
+    let title = map_title(input.profile, inv);
+    s.push_str(&format!("# Codebase Map — {title}\n\n"));
+
+    s.push_str(&format!(
+        "Generated by Code Arch · {} analyzed files · {} lines · ~{} source tokens (est.)\n",
+        inv.len(),
+        inv.total_loc(),
+        estimate_source_tokens(inv)
+    ));
+    let sizes: Vec<usize> = input.summaries.iter().map(|c| c.size()).collect();
+    let overall = confidence::global(input.confidence, &sizes);
+    s.push_str(&format!(
+        "Import resolution: {:.0}% · {} domains in {} files · confidence: {}\n\n",
+        input.res.resolution_rate * 100.0,
+        view.units.len(),
+        view.slugs.len(),
+        Band::of(overall).label()
+    ));
+
+    s.push_str("## What This Is\n\n");
+    match &input.profile.description {
+        Some(d) if !d.trim().is_empty() => s.push_str(&format!("{d}\n\n")),
+        _ => s.push_str(&format!(
+            "{title} — no description declared in package.json.\n\n"
+        )),
+    }
+
+    s.push_str("## Stack\n\n");
+    if input.profile.frameworks.is_empty() {
+        s.push_str("No frameworks identified from the manifest.\n");
+    } else {
+        s.push_str(&format!("{}\n", input.profile.frameworks.join(" · ")));
+    }
+    let top = input.res.top_externals(8);
+    if !top.is_empty() {
+        let names: Vec<String> = top
+            .iter()
+            .map(|(name, count)| format!("{name} ({count})"))
+            .collect();
+        s.push_str(&format!("\nMost-referenced packages: {}\n", names.join(", ")));
+    }
+    s.push('\n');
+
+    s.push_str("## Domains\n\n");
+    for (i, unit) in view.units.iter().enumerate() {
+        if unit.kind != UnitKind::Full {
+            continue;
+        }
+        let label = &view.labels[i];
+        let sum = &view.summaries[i];
+        s.push_str(&format!("### {}\n\n", label.name));
+        s.push_str(&format!("{}\n\n", label.summary));
+        if !sum.entry_points.is_empty() {
+            s.push_str(&format!("Entry points: {}\n\n", sum.entry_points.join(", ")));
+        }
+        s.push_str("Key files:\n\n");
+        for &f in sum.files.iter().take(3) {
+            let rel = &inv.get(f).rel;
+            match file_symbols(input.parsed, f, 3) {
+                Some(syms) => s.push_str(&format!("- `{rel}` — {syms}\n")),
+                None => s.push_str(&format!("- `{rel}`\n")),
+            }
+        }
+        s.push_str(&format!(
+            "\nDetail: `.codearch/domains/{}.md` ({} files)\n\n",
+            view.slugs[i],
+            unit.files.len()
+        ));
+    }
+
+    let buckets: Vec<usize> = view
+        .units
+        .iter()
+        .enumerate()
+        .filter(|(_, u)| u.kind == UnitKind::Bucket)
+        .map(|(i, _)| i)
+        .collect();
+    if !buckets.is_empty() {
+        s.push_str("### Ungrouped Files\n\n");
+        s.push_str(
+            "These files share no imports with anything mapped; they are \
+             grouped by directory with no claimed relationships.\n\n",
+        );
+        for &i in &buckets {
+            s.push_str(&format!(
+                "- `{}` — {} files → `.codearch/domains/{}.md`\n",
+                view.units[i].dir_key,
+                view.units[i].files.len(),
+                view.slugs[i]
+            ));
+        }
+        s.push('\n');
+    }
+
+    s.push_str("## Routing\n\n");
+    s.push_str("Keywords to domain detail files. Terms are discriminative by construction.\n\n");
+    for (i, terms) in view.terms.iter().enumerate() {
+        if terms.is_empty() {
+            continue;
+        }
+        s.push_str(&format!(
+            "{}   → `.codearch/domains/{}.md`\n",
+            terms.join(", "),
+            view.slugs[i]
+        ));
+    }
+    s.push('\n');
+
+    s.push_str(&imports_section(input.hubs, input.imports));
+
+    s.push_str("## Task Navigation\n\n");
+    for (i, unit) in view.units.iter().enumerate() {
+        if unit.kind != UnitKind::Full {
+            continue;
+        }
+        s.push_str(&format!(
+            "- Changes to **{}** — read `.codearch/domains/{}.md`\n",
+            view.labels[i].name, view.slugs[i]
+        ));
+    }
+    s.push('\n');
+
+    s.push_str("## Not Analyzed\n\n");
+    s.push_str(&analyzed_boundary(input));
+    let relations = match input.cochange_pairs {
+        Some(pairs) => format!(
+            "relationships come from resolved imports, \
+             {pairs} git co-change pairs and directory structure"
+        ),
+        None => "relationships come from resolved imports and directory structure only".to_string(),
+    };
+    s.push_str(&format!(
+        "- This root map routes to `.codearch/domains/*.md` for detail; execution flows live in domain files. {relations}\n"
+    ));
+
+    s
+}
+
+/// One domain file. `detail_cap` bounds every file listing on the page
+/// (key files, subsection files, bucket directory files); callers ladder it
+/// down until the page fits its budget share.
+pub fn render_domain(
+    input: &MapInput,
+    view: &SplitView,
+    unit_idx: usize,
+    detail_cap: usize,
+) -> String {
+    let inv = input.inv;
+    let unit = &view.units[unit_idx];
+    let label = &view.labels[unit_idx];
+    let sum = &view.summaries[unit_idx];
+    let mut s = String::new();
+
+    let title = map_title(input.profile, inv);
+    s.push_str(&format!("# {} — {title}\n\n", label.name));
+    s.push_str(&format!("{}\n\n", label.summary));
+
+    if !sum.entry_points.is_empty() {
+        s.push_str(&format!("Entry points: {}\n\n", sum.entry_points.join(", ")));
+    }
+
+    if unit.kind == UnitKind::Full {
+        s.push_str("Key files:\n\n");
+        for &f in sum.files.iter().take(detail_cap) {
+            let rel = &inv.get(f).rel;
+            match file_symbols(input.parsed, f, 3) {
+                Some(syms) => s.push_str(&format!("- `{rel}` — {syms}\n")),
+                None => s.push_str(&format!("- `{rel}`\n")),
+            }
+        }
+        if sum.files.len() > detail_cap {
+            s.push_str(&format!(
+                "- …and {} more files in this domain\n",
+                sum.files.len() - detail_cap
+            ));
+        }
+        s.push('\n');
+
+        // Aggregated member flows, deduplicated: the same chain reached from
+        // two entries renders once.
+        let mut seen = std::collections::HashSet::new();
+        let mut chains: Vec<String> = Vec::new();
+        for &fine_id in &unit.fine {
+            if let Some(flows) = input.flows.get(fine_id) {
+                for f in flows {
+                    let chain: Vec<String> = f
+                        .path
+                        .iter()
+                        .map(|&id| format!("`{}`", inv.get(id).rel))
+                        .collect();
+                    let mut line = format!("- {}: {}", f.entry_label, chain.join(" → "));
+                    if f.leaves > 0 {
+                        line.push_str(&format!(" → … (+{} leaves)", f.leaves));
+                    }
+                    if seen.insert(line.clone()) {
+                        chains.push(line);
+                    }
+                }
+            }
+        }
+        chains.sort();
+        if !chains.is_empty() {
+            s.push_str("Flows:\n\n");
+            for line in chains {
+                s.push_str(&line);
+                s.push('\n');
+            }
+            s.push('\n');
+        }
+
+        let dep_names = |ids: &[usize]| -> String {
+            ids.iter()
+                .filter_map(|&c| view.labels.get(c).map(|l| l.name.clone()))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let deps = dep_names(&sum.depends_on);
+        let rdeps = dep_names(&sum.depended_on_by);
+        if !deps.is_empty() || !rdeps.is_empty() {
+            let mut line = Vec::new();
+            if !deps.is_empty() {
+                line.push(format!("Depends on: {deps}"));
+            }
+            if !rdeps.is_empty() {
+                line.push(format!("Depended on by: {rdeps}"));
+            }
+            s.push_str(&format!("{}\n\n", line.join(" · ")));
+        }
+
+        // Fine subsections: named connected clusters; singleton members fold
+        // into a by-directory listing instead of hundreds of subsections.
+        // Buckets get the same treatment: their connected nested clusters
+        // are real substructure even though the bucket claims nothing.
+        let (subsections, singletons) = fine_subsections(input, view, unit, detail_cap);
+        s.push_str(&subsections);
+        if !singletons.is_empty() {
+            let mut singletons = singletons;
+            singletons.sort_by(|&a, &b| inv.get(a).rel.cmp(&inv.get(b).rel));
+            s.push_str("### Ungrouped Files\n\n");
+            for (dir, files) in files_by_directory(inv, &singletons, singletons.len()) {
+                s.push_str(&format!("- `{dir}` — {}\n", files.join(", ")));
+            }
+            s.push('\n');
+        }
+    } else {
+        // Buckets claim no unit-level structure: no Key files, no Flows, no
+        // Depends. Connected nested clusters still render as subsections;
+        // the rest list by directory.
+        s.push_str(
+            "Files grouped by directory with no claimed relationships. \
+             Nothing here imported anything mapped.\n\n",
+        );
+        let (subsections, singletons) = fine_subsections(input, view, unit, detail_cap);
+        s.push_str(&subsections);
+        if !singletons.is_empty() {
+            let mut singletons = singletons;
+            singletons.sort_by(|&a, &b| inv.get(a).rel.cmp(&inv.get(b).rel));
+            s.push_str("### Ungrouped Files\n\n");
+            for (dir, files) in files_by_directory(inv, &singletons, detail_cap) {
+                s.push_str(&format!("- `{dir}` — {}\n", files.join(", ")));
+            }
+            if singletons.len() > detail_cap {
+                s.push_str(&format!(
+                    "- …and {} more files in this directory group\n",
+                    singletons.len() - detail_cap
+                ));
+            }
+            s.push('\n');
+        }
+    }
+
+    s.push_str("## Not Analyzed\n\n");
+    s.push_str(&analyzed_boundary(input));
+    s
+}
+
+/// Named fine subsections for one coarse unit plus the leftover singleton
+/// files. Shared by full units and buckets: substructure renders wherever
+/// the edges support it, unit-level claims only where the band allows.
+fn fine_subsections(
+    input: &MapInput,
+    view: &SplitView,
+    unit: &CoarseUnit,
+    detail_cap: usize,
+) -> (String, Vec<usize>) {
+    let inv = input.inv;
+    let mut s = String::new();
+    let mut singletons: Vec<usize> = Vec::new();
+    for &fine_id in &unit.fine {
+        let name = view.fine_labels.get(fine_id).and_then(|o| o.as_ref());
+        let files: Vec<usize> = input
+            .summaries
+            .get(fine_id)
+            .map(|fs| fs.files.clone())
+            .unwrap_or_default();
+        match name {
+            Some(n) => {
+                s.push_str(&format!("### {n}\n\n"));
+                for &f in files.iter().take(detail_cap) {
+                    let rel = &inv.get(f).rel;
+                    match file_symbols(input.parsed, f, 2) {
+                        Some(syms) => s.push_str(&format!("- `{rel}` — {syms}\n")),
+                        None => s.push_str(&format!("- `{rel}`\n")),
+                    }
+                }
+                if files.len() > detail_cap {
+                    s.push_str(&format!("- …and {} more files in this subsystem\n", files.len() - detail_cap));
+                }
+                s.push('\n');
+            }
+            None => singletons.extend(files),
+        }
+    }
+    (s, singletons)
 }
 
 #[cfg(test)]

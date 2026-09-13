@@ -15,6 +15,7 @@
 //! clock, so the stage is a pure function of the repository. Running it twice
 //! on the same checkout produces the same weights tomorrow as today.
 
+use crate::cache::StoredGit;
 use crate::inventory::Inventory;
 use crate::types::{FileClass, FileId};
 use std::collections::HashMap;
@@ -96,6 +97,83 @@ pub fn collect(root: &Path, inv: &Inventory) -> CoChange {
 
     let text = String::from_utf8_lossy(&out.stdout);
     build(&parse_log(&text), inv)
+}
+
+/// Cached collection. History is a pure function of HEAD: same HEAD, same
+/// signal. Stored pairs/churn are rel-keyed and mapped through the *current*
+/// inventory (missing paths dropped, ids re-stamped — the same staleness
+/// rule as cached parses). On HEAD mismatch or any git failure the full
+/// collection runs and refreshes the entry; a repo without git never writes
+/// one, so failed lookups stay fast failures instead of cached empties.
+pub fn collect_cached(
+    root: &Path,
+    inv: &Inventory,
+    git: &mut Option<StoredGit>,
+) -> CoChange {
+    let head = Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string());
+
+    if let (Some(head), Some(stored)) = (&head, &git) {
+        if stored.head == *head {
+            return remap(stored, inv);
+        }
+    }
+
+    let cc = collect(root, inv);
+    if let Some(head) = head {
+        let by_id = |id: FileId| inv.get(id).rel.clone();
+        *git = Some(StoredGit {
+            head,
+            pairs: cc
+                .pairs
+                .iter()
+                .map(|((a, b), w)| (by_id(*a), by_id(*b), *w))
+                .collect(),
+            churn: cc
+                .churn
+                .iter()
+                .enumerate()
+                .map(|(id, &n)| (by_id(id), n))
+                .collect(),
+            commits_read: cc.commits_read,
+        });
+    }
+    cc
+}
+
+/// Rebuild a CoChange from stored rels against today's inventory. Pairs are
+/// re-sorted by id key to restore the sorted invariant the graph relies on.
+fn remap(stored: &StoredGit, inv: &Inventory) -> CoChange {
+    let by_path: HashMap<&str, FileId> =
+        inv.files.iter().map(|f| (f.rel.as_str(), f.id)).collect();
+    let mut pairs: Vec<((FileId, FileId), f64)> = stored
+        .pairs
+        .iter()
+        .filter_map(|(a, b, w)| {
+            let i = by_path.get(a.as_str()).copied()?;
+            let j = by_path.get(b.as_str()).copied()?;
+            Some(((i.min(j), i.max(j)), *w))
+        })
+        .collect();
+    pairs.sort_by(|a, b| a.0.cmp(&b.0));
+    pairs.dedup_by(|a, b| a.0 == b.0);
+    let mut churn = vec![0usize; inv.len()];
+    for (rel, n) in &stored.churn {
+        if let Some(&id) = by_path.get(rel.as_str()) {
+            churn[id] = *n;
+        }
+    }
+    CoChange {
+        pairs,
+        churn,
+        commits_read: stored.commits_read,
+    }
 }
 
 /// Splits `git log --name-only` output into commits. Pure, so the test suite

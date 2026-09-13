@@ -1078,3 +1078,61 @@ lexical suite is TS-fixture-bound and cannot separate M4 arms; Python
 impact tasks do not exist (no madge equivalent) — both stated, not hidden.
 
 143 Rust tests (118 before) and 44 Python tests pass.
+
+
+## M5 hierarchical split and incremental cache — implemented, exit met on react
+
+Spec: `docs/superpowers/specs/2026-09-12-m5-split-cache-design.md`.
+Vehicle: `facebook/react` pinned at 019019b (4,367 analyzed files).
+
+**Before:** 2,133 domains (1,945 singletons, 2,124 isolated clusters), a
+236,702-token "map" against a 4,000 budget with the ladder bottomed out, in
+145s cold. `CODEARCH_TIME` staging (`--no-git` 27s) showed inventory 12.8s,
+parse 4.5s, label 4.1s, render 2.8s — and implicated a ~118s git stage that
+later turned out to be cold-disk IO, not CPU (subprocess 0.7s warm). Two
+failures matching the milestone halves: no split machinery, no cache.
+
+**Split.** Trigger is the flat map itself: fits → today's path
+byte-for-byte; exceeds → root plus `domains/*.md`, no flag. Fine is
+`partition_targeting(g, 120)` — react's honest fine structure is 2,133
+units, reported not forced. Coarse is a low-gamma pass plus `merge_small`;
+Full means connected *outward* (external edge weight > 0): an isolated
+200-file component rides a bucket with its fine subsections rather than a
+root slot. The tail groups by top-level directory (subdivision considered
+and rejected — a 1,674-file bucket split by segment is either still huge or
+file-pointers). Nesting is majority over post-reorder summary positions:
+`summarize` renumbers ids by importance, so partition ids are meaningless
+after it and the file set is the only honest join key (found the hard way —
+a crossed-nesting bug the integration test caught). Root carries full units
+with top files, compact bucket pointers, a discriminative routing table
+(extensions and dotted fragments excluded after they leaked in), and Task
+Nav pointing at domain files. Domain files hold ranked lists, aggregated
+flows, and fine subsections under `size × log(1 + churn)` shares (300–1200).
+`index.json` gains additive `hierarchy`; flat `clusters` untouched.
+
+**Cache** (`.codearch/cache/store.json`, `sha2` dep, created-if-absent
+`.gitignore`): stat-hit files skip reads and parse via stored hash,
+`parse_hash` guards the crash window, git reuses HEAD-keyed rel pairs/churn
+mapped through the current inventory, LLM labels cache by evidence hash
+(derived recomputes — one labeling path), and a fingerprint (files + HEAD +
+budget + cap + seed + labeler) memoizes the split verdict so warm re-runs
+skip rebuilding the flat map to measure it. A version-0.0 bug that kept the
+cache from ever engaging (saved version 0, load rejected, every run cold)
+was caught by hit/miss counters and fixed.
+
+**Measured** (same commands, same checkout):
+
+```text
+            root tokens   domains   re-run      determinism
+React       236,702 → 2,957   2133 → 17   ~145s → ~10s   byte-identical
+```
+
+Root routes 12 full units (reconciler, devtools, jest…) + 5 buckets
+(`compiler` 2,079 files the largest pointer) with routing terms
+spot-checked clean. Fine-N 2,133 and the 12+5 shape are reported, not
+fitted to the contract's 40–120 (written for connected repos).
+No-split regression: hono byte-identical; commerce/typedi differ by exactly
+the M4 rename line, which predates M5. Fixtures, M1 harness and ceiling are
+outside the split trigger by construction (flat fits) and untouched.
+
+160 Rust tests (143 before) and 44 Python tests pass.
