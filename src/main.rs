@@ -128,6 +128,9 @@ fn main() -> Result<()> {
         }
     );
     println!("Domains:             {}", report.domains);
+    if report.split {
+        println!("Split:               root routes to domain files");
+    }
     println!(
         "Flows:               {}",
         if report.flows_dropped {

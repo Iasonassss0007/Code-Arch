@@ -19,6 +19,7 @@
 //! byte for byte.
 
 pub mod cluster;
+pub mod cache;
 pub mod confidence;
 pub mod flows;
 pub mod git;
@@ -30,6 +31,7 @@ pub mod profile;
 pub mod rank;
 pub mod render;
 pub mod resolve;
+pub mod split;
 pub mod types;
 
 use anyhow::{Context, Result};
@@ -91,6 +93,133 @@ impl Default for Options {
     }
 }
 
+/// Per-stage wall clock, printed to stderr when `CODEARCH_TIME` is set.
+/// Zero overhead otherwise (one env read per run, one Instant per stage).
+struct Timer {
+    enabled: bool,
+    last: std::cell::Cell<std::time::Instant>,
+}
+
+impl Timer {
+    fn new() -> Timer {
+        Timer {
+            enabled: std::env::var_os("CODEARCH_TIME").is_some(),
+            last: std::cell::Cell::new(std::time::Instant::now()),
+        }
+    }
+
+    fn done(&self, stage: &str) {
+        if self.enabled {
+            let now = std::time::Instant::now();
+            eprintln!("time {:<12} {:>8.2}s", stage, (now - self.last.get()).as_secs_f64());
+            self.last.set(now);
+        }
+    }
+}
+
+/// Identity of the generative labeler: model path plus size and mtime, so a
+/// swapped model file invalidates stored labels without hashing gigabytes.
+fn model_identity(path: &PathBuf) -> String {
+    let sig = std::fs::metadata(path)
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .map(|t| {
+            t.duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs().to_string())
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
+    let size = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
+    format!("{}:{size}:{sig}", path.display())
+}
+
+/// Cache key for one LLM label: everything the label may depend on, and
+/// nothing it cannot see. Member rels are sorted — importance order shifts
+/// with scores, membership is what the label describes.
+fn label_evidence_key(
+    inv: &inventory::Inventory,
+    s: &label::ClusterSummary,
+    model: &str,
+) -> String {
+    let mut rels: Vec<&str> = s.files.iter().map(|&f| inv.get(f).rel.as_str()).collect();
+    rels.sort_unstable();
+    cache::sha_hex(
+        format!(
+            "llm|{model}|{}|{}|{}|{}|{}",
+            rels.join(","),
+            s.dirs.join(","),
+            s.top_symbols.join(","),
+            s.entry_points.join(","),
+            s.external_deps.join(","),
+        )
+        .as_bytes(),
+    )
+}
+
+/// One label through the shared cache-or-compute path. Used by the flat run
+/// and the split run alike, so names agree wherever the same evidence meets
+/// the same `taken` order.
+fn label_one(
+    labeler: &Box<dyn label::Labeler>,
+    store: &mut cache::Store,
+    llm_model_id: &Option<String>,
+    inv: &inventory::Inventory,
+    s: &label::ClusterSummary,
+    taken: &mut Vec<String>,
+) -> Label {
+    let key = llm_model_id
+        .as_ref()
+        .map(|model| label_evidence_key(inv, s, model));
+    if let Some(cached) = key.as_ref().and_then(|k| store.labels_llm.get(k)) {
+        taken.push(cached.name.clone());
+        return Label {
+            name: cached.name.clone(),
+            summary: cached.summary.clone(),
+        };
+    }
+    let l = labeler.label(s, taken);
+    if let Some(k) = key {
+        store.labels_llm.insert(
+            k,
+            cache::StoredLabel {
+                name: l.name.clone(),
+                summary: l.summary.clone(),
+            },
+        );
+    }
+    taken.push(l.name.clone());
+    l
+}
+
+/// Fingerprint for the split-verdict memo: file set and contents, git HEAD
+/// (or its absence), and every option the verdict can depend on. Sorted so
+/// HashMap order never leaks into the decision.
+fn split_fingerprint(
+    store: &cache::Store,
+    opts: &Options,
+    llm_model_id: &Option<String>,
+) -> String {
+    let mut parts: Vec<String> = store
+        .files
+        .iter()
+        .map(|(rel, f)| format!("{rel}:{}", f.hash))
+        .collect();
+    parts.sort();
+    parts.push(format!(
+        "git:{}",
+        store.git.as_ref().map(|g| g.head.as_str()).unwrap_or("none")
+    ));
+    parts.push(format!("nogit:{}", opts.no_git));
+    parts.push(format!("budget:{}:{}", opts.budget, opts.max_domains));
+    parts.push(format!("seed:{}", opts.seed));
+    parts.push(format!(
+        "labeler:{:?}:{}",
+        opts.labeler,
+        llm_model_id.as_deref().unwrap_or("")
+    ));
+    cache::sha_hex(parts.join("\n").as_bytes())
+}
+
 pub struct RunReport {
     pub files: usize,
     pub loc: usize,
@@ -113,6 +242,8 @@ pub struct RunReport {
     pub confidence: f64,
     /// Clusters rendered in the low band.
     pub low_confidence_domains: usize,
+    /// The flat map exceeded budget: root routes to domain files.
+    pub split: bool,
     /// Entry→import-chain flows rendered in the map.
     pub flows: usize,
     /// The budget ladder dropped flows before shrinking file lists.
@@ -128,34 +259,79 @@ pub struct RunReport {
 }
 
 pub fn run(opts: &Options) -> Result<RunReport> {
-    // 0 — Inventory
-    let inv = inventory::collect(&opts.root)?;
+    // Stage timings to stderr when CODEARCH_TIME is set. Permanent
+    // instrumentation, not a debug leftover: the M5 exit ("re-run in
+    // seconds") is measured with exactly this.
+    let timer = Timer::new();
+    // 0 — Inventory. The codearch directory (and its cache) resolves
+    // before the walk: warm stat entries skip file reads below. Loading a
+    // foreign or corrupt store yields an empty one; the run continues
+    // uncached.
+    let root = inventory::canonical_root(&opts.root)?;
+    let dir = opts
+        .codearch_dir
+        .clone()
+        .unwrap_or_else(|| root.join(".codearch"));
+    let mut store = cache::Store::load(&dir);
+    timer.done("cache-load");
+    let inv = inventory::collect_cached(&root, &mut store.files)?;
+    timer.done("inventory");
     if inv.is_empty() {
         anyhow::bail!(
             "no JavaScript, TypeScript or Python source files found under {}",
-            opts.root.display()
+            root.display()
         );
     }
 
     // 1 — Profile
     let profile = profile::detect(&inv);
     let routes = profile::route_hints(&profile, &inv);
+    timer.done("profile");
 
     // 2 — Parse
-    let parsed = parse::parse_all(&inv);
+    let parsed = parse::parse_all_cached(&inv, &mut store.files);
+    timer.done("parse");
 
     // 3 — Resolve
     let res = resolve::resolve_all(&inv, &parsed, &profile.mappings);
+    timer.done("resolve");
 
     // 4 — Git signals. Absent history is a degraded run, not a failed one.
+    // HEAD-keyed: an unchanged history reuses the stored signal.
     let cc = if opts.no_git {
         git::CoChange::default()
     } else {
-        git::collect(&inv.root, &inv)
+        git::collect_cached(&inv.root, &inv, &mut store.git)
     };
+        timer.done("git");
 
-    // 5 — Graph
+    // Split-verdict memo: identical inputs decide identically, so a warm
+    // re-run skips rebuilding the flat map just to measure it again. Any
+    // content, history, or option change re-probes exactly.
+    let llm_model_id = if opts.labeler == LabelerKind::Llm {
+        opts.model_path.as_ref().map(model_identity)
+    } else {
+        None
+    };
+    let fingerprint = split_fingerprint(&store, opts, &llm_model_id);
+    let memo_split = match &store.split_decision {
+        Some(d) if d.fingerprint == fingerprint => Some(d.split),
+        _ => None,
+    };
+    if std::env::var_os("CODEARCH_TIME").is_some() {
+        eprintln!(
+            "time split-memo     stored={} current={} hit={}",
+            store
+                .split_decision
+                .as_ref()
+                .map(|d| d.fingerprint.as_str())
+                .unwrap_or("-"),
+            fingerprint,
+            memo_split.is_some()
+        );
+    }    // 5 — Graph
     let g = graph::build(&inv, &res, &cc);
+    timer.done("graph");
 
     // 6 — Cluster. With no edges at all there is nothing to cluster, which is
     // stage 6's declared failure path rather than an error.
@@ -165,16 +341,20 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     } else {
         cluster::partition_targeting(&g, opts.max_domains, opts.seed)
     };
+    timer.done("cluster");
 
     // 7 — Rank
     let scores = rank::score(&g, &routes, &cc.churn);
+    timer.done("rank");
 
     // 8 — Confidence. Stability re-runs the clustering under other tie-break
     // orders, so it costs a few extra partitions and nothing else.
     let stability = confidence::file_stability(&g, &part, opts.max_domains, opts.seed);
+    timer.done("stability");
 
     // 9 — Label
     let summaries = label::summarize(&inv, &parsed, &res, &g, &part, &scores, &routes);
+    timer.done("summarize");
     let labeler: Box<dyn Labeler> = match opts.labeler {
         LabelerKind::Derived => Box::new(DerivedLabeler),
         #[cfg(feature = "llm")]
@@ -198,11 +378,27 @@ Rebuild with: cargo build --release --features llm"
     let mut labels: Vec<Label> = Vec::with_capacity(summaries.len());
     // `summarize` already ordered domains most-important first, so the domain
     // a reader cares about most wins the unqualified name.
+    //
+    // LLM labels consult the cache by evidence hash; derived labels always
+    // recompute (milliseconds post-split), so there is exactly one labeling
+    // path and no subset-dedup divergence. A hit skips inference, not the
+    // fallback accounting below — a stored label already survived it.
+    let llm_model_id = if opts.labeler == LabelerKind::Llm {
+        opts.model_path.as_ref().map(model_identity)
+    } else {
+        None
+    };
     for s in &summaries {
-        let l = labeler.label(s, &taken);
-        taken.push(l.name.clone());
-        labels.push(l);
+        labels.push(label_one(
+            &labeler,
+            &mut store,
+            &llm_model_id,
+            &inv,
+            s,
+            &mut taken,
+        ));
     }
+    timer.done("label");
 
     let conf: Vec<confidence::ClusterConfidence> = summaries
         .iter()
@@ -241,6 +437,7 @@ Rebuild with: cargo build --release --features llm"
             flows::domain_flows(&s.files, &entries, &g, &scores, &rels)
         })
         .collect();
+    timer.done("flows");
 
     // 10 — Render. The import index is built once, outside the budget ladder:
     // the root map only advertises it.
@@ -253,7 +450,7 @@ Rebuild with: cargo build --release --features llm"
         res.unresolved.len(),
     );
     let hubs = render::import_hubs(&paths, &g.in_edges, render::IMPORT_HUBS);
-    let rendered = render::render_map(&render::MapInput {
+    let map_input = render::MapInput {
         inv: &inv,
         profile: &profile,
         res: &res,
@@ -266,20 +463,65 @@ Rebuild with: cargo build --release --features llm"
         flows: &domain_flows,
         cochange_pairs: cc.has_history().then(|| cc.pairs.len()),
         budget: opts.budget,
-    });
+    };
+    let rendered = render::render_map(&map_input);
 
     let out_path = opts
         .out
         .clone()
         .unwrap_or_else(|| inv.root.join("CODEBASE.md"));
-    std::fs::write(&out_path, &rendered.markdown)
+
+    // Split trigger (Decision 2): the flat map is the probe. Fits → today's
+    // path byte-for-byte. Exceeds → root plus domain files. A memoized
+    // verdict skips the probe: the fingerprint covers everything it can
+    // depend on, so reuse is exact. Only the probe is skipped — labels still
+    // run uniformly, which is what subsection names are built from.
+    let rendered: Option<render::RenderedMap> = if memo_split == Some(true) {
+        None
+    } else {
+        Some(render::render_map(&map_input))
+    };
+    let split = memo_split
+        .unwrap_or_else(|| rendered.as_ref().is_some_and(|r| r.tokens > opts.budget));
+    if memo_split.is_none() {
+        store.split_decision = Some(cache::SplitDecision { fingerprint, split });
+    }
+
+    let (markdown, index_hierarchy, map_tokens, domain_count) = if !split {
+        let r = rendered.as_ref().expect("flat path always renders");
+        (r.markdown.clone(), None, r.tokens, summaries.len())
+    } else {
+        render_split(
+            &inv,
+            &parsed,
+            &res,
+            &g,
+            &scores,
+            &routes,
+            &rels,
+            &cc,
+            opts,
+            &dir,
+            &map_input,
+            &summaries,
+            &labels,
+            &mut taken,
+            &labeler,
+            &mut store,
+            &llm_model_id,
+        )?
+    };
+
+    std::fs::write(&out_path, &markdown)
         .with_context(|| format!("cannot write {}", out_path.display()))?;
 
-    let dir = opts
-        .codearch_dir
-        .clone()
-        .unwrap_or_else(|| inv.root.join(".codearch"));
     std::fs::create_dir_all(&dir).with_context(|| format!("cannot create {}", dir.display()))?;
+    // The stages above refreshed the store this run ran with; persist it for
+    // the next one. A write failure warns rather than failing the map — the
+    // cache saves time, and losing it only costs time.
+    if let Err(e) = store.save(&dir) {
+        eprintln!("warning: cannot write cache: {e:#}");
+    }
     // Always written: the root map points at it.
     let imports_path = dir.join("imports.md");
     std::fs::write(&imports_path, &imports.markdown)
@@ -295,19 +537,21 @@ Rebuild with: cargo build --release --features llm"
             &labels,
             &conf,
             &domain_flows,
-            rendered.tokens,
+            map_tokens,
+            index_hierarchy,
         );
         std::fs::write(&p, json).with_context(|| format!("cannot write {}", p.display()))?;
         index_path = Some(p);
     }
+    timer.done("render+write");
 
     let source_bytes: u64 = inv.files.iter().map(|f| f.bytes).sum();
 
     Ok(RunReport {
         files: inv.len(),
         loc: inv.total_loc(),
-        domains: summaries.len(),
-        map_tokens: rendered.tokens,
+        domains: domain_count,
+        map_tokens,
         source_tokens_estimate: (source_bytes / 4) as usize,
         resolution_rate: res.resolution_rate,
         unresolved: res.unresolved.len(),
@@ -325,14 +569,229 @@ Rebuild with: cargo build --release --features llm"
             .filter(|c| c.band() == confidence::Band::Low)
             .count(),
         flows: domain_flows.iter().map(|f| f.len()).sum(),
-        flows_dropped: rendered.flows_dropped,
+        // Flat-probe fields. On a memoized split the probe never ran and the
+        // flat map does not exist: both read false, which is what "the root
+        // routes elsewhere" means for them.
+        flows_dropped: rendered.as_ref().map(|r| r.flows_dropped).unwrap_or(false),
+        split,
         cochange_pairs: cc.pairs.len(),
         commits_read: cc.commits_read,
         used_directory_fallback,
-        truncated: rendered.truncated,
+        truncated: rendered.as_ref().map(|r| r.truncated).unwrap_or(false),
         over_domain_cap: summaries.len() > opts.max_domains,
         labels_fell_back: labeler.fell_back(),
     })
+}
+
+/// The split path: coarse units, nesting, coarse labels, routing, domain
+/// files. Runs only when the flat map exceeds budget; small repos never
+/// reach it, which is what keeps their output byte-identical.
+///
+/// Label accounting: flat labels are already taken (the probe needed them).
+/// Coarse full units continue the same `taken` order; buckets bypass the
+/// labeler with directory statements. Fine subsection names reuse the flat
+/// labels for connected clusters of 2+ files under full units — singletons
+/// and bucket members render bare.
+#[allow(clippy::too_many_arguments)]
+fn render_split(
+    inv: &inventory::Inventory,
+    parsed: &[parse::FileParse],
+    res: &resolve::Resolution,
+    g: &graph::CodeGraph,
+    scores: &[f64],
+    routes: &[types::RouteHint],
+    rels: &[String],
+    cc: &git::CoChange,
+    opts: &Options,
+    dir: &std::path::Path,
+    map_input: &render::MapInput,
+    summaries: &[label::ClusterSummary],
+    labels: &[Label],
+    taken: &mut Vec<String>,
+    labeler: &Box<dyn label::Labeler>,
+    store: &mut cache::Store,
+    llm_model_id: &Option<String>,
+) -> anyhow::Result<(String, Option<serde_json::Value>, usize, usize)> {
+    let mut units = split::coarse(g, rels, opts.seed, opts.max_domains);
+
+    let mut file_unit = vec![0usize; inv.len()];
+    for (u, unit) in units.iter().enumerate() {
+        for &f in &unit.files {
+            file_unit[f] = u;
+        }
+    }
+    // Post-reorder identity: `summaries` come back from `summarize` sorted
+    // by importance with renumbered ids, so partition ids are meaningless
+    // from here on. Nesting and every index below run on summary positions.
+    let new_members: Vec<Vec<types::FileId>> =
+        summaries.iter().map(|s| s.files.clone()).collect();
+    let connected = split::fine_connected(g, &new_members);
+    let parent = split::nest(&new_members, &file_unit);
+    for (fine_id, &u) in parent.iter().enumerate() {
+        if let Some(unit) = units.get_mut(u) {
+            unit.fine.push(fine_id);
+        }
+    }
+
+    let part_coarse = cluster::Partition {
+        membership: file_unit,
+        count: units.len(),
+    };
+    let coarse_summaries =
+        label::summarize(inv, parsed, res, g, &part_coarse, scores, routes);
+    // Align units to coarse-summary order (also importance-sorted): the unit
+    // whose files match summary `s` moves to position `s`. Depends ids,
+    // labels and renders then agree with no translation table.
+    let unit_files: Vec<Vec<types::FileId>> =
+        units.iter().map(|u| u.files.clone()).collect();
+    let coarse_files: Vec<Vec<types::FileId>> = coarse_summaries
+        .iter()
+        .map(|s| s.files.clone())
+        .collect();
+    let unit_to_summary = split::align_by_files(&unit_files, &coarse_files);
+    let mut new_pos = vec![0usize; units.len()];
+    for (u, &s) in unit_to_summary.iter().enumerate() {
+        new_pos[u] = s.min(units.len().saturating_sub(1));
+    }
+    let mut reordered: Vec<split::CoarseUnit> = vec![
+        split::CoarseUnit {
+            kind: split::UnitKind::Bucket,
+            files: Vec::new(),
+            fine: Vec::new(),
+            dir_key: String::new(),
+        };
+        units.len()
+    ];
+    for (u, unit) in units.into_iter().enumerate() {
+        reordered[new_pos[u]] = unit;
+    }
+    let units = reordered;
+    let parent: Vec<usize> = parent.iter().map(|&u| new_pos[u]).collect();
+    for (u, unit) in units.iter().enumerate() {
+        debug_assert!(
+            unit.fine.iter().all(|&f| parent.get(f).copied() == Some(u)),
+            "nesting disagrees after reorder"
+        );
+    }
+    let mut coarse_labels: Vec<Label> = Vec::with_capacity(units.len());
+    for (unit, s) in units.iter().zip(&coarse_summaries) {
+        if unit.kind == split::UnitKind::Full {
+            coarse_labels.push(label_one(labeler, store, llm_model_id, inv, s, taken));
+        } else {
+            coarse_labels.push(bucket_label(unit));
+        }
+    }
+
+    let fine_labels: Vec<Option<String>> = summaries
+        .iter()
+        .enumerate()
+        .map(|(i, s)| {
+            // Names render wherever subsections do: connected clusters of 2+
+            // files, under full units and buckets alike. Singletons and
+            // edgeless clusters list bare.
+            if s.files.len() >= 2 && connected.get(i).copied().unwrap_or(false) {
+                Some(labels[i].name.clone())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    let extra: Vec<Vec<String>> = units
+        .iter()
+        .enumerate()
+        .map(|(i, u)| {
+            if u.kind == split::UnitKind::Full {
+                coarse_summaries[i].top_symbols.clone()
+            } else {
+                Vec::new()
+            }
+        })
+        .collect();
+    let mut terms = split::routing_terms(&units, rels, &extra);
+    let names: Vec<String> = units
+        .iter()
+        .enumerate()
+        .map(|(i, u)| {
+            if u.kind == split::UnitKind::Full {
+                coarse_labels[i].name.clone()
+            } else {
+                u.dir_key.clone()
+            }
+        })
+        .collect();
+    let slugs = split::assign_slugs(&names);
+    let budgets = split::domain_budgets(&units, &cc.churn);
+
+    // Root overflow guard: routing terms truncate first (halved to a floor
+    // of one term per unit, then accepted). Sections are fixed-size by
+    // construction; only terms flex.
+    for _ in 0..5 {
+        let view = render::SplitView {
+            units: &units,
+            summaries: &coarse_summaries,
+            labels: &coarse_labels,
+            terms: &terms,
+            slugs: &slugs,
+            budgets: &budgets,
+            parent: &parent,
+            fine_labels: &fine_labels,
+        };
+        let root = render::render_split_root(map_input, &view);
+        if render::count_tokens(&root) <= opts.budget
+            || terms.iter().all(|t| t.len() <= 1)
+        {
+            let root_tokens = render::count_tokens(&root);
+            let view = render::SplitView {
+                units: &units,
+                summaries: &coarse_summaries,
+                labels: &coarse_labels,
+                terms: &terms,
+                slugs: &slugs,
+                budgets: &budgets,
+                parent: &parent,
+                fine_labels: &fine_labels,
+            };
+            let domains_dir = dir.join("domains");
+            std::fs::create_dir_all(&domains_dir).with_context(|| {
+                format!("cannot create {}", domains_dir.display())
+            })?;
+            for (i, slug) in slugs.iter().enumerate() {
+                let mut md = String::new();
+                for &cap in &[60usize, 30, 15, 8, 4] {
+                    md = render::render_domain(map_input, &view, i, cap);
+                    if render::count_tokens(&md) <= budgets[i] {
+                        break;
+                    }
+                }
+                std::fs::write(domains_dir.join(format!("{slug}.md")), &md)
+                    .with_context(|| format!("cannot write domain {slug}"))?;
+            }
+            let hierarchy =
+                split::hierarchy_json(&units, &names, &parent);
+            return Ok((root, Some(hierarchy), root_tokens, units.len()));
+        }
+        for t in terms.iter_mut() {
+            t.truncate((t.len() + 1) / 2);
+        }
+    }
+    anyhow::bail!("split root exceeds budget after routing truncation")
+}
+
+fn bucket_label(unit: &split::CoarseUnit) -> Label {
+    let where_ = if unit.dir_key == "(root)" {
+        "at the repository root".to_string()
+    } else {
+        format!("under `{}/`", unit.dir_key)
+    };
+    Label {
+        name: unit.dir_key.clone(),
+        summary: format!(
+            "{} files {}, grouped by directory with no claimed relationships.",
+            unit.files.len(),
+            where_
+        ),
+    }
 }
 
 #[cfg(test)]
@@ -453,5 +912,147 @@ mod tests {
         assert!(tight_report.flows_dropped, "flows survived budget pressure");
         assert!(!tight_map.contains("Flows:"), "flows still rendered");
         assert!(tight_report.map_tokens <= tight.budget);
+    }
+
+    fn split_fixture(tmp: &std::path::Path) -> PathBuf {
+        // Two connected groups plus edgeless files: exercises full units,
+        // buckets, nesting and routing in one small repo.
+        let root = tmp.join("split-repo");
+        let _ = std::fs::remove_dir_all(&root);
+        for dir in ["shop/cart", "shop/pay", "misc"] {
+            std::fs::create_dir_all(root.join(dir)).unwrap();
+        }
+        std::fs::write(root.join("package.json"), r#"{"name": "shop"}"#).unwrap();
+        std::fs::write(
+            root.join("shop/cart/index.ts"),
+            "import { pay } from '../pay/index';\nexport const cart = pay;\n",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("shop/pay/index.ts"),
+            "import { cart } from '../cart/index';\nexport const pay = cart;\n",
+        )
+        .unwrap();
+        std::fs::write(root.join("misc/a.ts"), "export const a = 1;\n").unwrap();
+        std::fs::write(root.join("misc/b.ts"), "export const b = 2;\n").unwrap();
+        root
+    }
+
+    #[test]
+    fn over_budget_splits_into_root_and_domains() {
+        let tmp = std::env::temp_dir().join(format!("codearch-split-{}", std::process::id()));
+        let root = split_fixture(&tmp);
+        let flat = Options {
+            root: root.clone(),
+            out: Some(tmp.join("flat.md")),
+            codearch_dir: Some(tmp.join("flat-state")),
+            write_index: false,
+            no_git: true,
+            ..Options::default()
+        };
+        let flat_report = run(&flat).unwrap();
+        assert!(!flat_report.split, "fixture should fit flat at full budget");
+
+        // One token under the flat cost forces the split deterministically.
+        let opts = Options {
+            root: root.clone(),
+            out: Some(tmp.join("CODEBASE.md")),
+            codearch_dir: Some(tmp.join("state")),
+            write_index: true,
+            no_git: true,
+            budget: flat_report.map_tokens - 1,
+            ..Options::default()
+        };
+
+        let report = run(&opts).unwrap();
+        assert!(report.split, "expected the 700-token budget to force a split");
+        let root_md = std::fs::read_to_string(&report.out_path).unwrap();
+        assert!(root_md.contains("## Routing"), "root has no routing table");
+        assert!(root_md.contains(".codearch/domains/"), "root points nowhere");
+        let domains: Vec<_> = std::fs::read_dir(tmp.join("state").join("domains"))
+            .unwrap()
+            .collect();
+        assert!(!domains.is_empty(), "no domain files written");
+        let index = std::fs::read_to_string(report.index_path.as_ref().unwrap()).unwrap();
+        assert!(index.contains("\"hierarchy\""), "index.json has no hierarchy");
+        assert!(index.contains("\"parent\""), "index.json has no parent map");
+        // Flat clusters stay readable for eval tooling.
+        assert!(index.contains("\"clusters\""), "index.json lost flat clusters");
+
+        // Cached second run reproduces byte for byte, root and domains.
+        // store.json compares semantically: HashMap serialization order is
+        // nondeterministic across runs, but the content must agree exactly.
+        let before = walk_files(&tmp);
+        let report2 = run(&opts).unwrap();
+        assert!(report2.split);
+        let after = walk_files(&tmp);
+        assert_eq!(before.len(), after.len(), "file set diverged");
+        for ((pb, cb), (pa, ca)) in before.iter().zip(after.iter()) {
+            assert_eq!(pb, pa, "path set diverged");
+            if pb.ends_with("store.json") {
+                let vb: serde_json::Value = serde_json::from_str(cb).unwrap();
+                let va: serde_json::Value = serde_json::from_str(ca).unwrap();
+                assert_eq!(vb, va, "cache content diverged");
+            } else {
+                assert_eq!(cb, ca, "content diverged for {}", pb.display());
+            }
+        }
+
+        // A content change re-probes (fingerprint mismatch) and still splits:
+        // the memo must never freeze a stale verdict.
+        std::fs::write(root.join("misc/a.ts"), "export const a = 1; // touched\n").unwrap();
+        let report3 = run(&opts).unwrap();
+        assert!(report3.split, "changed run should still split");
+        let root3 = std::fs::read_to_string(&report3.out_path).unwrap();
+        assert!(root3.contains("## Routing"), "changed run lost routing");
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn split_fingerprint_moves_with_inputs() {
+        use std::collections::HashMap;
+        let mut files = HashMap::new();
+        files.insert(
+            "a.ts".to_string(),
+            cache::StoredFile {
+                hash: "h1".to_string(),
+                ..Default::default()
+            },
+        );
+        let store = cache::Store {
+            version: cache::FORMAT,
+            files,
+            ..Default::default()
+        };
+        let opts = Options::default();
+        let fp1 = split_fingerprint(&store, &opts, &None);
+        // Same inputs → same verdict key.
+        assert_eq!(fp1, split_fingerprint(&store, &opts, &None));
+        // Any content change → different key.
+        let mut store2 = store.clone();
+        store2.files.get_mut("a.ts").unwrap().hash = "h2".to_string();
+        assert_ne!(fp1, split_fingerprint(&store2, &opts, &None));
+        // Budget is part of the key: the verdict is budget-relative.
+        let mut opts2 = Options::default();
+        opts2.budget += 1;
+        assert_ne!(fp1, split_fingerprint(&store, &opts2, &None));
+    }
+
+    fn walk_files(dir: &std::path::Path) -> Vec<(PathBuf, String)> {
+        let mut out = Vec::new();
+        let mut stack = vec![dir.to_path_buf()];
+        while let Some(d) = stack.pop() {
+            let mut entries: Vec<_> = std::fs::read_dir(&d).unwrap().map(|e| e.unwrap().path()).collect();
+            entries.sort();
+            for p in entries {
+                if p.is_dir() {
+                    stack.push(p);
+                } else if p.extension().map(|e| e != "tmp").unwrap_or(true) {
+                    out.push((p.strip_prefix(dir).unwrap().to_path_buf(), std::fs::read_to_string(&p).unwrap()));
+                }
+            }
+        }
+        out.sort();
+        out
     }
 }
