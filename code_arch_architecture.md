@@ -663,14 +663,27 @@ Co-change catches some of it. Nothing catches the rest yet.
 Measured 2026-09-13 on `eval/fixtures/xlang` (deliberately manifest-free, to
 isolate the parse question): `fetch('/api/users')` and
 `@app.route('/api/users')` share an exact contract string and the map shows
-nothing across the Frontend/Backend split — stage 2 harvests no URL literals
-on either side and no decorator paths, so the edge has no evidence to be
-built from. Both domains report high confidence: the absence is silent, not
+nothing across the Frontend/Backend split — stage 2 harvested no URL literals
+on either side and no decorator paths, so the edge had no evidence to be
+built from. Both domains reported high confidence: the absence was silent, not
 flagged. Side observation: manifest-free `from db import` files as external
 `db` — the slice-3 lesson restated (absolute single-segment imports need a
 package root). Slices: (1) this diagnosis [done]; (2) URL-contract
-harvesting (stage-2 literals + decorators, stage-3 normalized-path join with
-a stated precision rule); (3) false-positive measurement on real repos.
+harvesting [done — stage 2 harvests normalized paths (`api/users`) from TS
+call string args (leading `/` only), Python route decorators (any
+spelling), and Django `path()`/`re_path()`/`url()` calls; dynamic segments
+(`:id`, `<…>`, digits) collapse so concrete fetches match parameterized
+routes; one segment is not a contract. `contract::join` pairs
+cross-ecosystem files only (Python-vs-not — a variant-inequality bug that
+joined Ts×Tsx on hono was caught live at 24 false pairs and is regressed);
+one edge per pair. Fused at 0.45, traversable by flows/fan-in/coupling, but
+never entering the import index or hubs — the ceiling invariant, guarded by
+an end-to-end test]; (3) measurement [done — the xlang contract string now
+joins Frontend↔Backend with a stated caveat line; hono/commerce/typedi/
+realworld (all `--no-git`) yield zero contracts with byte-exact historical
+sentences. No multi-ecosystem real checkout exists locally, so false
+positives rest on synthetic adversaries plus the hono live-fire event —
+stated, not hidden].
 ```
 
 ## Initial M1 proxy status — superseded by the real-agent run below

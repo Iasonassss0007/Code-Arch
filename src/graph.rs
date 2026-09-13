@@ -7,7 +7,10 @@
 //!
 //! M2 carries three of the four planned signals. Embedding similarity (0.35)
 //! stays out: M3 showed the Tier-2 gap was a resolver bug, not a missing
-//! signal. The fusion point is here so adding it touches only this file.
+//! signal. Cross-language contracts joined at 0.45: an exact normalized-path
+//! match is precise but lexical, so below behavioral co-change and above
+//! co-location. The fusion point is here so adding a signal touches only
+//! this file.
 
 use crate::git::CoChange;
 use crate::inventory::Inventory;
@@ -19,6 +22,9 @@ pub const W_IMPORT: f64 = 1.00;
 /// Language-agnostic and noisy alone, which is why it is worth less than an
 /// import edge and more than mere co-location.
 pub const W_COCHANGE: f64 = 0.55;
+/// An exact cross-language contract match: precise but lexical, hence below
+/// co-change (behavioral) and above directory (prior).
+pub const W_CONTRACT: f64 = 0.45;
 /// Weak prior that keeps sibling files from fragmenting when imports are sparse.
 pub const W_DIRECTORY: f64 = 0.25;
 
@@ -30,13 +36,18 @@ pub struct CodeGraph {
     pub n: usize,
     /// Undirected fused adjacency: `adj[i]` holds `(j, weight)`.
     pub adj: Vec<Vec<(usize, f64)>>,
-    /// Directed import edges, for PageRank and fan-in.
+    /// Directed edges, for PageRank, fan-in, flows and cluster coupling:
+    /// imports plus API contracts (both directions — the join does not know
+    /// consumer from provider, and the coupling is real either way).
     pub out_edges: Vec<Vec<usize>>,
     pub in_edges: Vec<Vec<usize>>,
     /// Co-change pairs that survived stage 4, `(low, high)` and sorted. Kept
     /// apart from the fused weights because the confidence model measures how
     /// far this signal and the import graph agree.
     pub cochange: Vec<(usize, usize)>,
+    /// Contract pairs fused from the cross-language join, same shape as
+    /// `cochange`. Kept apart so the map can say where the edge came from.
+    pub contracts: Vec<(usize, usize)>,
 }
 
 impl CodeGraph {
@@ -79,11 +90,17 @@ impl CodeGraph {
             out_edges,
             in_edges,
             cochange: Vec::new(),
+            contracts: Vec::new(),
         }
     }
 }
 
-pub fn build(inv: &Inventory, res: &Resolution, cc: &CoChange) -> CodeGraph {
+pub fn build(
+    inv: &Inventory,
+    res: &Resolution,
+    cc: &CoChange,
+    contracts: &[(usize, usize)],
+) -> CodeGraph {
     let n = inv.len();
     let mut weights: HashMap<(usize, usize), f64> = HashMap::new();
     let mut out_edges = vec![Vec::new(); n];
@@ -96,6 +113,22 @@ pub fn build(inv: &Inventory, res: &Resolution, cc: &CoChange) -> CodeGraph {
         out_edges[from].push(to);
         in_edges[to].push(from);
         *weights.entry(key(from, to)).or_insert(0.0) += W_IMPORT;
+    }
+
+    // Contracts: the one coupling imports cannot see. Both directions enter
+    // the directed edges — flows, fan-in and cluster coupling all traverse
+    // them — at a weight below co-change because the evidence is lexical.
+    let mut fused_contracts = Vec::with_capacity(contracts.len());
+    for &(a, b) in contracts {
+        if a >= n || b >= n || a == b {
+            continue;
+        }
+        out_edges[a].push(b);
+        out_edges[b].push(a);
+        in_edges[a].push(b);
+        in_edges[b].push(a);
+        *weights.entry(key(a, b)).or_insert(0.0) += W_CONTRACT;
+        fused_contracts.push(key(a, b));
     }
 
     // Co-change: files that keep changing together are coupled whether or not
@@ -151,6 +184,7 @@ pub fn build(inv: &Inventory, res: &Resolution, cc: &CoChange) -> CodeGraph {
         out_edges,
         in_edges,
         cochange,
+        contracts: fused_contracts,
     }
 }
 
@@ -207,7 +241,7 @@ mod tests {
             churn: vec![3, 3],
             commits_read: 3,
         };
-        let g = build(&inv, &res, &cc);
+        let g = build(&inv, &res, &cc, &[]);
         assert!((weight(&g, 0, 1) - W_COCHANGE).abs() < 1e-9);
         assert_eq!(g.cochange, vec![(0, 1)]);
         // It is not an import edge: PageRank and fan-in must not see it.
@@ -224,7 +258,7 @@ mod tests {
             churn: vec![1, 1],
             commits_read: 1,
         };
-        let g = build(&inv, &res, &cc);
+        let g = build(&inv, &res, &cc, &[]);
         assert!((weight(&g, 0, 1) - (W_IMPORT + W_COCHANGE * 0.5)).abs() < 1e-9);
     }
 
@@ -233,9 +267,32 @@ mod tests {
         let inv = inventory(&["a/one.ts", "b/two.ts"]);
         let mut res = Resolution::default();
         res.edges.push((0, 1));
-        let with_empty = build(&inv, &res, &CoChange::default());
+        let with_empty = build(&inv, &res, &CoChange::default(), &[]);
         assert!((weight(&with_empty, 0, 1) - W_IMPORT).abs() < 1e-9);
         assert!(with_empty.cochange.is_empty());
+    }
+
+    #[test]
+    fn contract_adds_a_sub_import_edge_visible_to_flows() {
+        // Separate directories, so directory adjacency cannot explain it.
+        let inv = inventory(&["a/one.ts", "b/two.py"]);
+        let g = build(&inv, &Resolution::default(), &CoChange::default(), &[(0, 1)]);
+        assert!((weight(&g, 0, 1) - W_CONTRACT).abs() < 1e-9);
+        assert_eq!(g.contracts, vec![(0, 1)]);
+        // Unlike co-change: the coupling is traversable, so flows, fan-in
+        // and cluster coupling all see it — that is the point of the edge.
+        assert!(g.out_edges[0].contains(&1));
+        assert!(g.out_edges[1].contains(&0));
+        assert_eq!(g.fan_in(1), 1);
+    }
+
+    #[test]
+    fn contract_and_import_sum_on_the_same_pair() {
+        let inv = inventory(&["a/one.ts", "b/two.py"]);
+        let mut res = Resolution::default();
+        res.edges.push((0, 1));
+        let g = build(&inv, &res, &CoChange::default(), &[(0, 1)]);
+        assert!((weight(&g, 0, 1) - (W_IMPORT + W_CONTRACT)).abs() < 1e-9);
     }
 
     #[test]

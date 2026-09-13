@@ -24,7 +24,7 @@ fn main() -> anyhow::Result<()> {
             let routes = codearch::profile::route_hints(&profile, &inv);
             let parsed = codearch::parse::parse_all(&inv);
             let res = codearch::resolve::resolve_all(&inv, &parsed, &profile.mappings, &profile.package_dirs);
-            let graph = codearch::graph::build(&inv, &res, &codearch::git::CoChange::default());
+            let graph = codearch::graph::build(&inv, &res, &codearch::git::CoChange::default(), &[]);
             let part = if graph.edge_count() == 0 {
                 codearch::cluster::directory_partition(&inv)
             } else {

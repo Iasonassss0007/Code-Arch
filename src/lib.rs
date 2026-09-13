@@ -21,6 +21,7 @@
 pub mod cluster;
 pub mod cache;
 pub mod confidence;
+pub mod contract;
 pub mod flows;
 pub mod git;
 pub mod graph;
@@ -258,6 +259,8 @@ pub struct RunReport {
     pub labels_fell_back: usize,
     /// Generated names kept with a derived summary (summary guard only).
     pub labels_summary_fell_back: usize,
+    /// Cross-language contract pairs fused into the graph.
+    pub contracts: usize,
 }
 
 pub fn run(opts: &Options) -> Result<RunReport> {
@@ -298,6 +301,10 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     let res = resolve::resolve_all(&inv, &parsed, &profile.mappings, &profile.package_dirs);
     timer.done("resolve");
 
+    // 3.5 — Cross-language contracts. Stage-2 URL evidence joined across
+    // languages; feeds stage-5 fusion and the render caveat.
+    let contracts = contract::join(&inv, &parsed);
+
     // 4 — Git signals. Absent history is a degraded run, not a failed one.
     // HEAD-keyed: an unchanged history reuses the stored signal.
     let cc = if opts.no_git {
@@ -332,7 +339,7 @@ pub fn run(opts: &Options) -> Result<RunReport> {
             memo_split.is_some()
         );
     }    // 5 — Graph
-    let g = graph::build(&inv, &res, &cc);
+    let g = graph::build(&inv, &res, &cc, &contracts);
     timer.done("graph");
 
     // 6 — Cluster. With no edges at all there is nothing to cluster, which is
@@ -444,14 +451,28 @@ Rebuild with: cargo build --release --features llm"
     // 10 — Render. The import index is built once, outside the budget ladder:
     // the root map only advertises it.
     let paths: Vec<&str> = inv.files.iter().map(|f| f.rel.as_str()).collect();
+    // Import-only directed edges for the index and hubs. The graph's
+    // `in_edges` also carries contract pairs (flows and coupling traverse
+    // them), but the index's contract is imports — "every analyzed file that
+    // imports it" — and the navigation ceiling measurement assumes it.
+    let mut import_in: Vec<Vec<usize>> = vec![Vec::new(); inv.len()];
+    for &(from, to) in &res.edges {
+        if from < inv.len() && to < inv.len() && from != to {
+            import_in[to].push(from);
+        }
+    }
+    for row in &mut import_in {
+        row.sort_unstable();
+        row.dedup();
+    }
     let imports = render::import_index(
         &render::map_title(&profile, &inv),
         &paths,
-        &g.in_edges,
+        &import_in,
         res.resolution_rate,
         res.unresolved.len(),
     );
-    let hubs = render::import_hubs(&paths, &g.in_edges, render::IMPORT_HUBS);
+    let hubs = render::import_hubs(&paths, &import_in, render::IMPORT_HUBS);
     let map_input = render::MapInput {
         inv: &inv,
         profile: &profile,
@@ -464,6 +485,7 @@ Rebuild with: cargo build --release --features llm"
         confidence: &conf,
         flows: &domain_flows,
         cochange_pairs: cc.has_history().then(|| cc.pairs.len()),
+        contracts: contracts.len(),
         budget: opts.budget,
     };
     let rendered = render::render_map(&map_input);
@@ -583,6 +605,7 @@ Rebuild with: cargo build --release --features llm"
         over_domain_cap: summaries.len() > opts.max_domains,
         labels_fell_back: labeler.fell_back(),
         labels_summary_fell_back: labeler.summary_fell_back(),
+        contracts: contracts.len(),
     })
 }
 
@@ -881,6 +904,51 @@ mod tests {
             "caveat does not describe flows"
         );
         assert!(index.contains("\"flows\""), "index.json has no flows");
+    }
+
+    fn xlang_fixture(tmp: &std::path::Path) -> PathBuf {
+        let root = tmp.join("xlang-repo");
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("frontend")).unwrap();
+        std::fs::create_dir_all(root.join("backend")).unwrap();
+        std::fs::write(
+            root.join("frontend/api.ts"),
+            "export async function getUsers() { return fetch('/api/users'); }\n",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("backend/server.py"),
+            "from flask import Flask\napp = Flask(__name__)\n@app.route('/api/users')\ndef users():\n    return []\n",
+        )
+        .unwrap();
+        root
+    }
+
+    #[test]
+    fn contracts_join_languages_but_not_the_import_index() {
+        let tmp = std::env::temp_dir().join(format!("codearch-xlang-test-{}", std::process::id()));
+        let root = xlang_fixture(&tmp);
+        let opts = Options {
+            root: root.clone(),
+            out: Some(tmp.join("CODEBASE.md")),
+            codearch_dir: Some(tmp.join("state")),
+            write_index: false,
+            no_git: true,
+            ..Options::default()
+        };
+
+        let report = run(&opts).unwrap();
+        let map = std::fs::read_to_string(&report.out_path).unwrap();
+        let index = std::fs::read_to_string(&report.imports_path).unwrap();
+        let _ = std::fs::remove_dir_all(&tmp);
+
+        assert_eq!(report.contracts, 1);
+        assert!(map.contains("1 API contract"));
+        // The index's contract is imports: a contract pair must never read
+        // as an importer. Neither file imports the other here, so the index
+        // carries no edge lines at all.
+        assert!(!index.lines().any(|l| l.contains(" ← ")));
+        assert!(!index.contains("server.py"));
     }
 
     #[test]
