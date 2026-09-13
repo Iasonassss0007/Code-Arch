@@ -660,6 +660,17 @@ files to the user's preference.
 Cross-language edges — an API contract between a TypeScript frontend and a
 Python backend is a real dependency that no single-language resolver sees.
 Co-change catches some of it. Nothing catches the rest yet.
+Measured 2026-09-13 on `eval/fixtures/xlang` (deliberately manifest-free, to
+isolate the parse question): `fetch('/api/users')` and
+`@app.route('/api/users')` share an exact contract string and the map shows
+nothing across the Frontend/Backend split — stage 2 harvests no URL literals
+on either side and no decorator paths, so the edge has no evidence to be
+built from. Both domains report high confidence: the absence is silent, not
+flagged. Side observation: manifest-free `from db import` files as external
+`db` — the slice-3 lesson restated (absolute single-segment imports need a
+package root). Slices: (1) this diagnosis [done]; (2) URL-contract
+harvesting (stage-2 literals + decorators, stage-3 normalized-path join with
+a stated precision rule); (3) false-positive measurement on real repos.
 ```
 
 ## Initial M1 proxy status — superseded by the real-agent run below
