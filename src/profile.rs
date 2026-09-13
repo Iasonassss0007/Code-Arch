@@ -10,7 +10,7 @@
 //! conventions decide what counts as an entry point.
 
 use crate::inventory::Inventory;
-use crate::types::RouteHint;
+use crate::types::{FileRecord, RouteHint};
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -88,6 +88,11 @@ pub struct Profile {
     /// or `pnpm-workspace.yaml`. Empty for single-package repos: no behavior
     /// change there. Slice 3 will hang per-package resolver roots off this.
     pub package_dirs: Vec<String>,
+    /// Frameworks per workspace package dir, same order as `package_dirs`.
+    /// The global `frameworks` stays the union (Stack display, Django gate
+    /// fallback); `route_hints` consults the scope a file lives in, so a
+    /// Django package cannot label a stray `urls.py` in its neighbor.
+    pub package_frameworks: Vec<(String, Vec<String>)>,
 }
 
 impl Profile {
@@ -109,6 +114,30 @@ impl Profile {
     pub fn uses(&self, framework: &str) -> bool {
         self.frameworks.iter().any(|f| f == framework)
     }
+
+    /// Longest workspace package containing `rel`, else the root: the
+    /// scope-relative path plus that scope's frameworks. Empty
+    /// `package_dirs` collapses to `(rel, global)` — single-package behavior
+    /// is therefore unchanged by construction.
+    fn scope_of<'a>(&'a self, rel: &'a str) -> (&'a str, &'a [String]) {
+        let mut best: Option<(&str, &[String])> = None;
+        for dir in &self.package_dirs {
+            let prefix = format!("{dir}/");
+            if let Some(rest) = rel.strip_prefix(&prefix) {
+                let longer = best.map(|(r, _)| rest.len() < r.len()).unwrap_or(true);
+                if longer {
+                    let fw = self
+                        .package_frameworks
+                        .iter()
+                        .find(|(d, _)| d == dir)
+                        .map(|(_, f)| f.as_slice())
+                        .unwrap_or(&[]);
+                    best = Some((rest, fw));
+                }
+            }
+        }
+        best.unwrap_or((rel, &self.frameworks))
+    }
 }
 
 pub fn detect(inv: &Inventory) -> Profile {
@@ -128,12 +157,17 @@ pub fn detect(inv: &Inventory) -> Profile {
     p.package_dirs = discover_packages(&inv.root, root_raw.as_ref());
     for pkg in p.package_dirs.clone() {
         let dir = inv.root.join(&pkg);
+        // Snapshot-diff: the readers merge into `p.deps`, and the difference
+        // is the package's own dependency set for its framework scope.
+        let before = p.deps.clone();
         if let Some(raw) = read_json(&dir.join("package.json")) {
             read_package_json(&raw, &pkg, &mut p);
         }
         read_pyproject(&dir, &mut p);
         read_requirements(&dir, &mut p);
         read_tsconfig(&dir, &pkg, &mut p);
+        let pkg_deps: BTreeSet<String> = p.deps.difference(&before).cloned().collect();
+        p.package_frameworks.push((pkg.clone(), package_frameworks(inv, &pkg, &pkg_deps)));
     }
 
     for (dep, display) in FRAMEWORKS {
@@ -546,19 +580,47 @@ fn is_django_project(inv: &Inventory, deps: &BTreeSet<String>) -> bool {
     if deps.contains("django") {
         return true;
     }
-    let manage = inv
-        .files
-        .iter()
-        .chain(inv.skipped.iter())
-        .find(|f| f.rel.rsplit('/').next().unwrap_or(&f.rel) == "manage.py");
-    let Some(manage) = manage else {
-        return false;
-    };
-    // Path match alone is weak (`manage.py` could be anything); the settings
-    // declaration makes it Django's.
-    std::fs::read_to_string(&manage.abs)
-        .map(|t| t.contains("DJANGO_SETTINGS_MODULE"))
+    has_django_manage(inv.files.iter().chain(inv.skipped.iter()), None)
+}
+
+/// A `manage.py` declaring `DJANGO_SETTINGS_MODULE`, optionally scoped to one
+/// package dir. Path match alone is weak (`manage.py` could be anything); the
+/// settings declaration makes it Django's.
+fn has_django_manage<'a>(
+    files: impl Iterator<Item = &'a FileRecord>,
+    scope: Option<&str>,
+) -> bool {
+    files
+        .filter(|f| scope.map(|p| f.rel.starts_with(p)).unwrap_or(true))
+        .find(|f| f.rel.rsplit('/').next().unwrap_or(&f.rel) == "manage.py")
+        .map(|m| {
+            std::fs::read_to_string(&m.abs)
+                .map(|t| t.contains("DJANGO_SETTINGS_MODULE"))
+                .unwrap_or(false)
+        })
         .unwrap_or(false)
+}
+
+/// Frameworks for one workspace package: the FRAMEWORKS table over its own
+/// deps only, plus the manage.py scan scoped to its dir. A Django package
+/// therefore cannot lend its framework to a neighbor's stray `urls.py`.
+fn package_frameworks(inv: &Inventory, pkg: &str, deps: &BTreeSet<String>) -> Vec<String> {
+    let mut out = Vec::new();
+    for (dep, display) in FRAMEWORKS {
+        if deps.contains(*dep) && !out.iter().any(|f| f == display) {
+            out.push((*display).to_string());
+        }
+    }
+    if !out.iter().any(|f| f == "Django")
+        && (deps.contains("django")
+            || has_django_manage(
+                inv.files.iter().chain(inv.skipped.iter()),
+                Some(&format!("{pkg}/")),
+            ))
+    {
+        out.push("Django".to_string());
+    }
+    out
 }
 
 /// Entry points derived from framework conventions and manifest fields.
@@ -570,9 +632,16 @@ pub fn route_hints(profile: &Profile, inv: &Inventory) -> Vec<RouteHint> {
 
     for f in &inv.files {
         let rel = f.rel.as_str();
-        let trimmed = rel.strip_prefix("src/").unwrap_or(rel);
+        // Slice 4: framework rules consult the scope the file lives in and
+        // match against the scope-relative path. A Next.js package's `app/`
+        // routes fire; the root and its neighbors stay quiet. Generic and
+        // manifest entries are scope-agnostic by design (a runnable module
+        // is an entry in any package).
+        let (scope_rel, scope_fw) = profile.scope_of(rel);
+        let uses = |fw: &str| scope_fw.iter().any(|x| x == fw);
+        let trimmed = scope_rel.strip_prefix("src/").unwrap_or(scope_rel);
 
-        if profile.uses("Next.js") {
+        if uses("Next.js") {
             if let Some(rest) = trimmed.strip_prefix("app/") {
                 if let Some(kind) = next_app_kind(rest) {
                     hints.push(RouteHint {
@@ -606,9 +675,10 @@ pub fn route_hints(profile: &Profile, inv: &Inventory) -> Vec<RouteHint> {
         }
 
         // Django: URLconfs are the route table, manage.py the entry script.
-        // Views and models stay targets, not entries. Gated on detection so
-        // a stray urls.py in another ecosystem is never mislabeled.
-        if profile.uses("Django") {
+        // Views and models stay targets, not entries. Gated on the file's
+        // own scope, so a Django package cannot label a stray urls.py in
+        // its neighbor — the monorepo case the root-wide gate got wrong.
+        if uses("Django") {
             let base = rel.rsplit('/').next().unwrap_or(rel);
             let app = rel
                 .rfind('/')
@@ -1013,22 +1083,25 @@ mod tests {
 
     fn test_inventory_at(root: std::path::PathBuf, rels: &[&str]) -> Inventory {
         use crate::types::{FileClass, FileRecord, Language};
+        // `abs` joins the root (not the bare rel) so disk-reading helpers —
+        // the manage.py settings scan — work on temp-dir trees.
+        let files: Vec<FileRecord> = rels
+            .iter()
+            .enumerate()
+            .map(|(id, rel)| FileRecord {
+                id,
+                rel: (*rel).into(),
+                abs: root.join(rel),
+                language: Language::from_path(std::path::Path::new(rel))
+                    .unwrap_or(Language::Ts),
+                bytes: 10,
+                loc: 1,
+                class: FileClass::Source,
+            })
+            .collect();
         Inventory {
             root,
-            files: rels
-                .iter()
-                .enumerate()
-                .map(|(id, rel)| FileRecord {
-                    id,
-                    rel: (*rel).into(),
-                    abs: std::path::PathBuf::from(rel),
-                    language: Language::from_path(std::path::Path::new(rel))
-                        .unwrap_or(Language::Ts),
-                    bytes: 10,
-                    loc: 1,
-                    class: FileClass::Source,
-                })
-                .collect(),
+            files,
             skipped: Vec::new(),
             excluded: Default::default(),
         }
@@ -1115,5 +1188,121 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         assert!(p.package_dirs.is_empty());
         assert!(p.frameworks.is_empty());
+    }
+
+    fn scoped_profile() -> (Profile, Inventory) {
+        // Global is the union, scopes disagree: the web package is Next.js,
+        // the api package is Flask, and neither lends its rules across.
+        let profile = Profile {
+            frameworks: vec!["Next.js".to_string(), "Flask".to_string()],
+            package_dirs: vec!["packages/api".to_string(), "packages/web".to_string()],
+            package_frameworks: vec![
+                ("packages/api".to_string(), vec!["Flask".to_string()]),
+                ("packages/web".to_string(), vec!["Next.js".to_string()]),
+            ],
+            ..Default::default()
+        };
+        let inv = test_inventory_at(
+            std::path::PathBuf::from("."),
+            &[
+                "packages/web/app/page.tsx",
+                "packages/api/app/page.tsx",
+                "packages/api/app.py",
+            ],
+        );
+        (profile, inv)
+    }
+
+    #[test]
+    fn next_routes_fire_only_in_the_next_package() {
+        let (profile, inv) = scoped_profile();
+        let labels: Vec<String> = route_hints(&profile, &inv)
+            .iter()
+            .map(|h| h.label.clone())
+            .collect();
+        assert!(labels.contains(&"page /".to_string()));
+        // The Flask package's identically-shaped path stays quiet, and its
+        // runnable module is still an entry by the scope-agnostic rule.
+        assert_eq!(labels.iter().filter(|l| l.starts_with("page ")).count(), 1);
+        assert!(labels.contains(&"entry: packages/api/app.py".to_string()));
+    }
+
+    #[test]
+    fn django_gate_is_per_scope() {
+        let profile = Profile {
+            frameworks: vec!["Django".to_string()],
+            package_dirs: vec!["blog".to_string(), "shop".to_string()],
+            package_frameworks: vec![
+                ("blog".to_string(), Vec::new()),
+                ("shop".to_string(), vec!["Django".to_string()]),
+            ],
+            ..Default::default()
+        };
+        let inv = test_inventory_at(
+            std::path::PathBuf::from("."),
+            &["shop/urls.py", "blog/urls.py"],
+        );
+        let labels: Vec<String> = route_hints(&profile, &inv)
+            .iter()
+            .map(|h| h.label.clone())
+            .collect();
+        assert!(labels.contains(&"urls shop".to_string()));
+        assert!(!labels.iter().any(|l| l == "urls blog"));
+    }
+
+    #[test]
+    fn detect_records_per_package_frameworks() {
+        let dir =
+            std::env::temp_dir().join(format!("codearch-scopes-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(
+            &dir.join("package.json"),
+            r#"{"name":"mono","private":true,"workspaces":["packages/*"]}"#,
+        );
+        write_tree(
+            &dir.join("packages/shop/package.json"),
+            r#"{"name":"shop","dependencies":{"next":"14.0.0"}}"#,
+        );
+        write_tree(
+            &dir.join("packages/api/pyproject.toml"),
+            "[project]\nname = \"api\"\ndependencies = [\"django\"]\n",
+        );
+        let p = detect(&test_inventory_at(dir.clone(), &[]));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(
+            p.package_frameworks,
+            vec![
+                ("packages/api".to_string(), vec!["Django".to_string()]),
+                ("packages/shop".to_string(), vec!["Next.js".to_string()]),
+            ]
+        );
+    }
+
+    #[test]
+    fn manage_py_scoped_to_its_package() {
+        let dir =
+            std::env::temp_dir().join(format!("codearch-manage-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(
+            &dir.join("package.json"),
+            r#"{"name":"mono","private":true,"workspaces":["packages/*"]}"#,
+        );
+        write_tree(&dir.join("packages/shop/package.json"), r#"{"name":"shop"}"#);
+        write_tree(
+            &dir.join("packages/api/manage.py"),
+            "import os\nos.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')\n",
+        );
+        write_tree(&dir.join("packages/api/pyproject.toml"), "[project]\nname = \"api\"\n");
+        let p = detect(&test_inventory_at(dir.clone(), &["packages/api/manage.py"]));
+        let _ = std::fs::remove_dir_all(&dir);
+        let fw = |d: &str| {
+            p.package_frameworks
+                .iter()
+                .find(|(x, _)| x == d)
+                .map(|(_, f)| f.clone())
+                .unwrap_or_default()
+        };
+        assert!(fw("packages/api").contains(&"Django".to_string()));
+        assert!(!fw("packages/shop").contains(&"Django".to_string()));
     }
 }
