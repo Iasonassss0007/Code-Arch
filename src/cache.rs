@@ -29,7 +29,9 @@ use std::path::Path;
 
 /// Bump when the stored shapes change. A mismatch ignores the store
 /// wholesale rather than migrating it: caches are expendable, maps are not.
-pub const FORMAT: u32 = 1;
+/// v2: the M6-lite summary guard — labels stored under the name-only guard
+/// must regenerate, never serve.
+pub const FORMAT: u32 = 2;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StoredFile {

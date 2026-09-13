@@ -45,9 +45,9 @@ def main():
     helper = CRATE / 'target/debug' / ('eval-support.exe' if os.name == 'nt' else 'eval-support')
 
     derived, _ = predictions_of(bridge(helper, {'op': 'labels', 'clusters': clusters}))
-    generated, fell_back = predictions_of(
-        bridge(helper, {'op': 'labels', 'clusters': clusters, 'model': str(model)})
-    )
+    llm_response = bridge(helper, {'op': 'labels', 'clusters': clusters, 'model': str(model)})
+    generated, fell_back = predictions_of(llm_response)
+    summary_fell_back = llm_response.get('summary_fell_back', 0) if isinstance(llm_response, dict) else 0
 
     base = evaluate_labels(clusters, derived)
     cand = evaluate_labels(clusters, generated)
@@ -60,6 +60,7 @@ def main():
         'blind_model_review': 'labels-reference-review.json',
         'clusters': len(clusters),
         'fell_back': fell_back,
+        'summary_fell_back': summary_fell_back,
         'derived': {m: base[m] for m in metrics},
         'llm': {m: cand[m] for m in metrics},
         'derived_rows': base['rows'],
@@ -75,7 +76,9 @@ def main():
         '',
         f"Model: `{model.name}`. {len(clusters)} frozen reference clusters. "
         f"{fell_back} of {len(clusters)} fell back to the derived name "
-        f"(generation failure, ungrounded output, collision, or bad length).",
+        f"(generation failure, ungrounded output, collision, or bad length); "
+        f"{summary_fell_back} kept the generated name with a derived summary "
+        f"(summary guard).",
         '',
         'Higher is better for specificity and groundedness; lower is better for '
         'collisions. References are model-reviewed, not human ground truth, so '

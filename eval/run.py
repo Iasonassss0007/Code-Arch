@@ -11,7 +11,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 CRATE = ROOT.parent
 STOP = set('a an the to of in at by and or for with from is this that'.split())
-BOILERPLATE = set('file files under at the repository root key symbols uses'.split())
+
+def stem(word):
+    """Plural normalization, mirroring `stem` in src/label/validate.rs.
+
+    Metric v2 (2026-09-13): `ies` -> `y`, trailing `s` unless `ss`/`us`/`is`,
+    len > 3. Both sides stem so errors are false accepts only. v1 numbers stay
+    on record in code_arch_architecture.md; the sweep re-scores both arms with
+    this code in one invocation, so the comparison stays fair.
+    """
+    if len(word) > 3:
+        if word.endswith('ies'):
+            return word[:-3] + 'y'
+        if word.endswith('s') and not word.endswith(('ss', 'us', 'is')):
+            return word[:-1]
+    return word
+
+BOILERPLATE = set(stem(w) for w in 'file files under at the repository root key symbols uses'.split())
 # Every module extension codearch analyzes. The agent, the task builder and the
 # gate must agree, or the index can list a dependent the agent may not answer.
 SOURCE_SUFFIXES = frozenset({'.ts','.tsx','.js','.jsx','.mts','.cts','.mjs','.cjs','.py'})
@@ -20,7 +36,7 @@ SOURCE_SUFFIXES = frozenset({'.ts','.tsx','.js','.jsx','.mts','.cts','.mjs','.cj
 @lru_cache(maxsize=100000)
 def words(text):
     text = re.sub(r'([a-z0-9])([A-Z])', r'\1 \2', text)
-    return set(re.findall(r'[a-z]+', text.lower())) - STOP
+    return set(stem(w) for w in re.findall(r'[a-z]+', text.lower())) - STOP
 
 
 def score(query, text):
@@ -138,7 +154,7 @@ def evaluate_labels(clusters, predictions):
         siblings = [by_id[s['id']]['name'] for s in clusters if s['group']==c['group'] and s['id']!=c['id']]
         collision = any(words(s)==words(p['name']) for s in siblings)
         allowed = words(' '.join(c['dirs']+c['top_symbols']+c['external_deps'])) | BOILERPLATE
-        aliases = c.get('grounding_aliases',{})
+        aliases = {stem(k): stem(v) for k, v in c.get('grounding_aliases',{}).items()}
         content = words(p['name']+' '+p['summary'])
         unsupported = sorted(w for w in content if w not in allowed and aliases.get(w) not in allowed)
         specific = name in [' '.join(sorted(words(n))) for n in c['acceptable_names']] and not collision

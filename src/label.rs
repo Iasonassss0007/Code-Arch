@@ -96,6 +96,12 @@ pub trait Labeler {
     fn fell_back(&self) -> usize {
         0
     }
+
+    /// Generated names kept with a derived summary because the generated
+    /// sentence failed the summary guard. Zero for labelers without a model.
+    fn summary_fell_back(&self) -> usize {
+        0
+    }
 }
 
 /// The deterministic fallback: no model, no network, no invention.

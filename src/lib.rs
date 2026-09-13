@@ -256,6 +256,8 @@ pub struct RunReport {
     /// Clusters the chosen labeler could not name itself. Always 0 for the
     /// derived labeler; reported rather than hidden for the model path.
     pub labels_fell_back: usize,
+    /// Generated names kept with a derived summary (summary guard only).
+    pub labels_summary_fell_back: usize,
 }
 
 pub fn run(opts: &Options) -> Result<RunReport> {
@@ -580,6 +582,7 @@ Rebuild with: cargo build --release --features llm"
         truncated: rendered.as_ref().map(|r| r.truncated).unwrap_or(false),
         over_domain_cap: summaries.len() > opts.max_domains,
         labels_fell_back: labeler.fell_back(),
+        labels_summary_fell_back: labeler.summary_fell_back(),
     })
 }
 
