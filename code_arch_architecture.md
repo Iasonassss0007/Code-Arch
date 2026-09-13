@@ -650,16 +650,28 @@ Web entry with an index → shared flow. Root files keep the union
 approximation, stated not hidden].
 
 Whether "Task Navigation" should be generated per repository or derived from
-observed agent behavior over time. The latter is more useful and much harder.
+observed agent behavior over time. Decided 2026-09-13: per-repository
+generation stays. The observed-behavior path needs cross-session usage
+telemetry the tool deliberately does not collect (local-first, no tracking);
+flows plus importance evidence is what a deterministic offline tool can
+honestly claim. Revisit only behind opt-in local usage logs.
 
-Whether CODEBASE.md should be committed. Committing shares the map across a
-team and across agents; it also produces diff noise on every structural change.
-Current lean: commit the root map, gitignore .codearch/cache/, leave domain
-files to the user's preference.
+Whether CODEBASE.md should be committed. Decided 2026-09-13: commit the map,
+ignore the cache. `CODEBASE.md`, `.codearch/domains/*.md`, `imports.md` and
+`index.json` are the persistent memory the core idea requires — an agent in
+a fresh clone without them gets routing tables pointing at files that do not
+exist, so leaving them uncommitted voids the tool's central value. Diff
+noise on structural change is accepted (same trade as any generated
+lockfile). `.codearch/cache/` stays ignored, enforced by the tool itself
+(created-if-absent `.gitignore`, never clobbered). The tool never touches
+the repository's own `.gitignore` or stages anything: committing is the
+user's act, the policy is the recommendation.
 
 Cross-language edges — an API contract between a TypeScript frontend and a
 Python backend is a real dependency that no single-language resolver sees.
-Co-change catches some of it. Nothing catches the rest yet.
+Co-change catches some of it; URL-contract harvesting (below) catches exact
+path matches. Semantic contracts (shared schemas, un-harvested call shapes)
+remain open.
 Measured 2026-09-13 on `eval/fixtures/xlang` (deliberately manifest-free, to
 isolate the parse question): `fetch('/api/users')` and
 `@app.route('/api/users')` share an exact contract string and the map shows

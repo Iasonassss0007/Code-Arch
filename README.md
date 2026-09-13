@@ -36,6 +36,14 @@ outside the map budget), and `.codearch/index.json` unless `--no-index` is passe
 
 Currently parses TypeScript, JavaScript and Python.
 
+### What to commit
+
+Commit the map, ignore the cache: `CODEBASE.md`, `.codearch/domains/`,
+`imports.md` and `index.json` are the shared memory agents start from —
+without them a fresh clone gets routing tables pointing at missing files.
+`.codearch/cache/` is machine-local derived data and stays ignored; the tool
+writes that `.gitignore` itself and never touches your repository's own.
+
 ## Optional: local model labeling
 
 By default, domain names are derived deterministically from directory
