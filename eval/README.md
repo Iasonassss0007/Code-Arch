@@ -261,7 +261,8 @@ The replacement asks for transitive impact -- "the behavior of X is changing,
 what else needs review?" -- which no path match reveals and which a grep-only
 agent can assemble only by walking the chain a round at a time.
 
-    npx --yes madge@8 --json --extensions ts,tsx,js,jsx,mts,cts,mjs,cjs repos/<r> > oracle/<r>.json
+    # --ts-config is required: without it madge drops bare baseUrl imports and Commerce lost 82 of 121 edges (fixed 2026-09-15)
+    npx --yes madge@8 --json --extensions ts,tsx,js,jsx,mts,cts,mjs,cjs --ts-config repos/<r>/tsconfig.json repos/<r> > oracle/<r>.json
     python build_tasks_nav.py --out tasks-nav.json --per-repo 500
     python gate_tasks_nav.py --tasks tasks-nav.json --out tasks-nav-gated.json
     python run_agent.py --tasks tasks-nav-gated.json --out results-nav

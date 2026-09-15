@@ -1,22 +1,22 @@
 {
   "summary": {
-    "tasks": 37,
+    "tasks": 34,
     "counter": "cl100k_base via eval-support",
     "natural": {
-      "grep_f1": 0.27895858095297477,
-      "index_f1": 0.8903975571099083
+      "grep_f1": 0.29062107700197304,
+      "index_f1": 0.9794117647058823
     },
     "cardinality_controlled": {
-      "grep_f1": 0.28664506952181623,
-      "index_f1": 0.9279279279279278
+      "grep_f1": 0.3038877459347319,
+      "index_f1": 0.9558823529411765
     },
     "tokens": {
-      "grep_mean": 46754.35135135135,
-      "index_mean": 17629.972972972973
+      "grep_mean": 50194.26470588235,
+      "index_mean": 18459.029411764706
     },
     "actions": {
-      "grep_opens_mean": 29.405405405405407,
-      "grep_searches_mean": 8.864864864864865,
+      "grep_opens_mean": 31.352941176470587,
+      "grep_searches_mean": 9.441176470588236,
       "index_opens_mean": 1.0,
       "index_searches_mean": 0.0
     },
@@ -882,59 +882,11 @@
       "adversary_f1": 0.0
     },
     {
-      "id": "commerce-impact-image-5",
-      "repo": "repos/commerce",
-      "expected": 7,
-      "grep_f1": 0.0,
-      "index_f1": 0.37837837837837834,
-      "grep_answer": [
-        "components/cart/modal.tsx",
-        "components/grid/tile.tsx",
-        "components/product/gallery.tsx",
-        "components/layout/navbar/index.tsx"
-      ],
-      "index_answer": [
-        "lib/shopify/fragments/product.ts",
-        "lib/shopify/fragments/cart.ts",
-        "lib/shopify/queries/collection.ts",
-        "lib/shopify/queries/product.ts",
-        "lib/shopify/index.ts",
-        "lib/shopify/mutations/cart.ts",
-        "lib/shopify/queries/cart.ts",
-        "app/[page]/opengraph-image.tsx",
-        "app/[page]/page.tsx",
-        "app/api/revalidate/route.ts",
-        "app/layout.tsx",
-        "app/product/[handle]/page.tsx",
-        "app/search/[collection]/opengraph-image.tsx",
-        "app/search/[collection]/page.tsx",
-        "app/search/page.tsx",
-        "app/sitemap.ts",
-        "components/carousel.tsx",
-        "components/cart/actions.ts",
-        "components/grid/three-items.tsx",
-        "components/layout/footer.tsx",
-        "components/layout/navbar/index.tsx",
-        "components/layout/search/collections.tsx",
-        "app/[page]/layout.tsx",
-        "app/page.tsx",
-        "app/search/layout.tsx",
-        "components/cart/add-to-cart.tsx",
-        "components/cart/delete-item-button.tsx",
-        "components/cart/edit-item-quantity-button.tsx",
-        "components/cart/modal.tsx",
-        "components/product/product-description.tsx"
-      ],
-      "grep_found": 4,
-      "index_found": 30,
-      "adversary_f1": 0.286
-    },
-    {
       "id": "commerce-impact-price-3",
       "repo": "repos/commerce",
-      "expected": 3,
-      "grep_f1": 0.5,
-      "index_f1": 0.35294117647058826,
+      "expected": 14,
+      "grep_f1": 0.5263157894736842,
+      "index_f1": 1.0,
       "grep_answer": [
         "components/cart/modal.tsx",
         "components/label.tsx",
@@ -960,95 +912,14 @@
       ],
       "grep_found": 5,
       "index_found": 14,
-      "adversary_f1": 0.0
-    },
-    {
-      "id": "commerce-impact-product-6",
-      "repo": "repos/commerce",
-      "expected": 6,
-      "grep_f1": 0.0,
-      "index_f1": 0.34285714285714286,
-      "grep_answer": [],
-      "index_answer": [
-        "lib/shopify/fragments/cart.ts",
-        "lib/shopify/queries/collection.ts",
-        "lib/shopify/queries/product.ts",
-        "lib/shopify/index.ts",
-        "lib/shopify/mutations/cart.ts",
-        "lib/shopify/queries/cart.ts",
-        "app/[page]/opengraph-image.tsx",
-        "app/[page]/page.tsx",
-        "app/api/revalidate/route.ts",
-        "app/layout.tsx",
-        "app/product/[handle]/page.tsx",
-        "app/search/[collection]/opengraph-image.tsx",
-        "app/search/[collection]/page.tsx",
-        "app/search/page.tsx",
-        "app/sitemap.ts",
-        "components/carousel.tsx",
-        "components/cart/actions.ts",
-        "components/grid/three-items.tsx",
-        "components/layout/footer.tsx",
-        "components/layout/navbar/index.tsx",
-        "components/layout/search/collections.tsx",
-        "app/[page]/layout.tsx",
-        "app/page.tsx",
-        "app/search/layout.tsx",
-        "components/cart/add-to-cart.tsx",
-        "components/cart/delete-item-button.tsx",
-        "components/cart/edit-item-quantity-button.tsx",
-        "components/cart/modal.tsx",
-        "components/product/product-description.tsx"
-      ],
-      "grep_found": 0,
-      "index_found": 29,
-      "adversary_f1": 0.333
-    },
-    {
-      "id": "commerce-impact-cart-4",
-      "repo": "repos/commerce",
-      "expected": 3,
-      "grep_f1": 0.0,
-      "index_f1": 0.20689655172413793,
-      "grep_answer": [],
-      "index_answer": [
-        "lib/shopify/mutations/cart.ts",
-        "lib/shopify/queries/cart.ts",
-        "lib/shopify/index.ts",
-        "app/[page]/opengraph-image.tsx",
-        "app/[page]/page.tsx",
-        "app/api/revalidate/route.ts",
-        "app/layout.tsx",
-        "app/product/[handle]/page.tsx",
-        "app/search/[collection]/opengraph-image.tsx",
-        "app/search/[collection]/page.tsx",
-        "app/search/page.tsx",
-        "app/sitemap.ts",
-        "components/carousel.tsx",
-        "components/cart/actions.ts",
-        "components/grid/three-items.tsx",
-        "components/layout/footer.tsx",
-        "components/layout/navbar/index.tsx",
-        "components/layout/search/collections.tsx",
-        "app/[page]/layout.tsx",
-        "app/page.tsx",
-        "app/search/layout.tsx",
-        "components/cart/add-to-cart.tsx",
-        "components/cart/delete-item-button.tsx",
-        "components/cart/edit-item-quantity-button.tsx",
-        "components/cart/modal.tsx",
-        "components/product/product-description.tsx"
-      ],
-      "grep_found": 0,
-      "index_found": 26,
-      "adversary_f1": 0.0
+      "adversary_f1": 0.071
     },
     {
       "id": "commerce-impact-label-0",
       "repo": "repos/commerce",
-      "expected": 2,
-      "grep_f1": 0.6666666666666666,
-      "index_f1": 0.3636363636363636,
+      "expected": 9,
+      "grep_f1": 0.19999999999999998,
+      "index_f1": 1.0,
       "grep_answer": [
         "components/grid/tile.tsx"
       ],
@@ -1065,7 +936,7 @@
       ],
       "grep_found": 1,
       "index_found": 9,
-      "adversary_f1": 0.0
+      "adversary_f1": 0.111
     },
     {
       "id": "typedi-impact-resolve-to-type-wrapper-3",
@@ -2146,56 +2017,37 @@
       "grep_exhausted": true
     },
     {
-      "id": "commerce-impact-image-5",
+      "id": "commerce-impact-price-3",
       "repo": "repos/commerce",
-      "expected": 7,
-      "grep_f1": 0.0,
+      "expected": 14,
+      "grep_f1": 0.5263157894736842,
       "index_f1": 1.0,
       "grep_answer": [
         "components/cart/modal.tsx",
+        "components/label.tsx",
+        "components/product/product-description.tsx",
         "components/grid/tile.tsx",
-        "components/product/gallery.tsx",
         "components/layout/navbar/index.tsx"
       ],
       "index_answer": [
-        "lib/shopify/fragments/product.ts",
-        "lib/shopify/fragments/cart.ts",
-        "lib/shopify/queries/collection.ts",
-        "lib/shopify/queries/product.ts",
-        "lib/shopify/index.ts",
-        "lib/shopify/mutations/cart.ts",
-        "lib/shopify/queries/cart.ts"
-      ],
-      "grep_found": 4,
-      "index_found": 30,
-      "adversary_f1": 0.286,
-      "grep_tokens": 13213,
-      "index_tokens": 8234,
-      "grep_opens": 15,
-      "index_opens": 1,
-      "grep_searches": 5,
-      "index_searches": 0,
-      "grep_exhausted": false
-    },
-    {
-      "id": "commerce-impact-price-3",
-      "repo": "repos/commerce",
-      "expected": 3,
-      "grep_f1": 0.3333333333333333,
-      "index_f1": 0.3333333333333333,
-      "grep_answer": [
         "components/cart/modal.tsx",
         "components/label.tsx",
-        "components/product/product-description.tsx"
-      ],
-      "index_answer": [
-        "components/cart/modal.tsx",
-        "components/label.tsx",
-        "components/product/product-description.tsx"
+        "components/product/product-description.tsx",
+        "app/product/[handle]/page.tsx",
+        "components/grid/tile.tsx",
+        "components/layout/navbar/index.tsx",
+        "app/layout.tsx",
+        "components/carousel.tsx",
+        "components/grid/three-items.tsx",
+        "components/layout/product-grid-items.tsx",
+        "components/product/gallery.tsx",
+        "app/page.tsx",
+        "app/search/[collection]/page.tsx",
+        "app/search/page.tsx"
       ],
       "grep_found": 5,
       "index_found": 14,
-      "adversary_f1": 0.0,
+      "adversary_f1": 0.071,
       "grep_tokens": 19524,
       "index_tokens": 8231,
       "grep_opens": 22,
@@ -2205,70 +2057,28 @@
       "grep_exhausted": false
     },
     {
-      "id": "commerce-impact-product-6",
-      "repo": "repos/commerce",
-      "expected": 6,
-      "grep_f1": 0.0,
-      "index_f1": 1.0,
-      "grep_answer": [],
-      "index_answer": [
-        "lib/shopify/fragments/cart.ts",
-        "lib/shopify/queries/collection.ts",
-        "lib/shopify/queries/product.ts",
-        "lib/shopify/index.ts",
-        "lib/shopify/mutations/cart.ts",
-        "lib/shopify/queries/cart.ts"
-      ],
-      "grep_found": 0,
-      "index_found": 29,
-      "adversary_f1": 0.333,
-      "grep_tokens": 4480,
-      "index_tokens": 8234,
-      "grep_opens": 3,
-      "index_opens": 1,
-      "grep_searches": 1,
-      "index_searches": 0,
-      "grep_exhausted": false
-    },
-    {
-      "id": "commerce-impact-cart-4",
-      "repo": "repos/commerce",
-      "expected": 3,
-      "grep_f1": 0.0,
-      "index_f1": 1.0,
-      "grep_answer": [],
-      "index_answer": [
-        "lib/shopify/mutations/cart.ts",
-        "lib/shopify/queries/cart.ts",
-        "lib/shopify/index.ts"
-      ],
-      "grep_found": 0,
-      "index_found": 26,
-      "adversary_f1": 0.0,
-      "grep_tokens": 5613,
-      "index_tokens": 8234,
-      "grep_opens": 4,
-      "index_opens": 1,
-      "grep_searches": 1,
-      "index_searches": 0,
-      "grep_exhausted": false
-    },
-    {
       "id": "commerce-impact-label-0",
       "repo": "repos/commerce",
-      "expected": 2,
-      "grep_f1": 0.6666666666666666,
-      "index_f1": 0.5,
+      "expected": 9,
+      "grep_f1": 0.19999999999999998,
+      "index_f1": 1.0,
       "grep_answer": [
         "components/grid/tile.tsx"
       ],
       "index_answer": [
         "components/grid/tile.tsx",
-        "app/product/[handle]/page.tsx"
+        "app/product/[handle]/page.tsx",
+        "components/carousel.tsx",
+        "components/grid/three-items.tsx",
+        "components/layout/product-grid-items.tsx",
+        "components/product/gallery.tsx",
+        "app/page.tsx",
+        "app/search/[collection]/page.tsx",
+        "app/search/page.tsx"
       ],
       "grep_found": 1,
       "index_found": 9,
-      "adversary_f1": 0.0,
+      "adversary_f1": 0.111,
       "grep_tokens": 11756,
       "index_tokens": 8231,
       "grep_opens": 13,

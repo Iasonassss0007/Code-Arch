@@ -955,41 +955,6 @@
     }
   },
   {
-    "id": "commerce-impact-image-5",
-    "repo": "repos/commerce",
-    "tier": 2,
-    "kind": "impact",
-    "query": "The exported behavior of `lib/shopify/fragments/image.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
-    "target": "lib/shopify/fragments/image.ts",
-    "expected_files": [
-      "lib/shopify/fragments/cart.ts",
-      "lib/shopify/fragments/product.ts",
-      "lib/shopify/index.ts",
-      "lib/shopify/mutations/cart.ts",
-      "lib/shopify/queries/cart.ts",
-      "lib/shopify/queries/collection.ts",
-      "lib/shopify/queries/product.ts"
-    ],
-    "oracle": {
-      "tool": "madge",
-      "version": "8",
-      "relation": "transitive_importers"
-    },
-    "gates": {
-      "max_depth": 3,
-      "directories": 4,
-      "adversary_f1": {
-        "path_guess": 0.286,
-        "hub_guess": 0.143
-      }
-    },
-    "provenance": {
-      "url": "https://github.com/vercel/commerce.git",
-      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
-      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
-    }
-  },
-  {
     "id": "commerce-impact-price-3",
     "repo": "repos/commerce",
     "tier": 2,
@@ -997,92 +962,39 @@
     "query": "The exported behavior of `components/price.tsx` is changing. List every source file that depends on it, directly or transitively, and would need review.",
     "target": "components/price.tsx",
     "expected_files": [
+      "app/layout.tsx",
+      "app/page.tsx",
+      "app/product/[handle]/page.tsx",
+      "app/search/[collection]/page.tsx",
+      "app/search/page.tsx",
       "components/carousel.tsx",
+      "components/cart/modal.tsx",
+      "components/grid/three-items.tsx",
       "components/grid/tile.tsx",
-      "components/label.tsx"
+      "components/label.tsx",
+      "components/layout/navbar/index.tsx",
+      "components/layout/product-grid-items.tsx",
+      "components/product/gallery.tsx",
+      "components/product/product-description.tsx"
     ],
     "oracle": {
       "tool": "madge",
       "version": "8",
-      "relation": "transitive_importers"
+      "relation": "transitive_importers",
+      "ts_config": "tsconfig.json"
     },
     "gates": {
-      "max_depth": 3,
-      "directories": 2,
+      "max_depth": 4,
+      "directories": 10,
       "adversary_f1": {
         "path_guess": 0.0,
-        "hub_guess": 0.0
+        "hub_guess": 0.071
       }
     },
     "provenance": {
       "url": "https://github.com/vercel/commerce.git",
       "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
-      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
-    }
-  },
-  {
-    "id": "commerce-impact-product-6",
-    "repo": "repos/commerce",
-    "tier": 2,
-    "kind": "impact",
-    "query": "The exported behavior of `lib/shopify/fragments/product.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
-    "target": "lib/shopify/fragments/product.ts",
-    "expected_files": [
-      "lib/shopify/fragments/cart.ts",
-      "lib/shopify/index.ts",
-      "lib/shopify/mutations/cart.ts",
-      "lib/shopify/queries/cart.ts",
-      "lib/shopify/queries/collection.ts",
-      "lib/shopify/queries/product.ts"
-    ],
-    "oracle": {
-      "tool": "madge",
-      "version": "8",
-      "relation": "transitive_importers"
-    },
-    "gates": {
-      "max_depth": 2,
-      "directories": 4,
-      "adversary_f1": {
-        "path_guess": 0.333,
-        "hub_guess": 0.0
-      }
-    },
-    "provenance": {
-      "url": "https://github.com/vercel/commerce.git",
-      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
-      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
-    }
-  },
-  {
-    "id": "commerce-impact-cart-4",
-    "repo": "repos/commerce",
-    "tier": 2,
-    "kind": "impact",
-    "query": "The exported behavior of `lib/shopify/fragments/cart.ts` is changing. List every source file that depends on it, directly or transitively, and would need review.",
-    "target": "lib/shopify/fragments/cart.ts",
-    "expected_files": [
-      "lib/shopify/index.ts",
-      "lib/shopify/mutations/cart.ts",
-      "lib/shopify/queries/cart.ts"
-    ],
-    "oracle": {
-      "tool": "madge",
-      "version": "8",
-      "relation": "transitive_importers"
-    },
-    "gates": {
-      "max_depth": 2,
-      "directories": 3,
-      "adversary_f1": {
-        "path_guess": 0.0,
-        "hub_guess": 0.0
-      }
-    },
-    "provenance": {
-      "url": "https://github.com/vercel/commerce.git",
-      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
-      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2. Commerce re-oracled 2026-09-15 with madge --ts-config (baseUrl imports were unresolved)."
     }
   },
   {
@@ -1093,26 +1005,34 @@
     "query": "The exported behavior of `components/label.tsx` is changing. List every source file that depends on it, directly or transitively, and would need review.",
     "target": "components/label.tsx",
     "expected_files": [
+      "app/page.tsx",
+      "app/product/[handle]/page.tsx",
+      "app/search/[collection]/page.tsx",
+      "app/search/page.tsx",
       "components/carousel.tsx",
-      "components/grid/tile.tsx"
+      "components/grid/three-items.tsx",
+      "components/grid/tile.tsx",
+      "components/layout/product-grid-items.tsx",
+      "components/product/gallery.tsx"
     ],
     "oracle": {
       "tool": "madge",
       "version": "8",
-      "relation": "transitive_importers"
+      "relation": "transitive_importers",
+      "ts_config": "tsconfig.json"
     },
     "gates": {
-      "max_depth": 2,
-      "directories": 2,
+      "max_depth": 3,
+      "directories": 8,
       "adversary_f1": {
         "path_guess": 0.0,
-        "hub_guess": 0.0
+        "hub_guess": 0.111
       }
     },
     "provenance": {
       "url": "https://github.com/vercel/commerce.git",
       "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
-      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2."
+      "annotation": "Transitive importers from madge 8; gates: no stem leak, >=2 directories, depth>=2. Commerce re-oracled 2026-09-15 with madge --ts-config (baseUrl imports were unresolved)."
     }
   },
   {

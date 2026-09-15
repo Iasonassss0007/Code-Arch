@@ -46,7 +46,27 @@ Paired per-task delta vs without_map (5000-sample bootstrap):
    The open question moves to tasks a static import walk can't answer
    (DI, URL contracts, "where does X belong").
 
+## Rescored after the oracle fix (same day)
+
+Commerce was re-oracled with `madge --ts-config` (39 → 121 edges, none
+removed; Hono and TypeDI graphs unchanged). Three Commerce tasks (`image-5`,
+`product-6`, `cart-4`) grew to 26–30 answers, and a free adversary now scores
+above the 0.35 cap, so they fail the admission gate and are dropped. The set is
+now 34 tasks. With the corrected expected sets, the live run's `price-3` and `label-0` answers
+score F1 1.00. The dropped three would have scored 1.00 too. See
+`results-nav-rescored/report.md` (`python rescore_nav.py results-nav-3arm results-nav-importers`).
+
+| Arm | Mean F1 | Exact | Provider tokens/ep |
+|---|---:|---:|---:|
+| without_map | 0.608 | 12/68 | 11,400 |
+| with_map | 0.583 | 4/68 | 20,855 |
+| index_only | 0.550 | 10/68 | 12,258 |
+| **importers_tool** | **0.979** | **64/68** | **9,387** |
+
+importers_tool vs without_map: ΔF1 +0.372, CI [+0.276, +0.470], better on 28
+tasks and worse on none. with_map and index_only remain nulls. The offline proxy on the new set
+scores 0.979, equal to the live arm. The one remaining miss is `hono-impact-index-51`.
+
 ## Next
 
-- Fix the oracle: regenerate Commerce expected sets with `baseUrl`/`paths` resolution, then rescore both checkpoints.
 - Build a task set where the static import walk is wrong or incomplete, to test the map on what the tool can't cover.
