@@ -1,0 +1,56 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.27s
+1/108 paperless-xlang-applicationconfigurationviewset-0 without_map: correct=False opens=0 searches=1 error=Answer must contain inventoried paths
+2/108 paperless-xlang-applicationconfigurationviewset-0 with_map: correct=False opens=0 searches=1 error=Answer must contain inventoried paths
+3/108 paperless-xlang-applicationconfigurationviewset-0 importers_tool: correct=False opens=0 searches=1 error=None
+4/108 paperless-xlang-bulkeditobjectsview-1 with_map: correct=False opens=0 searches=1 error=None
+5/108 paperless-xlang-bulkeditobjectsview-1 importers_tool: correct=False opens=0 searches=1 error=None
+6/108 paperless-xlang-bulkeditobjectsview-1 without_map: correct=False opens=0 searches=1 error=None
+7/108 paperless-xlang-chatstreamingview-2 importers_tool: correct=False opens=0 searches=1 error=None
+8/108 paperless-xlang-chatstreamingview-2 without_map: correct=False opens=0 searches=1 error=None
+9/108 paperless-xlang-chatstreamingview-2 with_map: correct=True opens=0 searches=1 error=None
+10/108 paperless-xlang-correspondentviewset-3 without_map: correct=False opens=0 searches=1 error=None
+11/108 paperless-xlang-correspondentviewset-3 with_map: correct=False opens=0 searches=1 error=None
+12/108 paperless-xlang-correspondentviewset-3 importers_tool: correct=False opens=0 searches=1 error=None
+13/108 paperless-xlang-disconnectsocialaccountview-4 with_map: correct=True opens=0 searches=1 error=None
+14/108 paperless-xlang-disconnectsocialaccountview-4 importers_tool: correct=False opens=0 searches=1 error=None
+15/108 paperless-xlang-disconnectsocialaccountview-4 without_map: correct=True opens=0 searches=1 error=None
+16/108 paperless-xlang-documenttypeviewset-5 importers_tool: correct=False opens=0 searches=1 error=None
+17/108 paperless-xlang-documenttypeviewset-5 without_map: correct=False opens=0 searches=1 error=None
+18/108 paperless-xlang-documenttypeviewset-5 with_map: correct=False opens=0 searches=1 error=None
+19/108 paperless-xlang-globalsearchview-6 without_map: correct=False opens=0 searches=1 error=None
+20/108 paperless-xlang-globalsearchview-6 with_map: correct=False opens=0 searches=1 error=None
+21/108 paperless-xlang-globalsearchview-6 importers_tool: correct=False opens=0 searches=1 error=None
+22/108 paperless-xlang-groupviewset-7 with_map: correct=False opens=0 searches=1 error=None
+23/108 paperless-xlang-groupviewset-7 importers_tool: correct=False opens=0 searches=1 error=None
+24/108 paperless-xlang-groupviewset-7 without_map: correct=False opens=0 searches=1 error=None
+25/108 paperless-xlang-logviewset-8 importers_tool: correct=True opens=0 searches=1 error=None
+26/108 paperless-xlang-logviewset-8 without_map: correct=True opens=0 searches=1 error=None
+27/108 paperless-xlang-logviewset-8 with_map: correct=True opens=0 searches=1 error=None
+28/108 paperless-xlang-processedmailviewset-9 without_map: correct=False opens=0 searches=1 error=None
+29/108 paperless-xlang-processedmailviewset-9 with_map: correct=False opens=0 searches=1 error=None
+30/108 paperless-xlang-processedmailviewset-9 importers_tool: correct=False opens=0 searches=1 error=None
+31/108 paperless-xlang-savedviewviewset-10 with_map: correct=False opens=0 searches=1 error=None
+32/108 paperless-xlang-savedviewviewset-10 importers_tool: correct=False opens=0 searches=1 error=None
+33/108 paperless-xlang-savedviewviewset-10 without_map: correct=False opens=0 searches=1 error=None
+34/108 paperless-xlang-sharelinkbundleviewset-11 importers_tool: correct=False opens=0 searches=1 error=None
+35/108 paperless-xlang-sharelinkbundleviewset-11 without_map: correct=False opens=0 searches=1 error=None
+36/108 paperless-xlang-sharelinkbundleviewset-11 with_map: correct=False opens=0 searches=1 error=None
+37/108 paperless-xlang-sharelinkviewset-12 without_map: correct=True opens=0 searches=1 error=None
+38/108 paperless-xlang-sharelinkviewset-12 with_map: correct=True opens=0 searches=1 error=None
+39/108 paperless-xlang-sharelinkviewset-12 importers_tool: correct=False opens=0 searches=1 error=None
+40/108 paperless-xlang-statisticsview-13 with_map: correct=False opens=0 searches=1 error=None
+41/108 paperless-xlang-statisticsview-13 importers_tool: correct=False opens=0 searches=1 error=None
+42/108 paperless-xlang-statisticsview-13 without_map: correct=False opens=0 searches=1 error=None
+43/108 paperless-xlang-tagviewset-14 importers_tool: correct=False opens=0 searches=1 error=None
+44/108 paperless-xlang-tagviewset-14 without_map: correct=False opens=0 searches=1 error=None
+45/108 paperless-xlang-tagviewset-14 with_map: correct=False opens=0 searches=1 error=None
+46/108 paperless-xlang-tasksviewset-15 without_map: correct=False opens=0 searches=1 error=None
+47/108 paperless-xlang-tasksviewset-15 with_map: correct=False opens=0 searches=1 error=Answer must contain inventoried paths
+48/108 paperless-xlang-tasksviewset-15 importers_tool: correct=False opens=0 searches=1 error=Gemini HTTP 429
+Traceback (most recent call last):
+  File "C:\Users\giann\Documents\Code Arch\eval\run_agent.py", line 247, in <module>
+    if __name__=='__main__': main()
+                             ^^^^^^
+  File "C:\Users\giann\Documents\Code Arch\eval\run_agent.py", line 192, in main
+    raise RuntimeError('Provider failure; checkpoint saved, no further calls')
+RuntimeError: Provider failure; checkpoint saved, no further calls

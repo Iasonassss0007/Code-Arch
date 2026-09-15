@@ -22,8 +22,12 @@ Ground truth, built without codearch:
 Gates follow build_tasks_nav/gate_tasks_nav: 2-20 answers, >=2 directories,
 at least one answer reached only through an import (the URL hop is the step
 grep cannot make, so one import hop suffices), both free adversaries below
-0.35 F1 (path_guess gets the view class name too). Views whose answer set
-equals an earlier view's are dropped: they are the same task twice.
+0.35 F1 (path_guess gets the view class name too). A third adversary,
+search_guess, runs the harness's own lexical search for the view class name
+(with and without its View/ViewSet suffix) over the frontend and answers with
+the top hits: paperless names both sides alike (TagViewSet / tag.service.ts),
+and a first live trial solved such tasks with one search. Views whose answer
+set equals an earlier view's are dropped: they are the same task twice.
 
     python build_tasks_xlang.py --table          # print view -> callers for review
     python build_tasks_xlang.py --out tasks-xlang.json
@@ -38,6 +42,7 @@ from pathlib import Path
 
 import build_tasks_nav as B
 import gate_tasks_nav as G
+from run import score
 
 ROOT = Path(__file__).resolve().parent
 REPO = ROOT / 'repos' / 'paperless-ngx'
@@ -191,11 +196,26 @@ def callers_by_view(table, calls):
     return views, unresolved
 
 
+def search_guess(view, files, budget):
+    """Top-`budget` frontend files for the class name, as the agent's search ranks them."""
+    guesses = []
+    for query in (view, re.sub(r'View(Set)?$', '', view)):
+        hits = []
+        for path, lines in files.items():
+            best = max((score(query, line) for line in lines), default=0)
+            if best:
+                hits.append((-best, path))
+        guesses.append([p for _, p in sorted(hits)][:budget])
+    return guesses
+
+
 def build(table, calls, graph):
     back = B.reverse(graph)
     paths = sorted(B.source_files('paperless-ngx'))
     counts = Counter(d for deps in graph.values() for d in deps)
     views, _ = callers_by_view(table, calls)
+    ui_files = {p.relative_to(REPO).as_posix(): p.read_text(encoding='utf-8').splitlines()
+                for p in sorted((REPO / UI).rglob('*.ts'))}
     tasks, rejected, seen = [], [], {}
     for (view, file), direct in sorted(views.items()):
         if not file:
@@ -216,7 +236,8 @@ def build(table, calls, graph):
         # The adversary reads the view name as well as the file path.
         probe = {'target': f"{file.rsplit('/', 1)[0]}/{re.sub(r'(?<!^)(?=[A-Z])', '_', view).lower()}.py"}
         adversary = {'path_guess': round(G.f1(G.path_guess(probe, paths, len(answers)), answers), 3),
-                     'hub_guess': round(G.f1(G.hub_guess(probe, paths, counts, len(answers)), answers), 3)}
+                     'hub_guess': round(G.f1(G.hub_guess(probe, paths, counts, len(answers)), answers), 3),
+                     'search_guess': round(max(G.f1(g, answers) for g in search_guess(view, ui_files, len(answers))), 3)}
         if not why and max(adversary.values()) > 0.35:
             why = f'adversary {adversary}'
         if why:

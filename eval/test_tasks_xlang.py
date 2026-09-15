@@ -40,3 +40,12 @@ def test_endpoints_harvest_resource_services_and_templates():
     profile = "private endpoint = 'profile'\n get() { return this.http.get(`${environment.apiBaseUrl}${this.endpoint}/totp/`) }"
     assert X.endpoints(profile) == {'api/profile/totp/'}
     assert X.endpoints("const x = `hello ${name}`") == set()
+
+
+def test_search_guess_ranks_files_by_class_name_overlap():
+    files = {'a/tag.service.ts': ['this.resourceName = "tags"', 'class TagService'],
+             'a/other.ts': ['nothing here'],
+             'a/tag-list.component.ts': ['import { TagService }']}
+    full, stripped = X.search_guess('TagViewSet', files, 2)
+    assert 'a/other.ts' not in full and 'a/other.ts' not in stripped
+    assert set(stripped) == {'a/tag.service.ts', 'a/tag-list.component.ts'}
