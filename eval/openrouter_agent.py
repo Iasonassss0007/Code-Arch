@@ -23,8 +23,15 @@ Return exactly one JSON object per turn, no markdown. Available actions:
 Answers may contain only inventoried source paths. You have at most 12 actions, including the final answer. Each supplied transcript is one independent task; do not assume knowledge from other tasks.'''
 
 
-def system_for(task):
-    return SYSTEM_IMPACT if task.get('kind') == 'impact' else SYSTEM
+# importers_tool arm only; appended so SYSTEM_IMPACT stays byte-identical.
+IMPORTERS_TOOL = '''
+{"tool":"importers","path":"relative/path.ts"} returns every file that imports that path, directly (depth 1) or transitively (depth 2+), from a static import index. It may miss runtime or string-based coupling.'''
+
+
+def system_for(task, arm=None):
+    if task.get('kind') != 'impact':
+        return SYSTEM
+    return SYSTEM_IMPACT + IMPORTERS_TOOL if arm == 'importers_tool' else SYSTEM_IMPACT
 
 
 # M1's one-file answers fit in 512 output tokens; M1v2 impact answers hold

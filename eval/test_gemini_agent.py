@@ -52,7 +52,7 @@ def test_payload_constrains_output_to_the_action_shape():
     # Live probe: gemini-3.6-flash answered {"action": "search", ...} instead of {"tool": ...}.
     schema = G.payload({}, "gemini-3.1-flash-lite", "SYS")["generationConfig"]["responseSchema"]
     assert schema["required"] == ["tool"]
-    assert schema["properties"]["tool"]["enum"] == ["search", "open", "answer"]
+    assert schema["properties"]["tool"]["enum"] == ["search", "open", "answer", "importers"]
     assert set(schema["properties"]) == {"tool", "query", "path", "files"}
 
 

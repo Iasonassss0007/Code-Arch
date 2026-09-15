@@ -8,12 +8,15 @@ import time
 from pathlib import Path
 from run import ROOT, CRATE, Session, bridge, safe_file, set_f1, summarize
 from openrouter_agent import (complete, SYSTEM, SYSTEM_IMPACT, system_for,
-                              MAX_TOKENS_M1, MAX_TOKENS_IMPACT)
+                              MAX_TOKENS_M1, MAX_TOKENS_IMPACT, IMPORTERS_TOOL)
 import gemini_agent
+from build_tasks_nav import importers as walk_importers
+from check_import_index import parse_index
 import groq_agent
 
 # The path CODEBASE.md names for the reverse import index.
 IMPORTS_REL='.codearch/imports.md'
+ARMS=('without_map','with_map','index_only','importers_tool')
 
 
 def episode(session, model, request_fn=complete):
@@ -91,7 +94,7 @@ def main():
     p.add_argument('--model',default=None,help="default: the provider's default model")
     p.add_argument('--repeats',type=int,default=2)
     p.add_argument('--arms',default='without_map,with_map',
-                   help="comma-separated subset of without_map,with_map,index_only. index_only serves no map text, only .codearch/imports.md on demand")
+                   help="comma-separated subset of without_map,with_map,index_only,importers_tool. index_only serves no map text, only .codearch/imports.md on demand; importers_tool serves the same index as an importers(path) query")
     p.add_argument('--max-cost',type=float,default=1.0,help='Stop between episodes when reported USD reaches this cap')
     p.add_argument('--resume',action='store_true')
     args=p.parse_args()
@@ -99,8 +102,8 @@ def main():
     args.model=args.model or default_model
     if args.repeats<1 or args.max_cost<=0: raise ValueError('Positive repeats and cost required')
     ALL_ARMS=[a.strip() for a in args.arms.split(',') if a.strip()]
-    if not ALL_ARMS or any(a not in ('without_map','with_map','index_only') for a in ALL_ARMS) or len(set(ALL_ARMS))!=len(ALL_ARMS):
-        raise ValueError("--arms must be a unique subset of without_map,with_map,index_only")
+    if not ALL_ARMS or any(a not in ARMS for a in ALL_ARMS) or len(set(ALL_ARMS))!=len(ALL_ARMS):
+        raise ValueError("--arms must be a unique subset of "+",".join(ARMS))
     tasks=json.loads(args.tasks.read_text(encoding='utf-8'))
     if not tasks or len({t['id'] for t in tasks})!=len(tasks): raise ValueError('Invalid task IDs')
     args.out.mkdir(parents=True,exist_ok=True)
@@ -129,7 +132,7 @@ def main():
         config={'provider':args.provider,'model':args.model,'repeats':args.repeats,'arms':ALL_ARMS,'tasks':tasks,'revisions':revisions,
                 'corpus_sha256':corpus,'map_sha256':{k:hashlib.sha256(v.encode()).hexdigest() for k,v in maps.items()},
                 'imports_sha256':{k:hashlib.sha256(v.encode()).hexdigest() for k,v in imports.items()},
-                'system_prompt':SYSTEM,'system_prompt_impact':SYSTEM_IMPACT,'max_actions':12,'temperature':0,'seed':24301,
+                'system_prompt':SYSTEM,'system_prompt_impact':SYSTEM_IMPACT,'system_prompt_importers_tool':SYSTEM_IMPACT+IMPORTERS_TOOL,'max_actions':12,'temperature':0,'seed':24301,
                 'source_sha256':{str(f.relative_to(CRATE)):hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted((CRATE/'src').rglob('*.rs'))+[CRATE/'Cargo.lock',ROOT/'run.py',Path(__file__),ROOT/'openrouter_agent.py']}}
         checkpoint=args.out/'checkpoint.json'
         rows=[]
@@ -165,8 +168,9 @@ def main():
                     # offline proxy vindicates) beats map-text-in-context.
                     has_index=arm in ('with_map','index_only')
                     session=Session((ROOT/task['repo']).resolve(),task['query'],maps[task['repo']] if arm=='with_map' else '',
-                                    map_files={IMPORTS_REL:imports[task['repo']]} if has_index else None)
-                    system=system_for(task)
+                                    map_files={IMPORTS_REL:imports[task['repo']]} if has_index else None,
+                                    importers=(lambda rel,back=parse_index(imports[task['repo']]):walk_importers(back,rel)) if arm=='importers_tool' else None)
+                    system=system_for(task,arm)
                     # Impact answers hold 2-20 paths; 512 truncates them
                     # (recorded live on the Gemini probe). M1 tasks keep 512.
                     cap=MAX_TOKENS_IMPACT if task.get('kind')=='impact' else MAX_TOKENS_M1
@@ -178,7 +182,7 @@ def main():
                          'correct':error is None and session.answer==sorted(set(task['expected_files'])),
                          'f1':0.0 if error else set_f1(session.answer,task['expected_files']),
                          'expected':sorted(set(task['expected_files'])),
-                         'answer':session.answer,'files_opened':len(session.opened),'searches':session.searches,
+                         'answer':session.answer,'files_opened':len(session.opened),'searches':session.searches,'lookups':session.lookups,
                          'tokens':0,'error':error,'calls':calls,'usage':usage(calls),'trace':session.trace,
                          'elapsed_seconds':round(time.monotonic()-start,3)}
                     rows.append(row)
@@ -228,7 +232,7 @@ def main():
                    'provider-token savings: n/a (no provider usage)')
                 + f"; mean-F1 delta: {summary['f1_delta']:+.3f}; accuracy delta: {summary['accuracy_delta_pp']:.2f} pp.",
                 '', 'Context counts each observation/action once; provider usage includes repeated conversation input and system prompt. Both include map cost. Provider-reported USD includes any caching effects.',
-                '', ('Impact tasks: transitive importers from madge over the whole checkout, scored by set F1. The with_map and index_only arms may open `.codearch/imports.md`. Repeated trials on the same task are correlated. Not a code-change evaluation.' if impact else
+                '', ('Impact tasks: transitive importers from madge over the whole checkout, scored by set F1. The with_map and index_only arms may open `.codearch/imports.md`; importers_tool queries the same index. Repeated trials on the same task are correlated. Not a code-change evaluation.' if impact else
                      'This is a small file-location benchmark, not a code-change evaluation. Repeated trials on the same task are correlated. Tier 3 uses TypeDI runtime/decorator indirection, not a large enterprise application. Labels require separate review.')]
         (args.out/'report.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
         print('\n'.join(lines))

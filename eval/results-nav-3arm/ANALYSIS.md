@@ -31,8 +31,11 @@ Paired per-task delta vs without_map (task mean over trials, 5000-sample bootstr
    10/74 (index_only) episodes, and even then scored 0.566 / 0.400. It
    doesn't walk the transitive closure. The gap between 0.89 and 0.52 comes from
    the agent's behavior, not from missing content.
-4. **Part of the index_only loss comes from the harness.** 8 of its errors are
-   `Answer must contain inventoried paths` rejections, not navigation mistakes.
+4. **The index_only arm's errors are the agent's own mistakes.** All 8
+   `Answer must contain inventoried paths` rejections are correct: the agent listed
+   `.codearch/imports.md` itself as an answer file (6), or answered with a
+   path that doesn't exist (`runtime-tests/workerd/index.Exp.test.ts`, 2). The
+   index text confused the model about what counts as an answer.
 
 ## Implications
 
@@ -42,4 +45,6 @@ Paired per-task delta vs without_map (task mean over trials, 5000-sample bootstr
   that returns only the affected set. The proxy's 0.890 is roughly that arm's upper bound.
 - Evaluate the map where search can't see the link: DI or indirect coupling
   (the T3 signal), URL contracts, and "where does X belong" questions.
-- Before rerunning index_only, check the inventoried-paths rule.
+- Follow-up arm `importers_tool` added to `run_agent.py`. A scripted agent
+  (one `importers(target)` call, then answer) scores F1 0.890 through the real
+  Session on all 37 tasks, matching the proxy.

@@ -46,7 +46,7 @@ _last = [0.0]
 ACTION_SCHEMA = {
     'type': 'OBJECT',
     'properties': {
-        'tool': {'type': 'STRING', 'enum': ['search', 'open', 'answer']},
+        'tool': {'type': 'STRING', 'enum': ['search', 'open', 'answer', 'importers']},
         'query': {'type': 'STRING'},
         'path': {'type': 'STRING'},
         'files': {'type': 'ARRAY', 'items': {'type': 'STRING'}},
