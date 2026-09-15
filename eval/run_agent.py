@@ -202,16 +202,22 @@ def main():
                     'provider_usage':usage([c for r in subset for c in r['calls']])}
         # Classic pair keeps the recorded gate comparable; extra arms aggregate
         # the same way beside it.
-        summary=summarize([r for r in rows if r['arm'] in ('without_map','with_map')])
-        for arm in ['without_map','with_map']:
-            summary[arm]['provider_usage']=usage([c for r in rows if r['arm']==arm for c in r['calls']])
-        extra={arm:aggregate([r for r in rows if r['arm']==arm]) for arm in ALL_ARMS if arm not in ('without_map','with_map')}
-        a=summary['without_map']['provider_usage']; b=summary['with_map']['provider_usage']
-        a_total=a['prompt_tokens']+a['completion_tokens']
-        summary['provider_token_savings_percent']=(100*(1-(b['prompt_tokens']+b['completion_tokens'])/a_total)
-                                                    if a_total else None)
+        # A run without both classic arms (e.g. --arms importers_tool) has no
+        # pair to compare; every arm then aggregates as an extra arm.
+        classic={'without_map','with_map'}<=set(ALL_ARMS)
+        pair=('without_map','with_map') if classic else ()
+        summary=None
+        if classic:
+            summary=summarize([r for r in rows if r['arm'] in pair])
+            for arm in pair:
+                summary[arm]['provider_usage']=usage([c for r in rows if r['arm']==arm for c in r['calls']])
+            a=summary['without_map']['provider_usage']; b=summary['with_map']['provider_usage']
+            a_total=a['prompt_tokens']+a['completion_tokens']
+            summary['provider_token_savings_percent']=(100*(1-(b['prompt_tokens']+b['completion_tokens'])/a_total)
+                                                        if a_total else None)
+        extra={arm:aggregate([r for r in rows if r['arm']==arm]) for arm in ALL_ARMS if arm not in pair}
         report={'schema':3,'config':config,'summary':summary,'extra_arms':extra,
-                'by_tier':{str(t):summarize([r for r in rows if r['tier']==t and r['arm'] in ('without_map','with_map')]) for t in sorted({r['tier'] for r in rows})},
+                'by_tier':{str(t):summarize([r for r in rows if r['tier']==t and r['arm'] in pair]) for t in sorted({r['tier'] for r in rows})} if classic else None,
                 'episodes':rows}
         write_json(args.out/'report.json',report)
         for repo,text in maps.items(): (args.out/(Path(repo).name+'-CODEBASE.md')).write_text(text,encoding='utf-8')
@@ -220,17 +226,17 @@ def main():
         lines=['# M1v2 real-agent evaluation (impact)' if impact else '# M1 real-agent evaluation','',f'Model: `{args.model}`. {len(tasks)} tasks, {args.repeats} fresh trials per arm.',
                '', '| Arm | Mean F1 | Exact | Context tokens | Provider tokens | Files opened | Searches | USD |',
                '|---|---:|---:|---:|---:|---:|---:|---:|']
-        for arm in ['without_map','with_map']:
+        for arm in pair:
             s=summary[arm]; u=s['provider_usage']
             lines.append(f"| {arm} | {s['mean_f1']:.3f} | {s['correct']}/{s['episodes']} | {s['tokens']} | {u['prompt_tokens']+u['completion_tokens']} | {s['files_opened']} | {s['searches']} | {u['cost_usd']:.6f} |")
         for arm,s in extra.items():
             u=s['provider_usage']
             lines.append(f"| {arm} | {s['mean_f1']:.3f} | {s['correct']}/{s['episodes']} | {s['tokens']} | {u['prompt_tokens']+u['completion_tokens']} | {s['files_opened']} | {s['searches']} | {u['cost_usd']:.6f} |")
-        lines+=['',f"Context-token savings: {summary['token_savings_percent']:.2f}%; "
+        lines+=['',(f"Context-token savings: {summary['token_savings_percent']:.2f}%; "
                 + (f"provider-token savings: {summary['provider_token_savings_percent']:.2f}%"
                    if summary['provider_token_savings_percent'] is not None else
                    'provider-token savings: n/a (no provider usage)')
-                + f"; mean-F1 delta: {summary['f1_delta']:+.3f}; accuracy delta: {summary['accuracy_delta_pp']:.2f} pp.",
+                + f"; mean-F1 delta: {summary['f1_delta']:+.3f}; accuracy delta: {summary['accuracy_delta_pp']:.2f} pp.") if classic else 'No without_map/with_map pair in this run; compare arms across runs by task.',
                 '', 'Context counts each observation/action once; provider usage includes repeated conversation input and system prompt. Both include map cost. Provider-reported USD includes any caching effects.',
                 '', ('Impact tasks: transitive importers from madge over the whole checkout, scored by set F1. The with_map and index_only arms may open `.codearch/imports.md`; importers_tool queries the same index. Repeated trials on the same task are correlated. Not a code-change evaluation.' if impact else
                      'This is a small file-location benchmark, not a code-change evaluation. Repeated trials on the same task are correlated. Tier 3 uses TypeDI runtime/decorator indirection, not a large enterprise application. Labels require separate review.')]
