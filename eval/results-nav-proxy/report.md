@@ -4,12 +4,12 @@ Deterministic information-access measurement, zero provider calls. Not an LLM ag
 the paid M1v2 run stays the real gate. Pre-stated rule: index natural F1 >= grep + 0.10
 AND index mean tokens <= grep mean tokens.
 
-Tasks 37 · counter cl100k_base via eval-support · grep budget 15 searches / 40 opens (exhausted on 14)
+Tasks 34 · counter cl100k_base via eval-support · grep budget 15 searches / 40 opens (exhausted on 14)
 
 | Arm | Natural F1 | Cardinality-controlled F1 | Mean tokens | Mean opens | Mean searches |
 |---|---:|---:|---:|---:|---:|
-| Iterative grep | 0.279 | 0.287 | 46754 | 29.4 | 8.9 |
-| Map + index | 0.890 | 0.928 | 17630 | 1.0 | 0.0 |
+| Iterative grep | 0.291 | 0.304 | 50194 | 31.4 | 9.4 |
+| Map + index | 0.979 | 0.956 | 18459 | 1.0 | 0.0 |
 
 Offline payoff: yes.
 
@@ -46,11 +46,8 @@ the task was admitted against, so the iterative-vs-one-shot baseline difference 
 | hono-impact-serve-static-17 | hono | 2 | 14 | 2 | 0.000 | 1.000 | 0.000 |
 | hono-impact-serve-static-8 | hono | 2 | 14 | 2 | 0.500 | 1.000 | 0.000 |
 | hono-impact-ssg-10 | hono | 2 | 14 | 2 | 0.500 | 1.000 | 0.000 |
-| commerce-impact-image-5 | commerce | 7 | 4 | 30 | 0.000 | 1.000 | 0.286 |
-| commerce-impact-price-3 | commerce | 3 | 5 | 14 | 0.333 | 0.333 | 0.000 |
-| commerce-impact-product-6 | commerce | 6 | 0 | 29 | 0.000 | 1.000 | 0.333 |
-| commerce-impact-cart-4 | commerce | 3 | 0 | 26 | 0.000 | 1.000 | 0.000 |
-| commerce-impact-label-0 | commerce | 2 | 1 | 9 | 0.667 | 0.500 | 0.000 |
+| commerce-impact-price-3 | commerce | 14 | 5 | 14 | 0.526 | 1.000 | 0.071 |
+| commerce-impact-label-0 | commerce | 9 | 1 | 9 | 0.200 | 1.000 | 0.111 |
 | typedi-impact-resolve-to-type-wrapper-3 | typedi | 19 | 18 | 19 | 0.973 | 1.000 | 0.158 |
 | typedi-impact-cannot-inject-value-2 | typedi | 19 | 18 | 19 | 0.973 | 1.000 | 0.250 |
 | typedi-impact-inject-1 | typedi | 17 | 16 | 17 | 0.970 | 1.000 | 0.182 |

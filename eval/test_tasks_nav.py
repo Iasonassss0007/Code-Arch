@@ -180,3 +180,19 @@ def test_importers_tool_is_refused_without_the_arm_and_prompt_only_extends(tmp_p
     assert system_for(impact) == system_for(impact, "with_map") == SYSTEM_IMPACT
     assert system_for(impact, "importers_tool").startswith(SYSTEM_IMPACT)
     assert '"importers"' in system_for(impact, "importers_tool")
+
+
+def test_rescore_regrades_recorded_answers_and_drops_removed_tasks():
+    from rescore_nav import rescore, paired
+    tasks = [{"id": "t1", "expected_files": ["a.ts", "b.ts"]}]
+    rows = [
+        {"task": "t1", "trial": 0, "tier": 1, "arm": "x", "answer": ["a.ts", "b.ts"], "error": None},
+        {"task": "t1", "trial": 0, "tier": 1, "arm": "base", "answer": ["a.ts", "b.ts"], "error": "boom"},
+        {"task": "gone", "trial": 0, "tier": 1, "arm": "x", "answer": ["a.ts"], "error": None},
+    ]
+    out = rescore(rows, tasks)
+    assert [r["task"] for r in out] == ["t1", "t1"]
+    assert out[0]["correct"] and out[0]["f1"] == 1.0
+    assert not out[1]["correct"] and out[1]["f1"] == 0.0   # errors never earn credit
+    d = paired(out, "x", "base")
+    assert d["delta"] == 1.0 and d["better"] == 1 and d["worse"] == 0
