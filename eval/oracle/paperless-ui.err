@@ -1,0 +1,2 @@
+npm notice run npx
+npm notice run madge --json --extensions ts --ts-config repos/paperless-ngx/src-ui/tsconfig.json repos/paperless-ngx/src-ui/src

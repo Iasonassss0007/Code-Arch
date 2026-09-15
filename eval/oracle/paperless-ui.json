@@ -1,0 +1,2910 @@
+{
+  "app/app-routing.module.ts": [
+    "app/components/admin/config/config.component.ts",
+    "app/components/admin/logs/logs.component.ts",
+    "app/components/admin/settings/settings.component.ts",
+    "app/components/admin/tasks/tasks.component.ts",
+    "app/components/admin/trash/trash.component.ts",
+    "app/components/admin/users-groups/users-groups.component.ts",
+    "app/components/app-frame/app-frame.component.ts",
+    "app/components/dashboard/dashboard.component.ts",
+    "app/components/document-asn/document-asn.component.ts",
+    "app/components/document-detail/document-detail.component.ts",
+    "app/components/document-list/document-list.component.ts",
+    "app/components/manage/document-attributes/document-attributes.component.ts",
+    "app/components/manage/mail/mail.component.ts",
+    "app/components/manage/saved-views/saved-views.component.ts",
+    "app/components/manage/workflows/workflows.component.ts",
+    "app/components/not-found/not-found.component.ts",
+    "app/guards/dirty-doc.guard.ts",
+    "app/guards/dirty-form.guard.ts",
+    "app/guards/dirty-saved-view.guard.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/app.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/app.component.ts",
+    "app/components/common/toasts/toasts.component.ts",
+    "app/components/file-drop/file-drop.component.ts",
+    "app/guards/dirty-saved-view.guard.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/hot-key.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/app.component.ts": [
+    "app/components/common/toasts/toasts.component.ts",
+    "app/components/file-drop/file-drop.component.ts",
+    "app/data/ui-settings.ts",
+    "app/services/component-router.service.ts",
+    "app/services/hot-key.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/tasks.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/admin/config/config.component.spec.ts": [
+    "app/components/admin/config/config.component.ts",
+    "app/components/common/input/file/file.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/data/paperless-config.ts",
+    "app/services/config.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/admin/config/config.component.ts": [
+    "app/components/common/input/file/file.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/password/password.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/paperless-config.ts",
+    "app/services/config.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/admin/logs/logs.component.spec.ts": [
+    "app/components/admin/logs/logs.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/services/rest/log.service.ts"
+  ],
+  "app/components/admin/logs/logs.component.ts": [
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/services/rest/log.service.ts"
+  ],
+  "app/components/admin/settings/settings.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/admin/settings/settings.component.ts",
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/color/color.component.ts",
+    "app/components/common/input/drag-drop-select/drag-drop-select.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/tags/tags.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/system-status-dialog/system-status-dialog.component.ts",
+    "app/data/system-status.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/system-status.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/navigation.ts"
+  ],
+  "app/components/admin/settings/settings.component.ts": [
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/color/color.component.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/pdf-editor/pdf-editor-edit-mode.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.types.ts",
+    "app/components/common/system-status-dialog/system-status-dialog.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/group.ts",
+    "app/data/system-status.ts",
+    "app/data/ui-settings.ts",
+    "app/data/user.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/system-status.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/navigation.ts"
+  ],
+  "app/components/admin/tasks/tasks.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/admin/tasks/tasks.component.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/data/paperless-task.ts",
+    "app/data/results.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/tasks.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/admin/tasks/tasks.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/paperless-task.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/tasks.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/admin/trash/trash.component.spec.ts": [
+    "app/components/admin/trash/trash.component.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/services/toast.service.ts",
+    "app/services/trash.service.ts"
+  ],
+  "app/components/admin/trash/trash.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/preview-popup/preview-popup.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/document.ts",
+    "app/data/ui-settings.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/trash.service.ts"
+  ],
+  "app/components/admin/users-groups/users-groups.component.spec.ts": [
+    "app/components/admin/users-groups/users-groups.component.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/group-edit-dialog/group-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.ts",
+    "app/data/group.ts",
+    "app/data/user.ts",
+    "app/guards/permissions.guard.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/navigation.ts"
+  ],
+  "app/components/admin/users-groups/users-groups.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/group-edit-dialog/group-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/group.ts",
+    "app/data/user.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/navigation.ts"
+  ],
+  "app/components/app-frame/app-frame.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/app-frame/app-frame.component.ts",
+    "app/components/app-frame/global-search/global-search.component.ts",
+    "app/components/common/profile-edit-dialog/profile-edit-dialog.component.ts",
+    "app/components/document-detail/document-detail.component.ts",
+    "app/data/saved-view.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/django-messages.service.ts",
+    "app/services/open-documents.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/remote-version.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/rest/search.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/tasks.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/app-frame/app-frame.component.ts": [
+    "app/components/app-frame/global-search/global-search.component.ts",
+    "app/components/app-frame/toasts-dropdown/toasts-dropdown.component.ts",
+    "app/components/chat/chat/chat.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/logo/brand-mark/brand-mark.component.ts",
+    "app/components/common/logo/logo.component.ts",
+    "app/components/common/profile-edit-dialog/profile-edit-dialog.component.ts",
+    "app/components/document-detail/document-detail.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/document.ts",
+    "app/data/saved-view.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/dirty-doc.guard.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/services/django-messages.service.ts",
+    "app/services/open-documents.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/remote-version.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/tasks.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/app-frame/global-search/global-search.component.spec.ts": [
+    "app/components/app-frame/global-search/global-search.component.ts",
+    "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/group-edit-dialog/group-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-account-edit-dialog/mail-account-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts",
+    "app/data/datatype.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/ui-settings.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/search.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/query-params.ts"
+  ],
+  "app/components/app-frame/global-search/global-search.component.ts": [
+    "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/group-edit-dialog/group-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-account-edit-dialog/mail-account-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/storage-path-edit-dialog/storage-path-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts",
+    "app/data/datatype.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/object-with-id.ts",
+    "app/data/ui-settings.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/hot-key.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/search.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/query-params.ts"
+  ],
+  "app/components/app-frame/toasts-dropdown/toasts-dropdown.component.spec.ts": [
+    "app/components/app-frame/toasts-dropdown/toasts-dropdown.component.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/app-frame/toasts-dropdown/toasts-dropdown.component.ts": [
+    "app/components/common/toast/toast.component.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/chat/chat/chat.component.spec.ts": [
+    "app/components/chat/chat/chat.component.ts",
+    "app/services/chat.service.ts"
+  ],
+  "app/components/chat/chat/chat.component.ts": [
+    "app/services/chat.service.ts"
+  ],
+  "app/components/common/clearable-badge/clearable-badge.component.spec.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts"
+  ],
+  "app/components/common/clearable-badge/clearable-badge.component.ts": [],
+  "app/components/common/confirm-button/confirm-button.component.spec.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts"
+  ],
+  "app/components/common/confirm-button/confirm-button.component.ts": [],
+  "app/components/common/confirm-dialog/confirm-dialog.component.spec.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts"
+  ],
+  "app/components/common/confirm-dialog/confirm-dialog.component.ts": [
+    "app/components/loading-component/loading.component.ts"
+  ],
+  "app/components/common/confirm-dialog/merge-as-versions-confirm-dialog/merge-as-versions-confirm-dialog.component.spec.ts": [
+    "app/components/common/confirm-dialog/merge-as-versions-confirm-dialog/merge-as-versions-confirm-dialog.component.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/confirm-dialog/merge-as-versions-confirm-dialog/merge-as-versions-confirm-dialog.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/data/document.ts",
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/confirm-dialog/merge-confirm-dialog/merge-confirm-dialog.component.spec.ts": [
+    "app/components/common/confirm-dialog/merge-confirm-dialog/merge-confirm-dialog.component.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/confirm-dialog/merge-confirm-dialog/merge-confirm-dialog.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/data/document.ts",
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/confirm-dialog/password-removal-confirm-dialog/password-removal-confirm-dialog.component.spec.ts": [
+    "app/components/common/confirm-dialog/password-removal-confirm-dialog/password-removal-confirm-dialog.component.ts"
+  ],
+  "app/components/common/confirm-dialog/password-removal-confirm-dialog/password-removal-confirm-dialog.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts"
+  ],
+  "app/components/common/confirm-dialog/reprocess-confirm-dialog/reprocess-confirm-dialog.component.spec.ts": [
+    "app/components/common/confirm-dialog/reprocess-confirm-dialog/reprocess-confirm-dialog.component.ts",
+    "app/data/paperless-config.ts",
+    "app/data/ui-settings.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/confirm-dialog/reprocess-confirm-dialog/reprocess-confirm-dialog.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/confirm-dialog/rotate-confirm-dialog/rotate-confirm-dialog.component.spec.ts": [
+    "app/components/common/confirm-dialog/rotate-confirm-dialog/rotate-confirm-dialog.component.ts"
+  ],
+  "app/components/common/confirm-dialog/rotate-confirm-dialog/rotate-confirm-dialog.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/custom-field-display/custom-field-display.component.spec.ts": [
+    "app/components/common/custom-field-display/custom-field-display.component.ts",
+    "app/data/custom-field.ts",
+    "app/data/document.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/custom-field-display/custom-field-display.component.ts": [
+    "app/components/loading-component/loading.component.ts",
+    "app/data/custom-field.ts",
+    "app/data/document.ts",
+    "app/data/results.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/custom-fields-dropdown/custom-fields-dropdown.component.spec.ts": [
+    "app/components/common/custom-fields-dropdown/custom-fields-dropdown.component.ts",
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/data/custom-field.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/custom-fields-dropdown/custom-fields-dropdown.component.ts": [
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/custom-field-instance.ts",
+    "app/data/custom-field.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/popper-options.ts",
+    "app/utils/text-search.ts"
+  ],
+  "app/components/common/custom-fields-query-dropdown/custom-fields-query-dropdown.component.spec.ts": [
+    "app/components/common/custom-fields-query-dropdown/custom-fields-query-dropdown.component.ts",
+    "app/data/custom-field-query.ts",
+    "app/data/custom-field.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/utils/custom-field-query-element.ts"
+  ],
+  "app/components/common/custom-fields-query-dropdown/custom-fields-query-dropdown.component.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/components/common/input/document-link/document-link.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/custom-field-query.ts",
+    "app/data/custom-field.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/utils/custom-field-query-element.ts",
+    "app/utils/popper-options.ts",
+    "app/utils/text-search.ts"
+  ],
+  "app/components/common/dates-dropdown/dates-dropdown.component.spec.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/components/common/dates-dropdown/dates-dropdown.component.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/dates-dropdown/dates-dropdown.component.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/settings.service.ts",
+    "app/utils/ngb-iso-date-adapter.ts",
+    "app/utils/popper-options.ts"
+  ],
+  "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/correspondent.ts",
+    "app/data/matching-model.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/custom-field.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/custom-field.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/document-type.ts",
+    "app/data/matching-model.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/data/matching-model.ts",
+    "app/data/tag.ts",
+    "app/data/ui-settings.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/edit-dialog/edit-dialog.component.ts": [
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/matching-model.ts",
+    "app/data/object-with-id.ts",
+    "app/data/object-with-permissions.ts",
+    "app/data/ui-settings.ts",
+    "app/data/user.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-paperless-service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/group-edit-dialog/group-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/group-edit-dialog/group-edit-dialog.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/permissions-select/permissions-select.component.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/group-edit-dialog/group-edit-dialog.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/permissions-select/permissions-select.component.ts",
+    "app/data/group.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/mail-account-edit-dialog/mail-account-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-account-edit-dialog/mail-account-edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/password/password.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/mail-account.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/edit-dialog/mail-account-edit-dialog/mail-account-edit-dialog.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/password/password.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/mail-account.ts",
+    "app/services/rest/mail-account.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/input/tags/tags.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/mail-rule.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/mail-account.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/input/tags/tags.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/correspondent.ts",
+    "app/data/document-type.ts",
+    "app/data/mail-account.ts",
+    "app/data/mail-rule.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/mail-account.service.ts",
+    "app/services/rest/mail-rule.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/edit-dialog/storage-path-edit-dialog/storage-path-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/storage-path-edit-dialog/storage-path-edit-dialog.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/storage-path-edit-dialog/storage-path-edit-dialog.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/input/textarea/textarea.component.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/matching-model.ts",
+    "app/data/storage-path.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/color/color.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/color/color.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/matching-model.ts",
+    "app/data/tag.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/utils/color.ts"
+  ],
+  "app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.spec.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.ts",
+    "app/components/common/input/password/password.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/permissions-select/permissions-select.component.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/password/password.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/permissions-select/permissions-select.component.ts",
+    "app/data/group.ts",
+    "app/data/user.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.spec.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/common/custom-fields-query-dropdown/custom-fields-query-dropdown.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/input/tags/tags.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/custom-field-query.ts",
+    "app/data/custom-field.ts",
+    "app/data/matching-model.ts",
+    "app/data/ui-settings.ts",
+    "app/data/workflow-action.ts",
+    "app/data/workflow-trigger.ts",
+    "app/data/workflow.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/mail-rule.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/custom-field-query-element.ts"
+  ],
+  "app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/common/custom-fields-query-dropdown/custom-fields-query-dropdown.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/custom-fields-values/custom-fields-values.component.ts",
+    "app/components/common/input/entries/entries.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/input/tags/tags.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/input/textarea/textarea.component.ts",
+    "app/data/correspondent.ts",
+    "app/data/custom-field.ts",
+    "app/data/document-type.ts",
+    "app/data/mail-rule.ts",
+    "app/data/matching-model.ts",
+    "app/data/storage-path.ts",
+    "app/data/ui-settings.ts",
+    "app/data/workflow-action.ts",
+    "app/data/workflow-trigger.ts",
+    "app/data/workflow.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/mail-rule.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/rest/workflow.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/custom-field-query-element.ts"
+  ],
+  "app/components/common/email-document-dialog/email-document-dialog.component.spec.ts": [
+    "app/components/common/email-document-dialog/email-document-dialog.component.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/email-document-dialog/email-document-dialog.component.ts": [
+    "app/components/loading-component/loading.component.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/filterable-dropdown/filterable-dropdown.component.spec.ts": [
+    "app/components/common/filterable-dropdown/filterable-dropdown.component.ts",
+    "app/components/common/filterable-dropdown/toggleable-dropdown-button/toggleable-dropdown-button.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/matching-model.ts",
+    "app/data/tag.ts",
+    "app/pipes/filter.pipe.ts",
+    "app/services/hot-key.service.ts"
+  ],
+  "app/components/common/filterable-dropdown/filterable-dropdown.component.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/components/common/filterable-dropdown/toggleable-dropdown-button/toggleable-dropdown-button.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/matching-model.ts",
+    "app/data/object-with-permissions.ts",
+    "app/data/results.ts",
+    "app/pipes/filter.pipe.ts",
+    "app/services/hot-key.service.ts",
+    "app/utils/popper-options.ts"
+  ],
+  "app/components/common/filterable-dropdown/toggleable-dropdown-button/toggleable-dropdown-button.component.spec.ts": [
+    "app/components/common/filterable-dropdown/toggleable-dropdown-button/toggleable-dropdown-button.component.ts",
+    "app/components/common/tag/tag.component.ts",
+    "app/data/tag.ts"
+  ],
+  "app/components/common/filterable-dropdown/toggleable-dropdown-button/toggleable-dropdown-button.component.ts": [
+    "app/components/common/tag/tag.component.ts",
+    "app/data/matching-model.ts",
+    "app/data/tag.ts"
+  ],
+  "app/components/common/hotkey-dialog/hotkey-dialog.component.spec.ts": [
+    "app/components/common/hotkey-dialog/hotkey-dialog.component.ts"
+  ],
+  "app/components/common/hotkey-dialog/hotkey-dialog.component.ts": [],
+  "app/components/common/input/abstract-input.spec.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/abstract-input.ts": [],
+  "app/components/common/input/check/check.component.spec.ts": [
+    "app/components/common/input/check/check.component.ts"
+  ],
+  "app/components/common/input/check/check.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/color/color.component.spec.ts": [
+    "app/components/common/input/color/color.component.ts"
+  ],
+  "app/components/common/input/color/color.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/utils/color.ts"
+  ],
+  "app/components/common/input/custom-fields-values/custom-fields-values.component.spec.ts": [
+    "app/components/common/input/custom-fields-values/custom-fields-values.component.ts",
+    "app/data/custom-field.ts",
+    "app/services/rest/custom-fields.service.ts"
+  ],
+  "app/components/common/input/custom-fields-values/custom-fields-values.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/date/date.component.ts",
+    "app/components/common/input/document-link/document-link.component.ts",
+    "app/components/common/input/monetary/monetary.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/input/textarea/textarea.component.ts",
+    "app/components/common/input/url/url.component.ts",
+    "app/data/custom-field.ts",
+    "app/services/rest/custom-fields.service.ts"
+  ],
+  "app/components/common/input/date/date.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/input/date/date.component.ts",
+    "app/utils/ngb-date-parser-formatter.ts"
+  ],
+  "app/components/common/input/date/date.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/input/document-link/document-link.component.spec.ts": [
+    "app/components/common/input/document-link/document-link.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/input/document-link/document-link.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/input/drag-drop-select/drag-drop-select.component.spec.ts": [
+    "app/components/common/input/drag-drop-select/drag-drop-select.component.ts"
+  ],
+  "app/components/common/input/drag-drop-select/drag-drop-select.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/entries/entries.component.spec.ts": [
+    "app/components/common/input/entries/entries.component.ts"
+  ],
+  "app/components/common/input/entries/entries.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/file/file.component.spec.ts": [
+    "app/components/common/input/file/file.component.ts"
+  ],
+  "app/components/common/input/file/file.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/monetary/monetary.component.spec.ts": [
+    "app/components/common/input/monetary/monetary.component.ts"
+  ],
+  "app/components/common/input/monetary/monetary.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/number/number.component.spec.ts": [
+    "app/components/common/input/number/number.component.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/input/number/number.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/input/password/password.component.spec.ts": [
+    "app/components/common/input/password/password.component.ts"
+  ],
+  "app/components/common/input/password/password.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/permissions/permissions-form/permissions-form.component.spec.ts": [
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts"
+  ],
+  "app/components/common/input/permissions/permissions-form/permissions-form.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/data/user.ts"
+  ],
+  "app/components/common/input/permissions/permissions-group/permissions-group.component.spec.ts": [
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/input/permissions/permissions-group/permissions-group.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/data/group.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/input/permissions/permissions-user/permissions-user.component.spec.ts": [
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/input/permissions/permissions-user/permissions-user.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/data/user.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/input/select/select.component.spec.ts": [
+    "app/components/common/input/select/select.component.ts",
+    "app/data/matching-model.ts",
+    "app/data/tag.ts"
+  ],
+  "app/components/common/input/select/select.component.ts": [
+    "app/components/common/input/abstract-input.ts",
+    "app/utils/text-search.ts"
+  ],
+  "app/components/common/input/switch/switch.component.spec.ts": [
+    "app/components/common/input/switch/switch.component.ts"
+  ],
+  "app/components/common/input/switch/switch.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/tags/tags.component.spec.ts": [
+    "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/color/color.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/tags/tags.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/matching-model.ts",
+    "app/data/tag.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/input/tags/tags.component.ts": [
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+    "app/components/common/tag/tag.component.ts",
+    "app/data/tag.ts",
+    "app/services/rest/tag.service.ts",
+    "app/utils/text-search.ts"
+  ],
+  "app/components/common/input/text/text.component.spec.ts": [
+    "app/components/common/input/text/text.component.ts"
+  ],
+  "app/components/common/input/text/text.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/textarea/textarea.component.spec.ts": [
+    "app/components/common/input/textarea/textarea.component.ts"
+  ],
+  "app/components/common/input/textarea/textarea.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/input/url/url.component.spec.ts": [
+    "app/components/common/input/url/url.component.ts"
+  ],
+  "app/components/common/input/url/url.component.ts": [
+    "app/components/common/input/abstract-input.ts"
+  ],
+  "app/components/common/logo/brand-mark/brand-mark.component.ts": [],
+  "app/components/common/logo/logo.component.spec.ts": [
+    "app/components/common/logo/logo.component.ts",
+    "app/data/ui-settings.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/logo/logo.component.ts": [
+    "app/data/ui-settings.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/page-header/page-header.component.spec.ts": [
+    "app/components/common/page-header/page-header.component.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/page-header/page-header.component.ts": [
+    "environments/environment.ts"
+  ],
+  "app/components/common/pdf-editor/pdf-editor-edit-mode.ts": [],
+  "app/components/common/pdf-editor/pdf-editor.component.spec.ts": [
+    "app/components/common/pdf-editor/pdf-editor.component.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/common/pdf-editor/pdf-editor.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/pdf-editor/pdf-editor-edit-mode.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.component.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.types.ts",
+    "app/data/ui-settings.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/pdf-viewer/pdf-viewer.component.spec.ts": [
+    "app/components/common/pdf-viewer/pdf-viewer.component.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.types.ts"
+  ],
+  "app/components/common/pdf-viewer/pdf-viewer.component.ts": [
+    "app/components/common/pdf-viewer/pdf-viewer.types.ts"
+  ],
+  "app/components/common/pdf-viewer/pdf-viewer.types.ts": [],
+  "app/components/common/permissions-dialog/permissions-dialog.component.spec.ts": [
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/permissions-dialog/permissions-dialog.component.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/permissions-dialog/permissions-dialog.component.ts": [
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/data/object-with-permissions.ts",
+    "app/data/user.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/permissions-filter-dropdown/permissions-filter-dropdown.component.spec.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/components/common/permissions-filter-dropdown/permissions-filter-dropdown.component.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/permissions-filter-dropdown/permissions-filter-dropdown.component.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/user.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/permissions-select/permissions-select.component.spec.ts": [
+    "app/components/common/permissions-select/permissions-select.component.ts",
+    "app/data/ui-settings.ts",
+    "app/services/permissions.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/permissions-select/permissions-select.component.ts": [
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/ui-settings.ts",
+    "app/services/permissions.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/preview-popup/preview-popup.component.spec.ts": [
+    "app/components/common/pdf-viewer/pdf-viewer.component.ts",
+    "app/components/common/preview-popup/preview-popup.component.ts",
+    "app/data/ui-settings.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/preview-popup/preview-popup.component.ts": [
+    "app/components/common/pdf-viewer/pdf-viewer.component.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.types.ts",
+    "app/data/document.ts",
+    "app/data/ui-settings.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/safeurl.pipe.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/common/profile-edit-dialog/profile-edit-dialog.component.spec.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/common/input/password/password.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/profile-edit-dialog/profile-edit-dialog.component.ts",
+    "app/services/profile.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/navigation.ts"
+  ],
+  "app/components/common/profile-edit-dialog/profile-edit-dialog.component.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/common/input/password/password.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/user-profile.ts",
+    "app/services/profile.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/navigation.ts"
+  ],
+  "app/components/common/share-link-bundle-dialog/share-link-bundle-dialog.component.spec.ts": [
+    "app/components/common/share-link-bundle-dialog/share-link-bundle-dialog.component.ts",
+    "app/data/share-link-bundle.ts",
+    "app/data/share-link.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/share-link-bundle-dialog/share-link-bundle-dialog.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/data/document.ts",
+    "app/data/share-link-bundle.ts",
+    "app/data/share-link.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/file-size.pipe.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/share-link-bundle-manage-dialog/share-link-bundle-manage-dialog.component.spec.ts": [
+    "app/components/common/share-link-bundle-manage-dialog/share-link-bundle-manage-dialog.component.ts",
+    "app/data/share-link-bundle.ts",
+    "app/data/share-link.ts",
+    "app/services/rest/share-link-bundle.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/share-link-bundle-manage-dialog/share-link-bundle-manage-dialog.component.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/share-link-bundle.ts",
+    "app/data/share-link.ts",
+    "app/pipes/file-size.pipe.ts",
+    "app/services/rest/share-link-bundle.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/share-links-dialog/share-links-dialog.component.spec.ts": [
+    "app/components/common/share-links-dialog/share-links-dialog.component.ts",
+    "app/data/share-link.ts",
+    "app/services/rest/share-link.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/share-links-dialog/share-links-dialog.component.ts": [
+    "app/data/share-link.ts",
+    "app/services/rest/share-link.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/suggestions-dropdown/suggestions-dropdown.component.spec.ts": [
+    "app/components/common/suggestions-dropdown/suggestions-dropdown.component.ts"
+  ],
+  "app/components/common/suggestions-dropdown/suggestions-dropdown.component.ts": [
+    "app/data/document-suggestions.ts",
+    "app/utils/popper-options.ts"
+  ],
+  "app/components/common/system-status-dialog/system-status-dialog.component.spec.ts": [
+    "app/components/common/system-status-dialog/system-status-dialog.component.ts",
+    "app/data/paperless-task.ts",
+    "app/data/system-status.ts",
+    "app/services/system-status.service.ts",
+    "app/services/tasks.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/common/system-status-dialog/system-status-dialog.component.ts": [
+    "app/data/paperless-task.ts",
+    "app/data/system-status.ts",
+    "app/data/ui-settings.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/file-size.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/system-status.service.ts",
+    "app/services/tasks.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/common/tag/tag.component.spec.ts": [
+    "app/components/common/tag/tag.component.ts",
+    "app/data/tag.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/tag.service.ts"
+  ],
+  "app/components/common/tag/tag.component.ts": [
+    "app/data/tag.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/tag.service.ts"
+  ],
+  "app/components/common/toast/toast.component.spec.ts": [
+    "app/components/common/toast/toast.component.ts"
+  ],
+  "app/components/common/toast/toast.component.ts": [
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/toasts/toasts.component.spec.ts": [
+    "app/components/common/toasts/toasts.component.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/common/toasts/toasts.component.ts": [
+    "app/components/common/toast/toast.component.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/dashboard/dashboard.component.spec.ts": [
+    "app/components/common/logo/logo.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/dashboard/dashboard.component.ts",
+    "app/components/dashboard/widgets/saved-view-widget/saved-view-widget.component.ts",
+    "app/components/dashboard/widgets/statistics-widget/statistics-widget.component.ts",
+    "app/components/dashboard/widgets/upload-file-widget/upload-file-widget.component.ts",
+    "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts",
+    "app/data/saved-view.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/dashboard/dashboard.component.ts": [
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/dashboard/widgets/saved-view-widget/saved-view-widget.component.ts",
+    "app/components/dashboard/widgets/statistics-widget/statistics-widget.component.ts",
+    "app/components/dashboard/widgets/upload-file-widget/upload-file-widget.component.ts",
+    "app/components/dashboard/widgets/welcome-widget/welcome-widget.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/saved-view.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/dashboard/widgets/saved-view-widget/saved-view-widget.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/custom-field-display/custom-field-display.component.ts",
+    "app/components/common/preview-popup/preview-popup.component.ts",
+    "app/components/dashboard/widgets/saved-view-widget/saved-view-widget.component.ts",
+    "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts",
+    "app/data/custom-field.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/saved-view.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/safeurl.pipe.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/dashboard/widgets/saved-view-widget/saved-view-widget.component.ts": [
+    "app/components/common/custom-field-display/custom-field-display.component.ts",
+    "app/components/common/preview-popup/preview-popup.component.ts",
+    "app/components/common/tag/tag.component.ts",
+    "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts",
+    "app/components/document-list/document-card-large/document-card-large.component.ts",
+    "app/components/document-list/document-card-small/document-card-small.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/custom-field.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/saved-view.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/document-type-name.pipe.ts",
+    "app/pipes/storage-path-name.pipe.ts",
+    "app/pipes/username.pipe.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/open-documents.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/dashboard/widgets/statistics-widget/statistics-widget.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/dashboard/widgets/statistics-widget/statistics-widget.component.ts",
+    "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/websocket-status.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/dashboard/widgets/statistics-widget/statistics-widget.component.ts": [
+    "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/websocket-status.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/dashboard/widgets/upload-file-widget/upload-file-widget.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/dashboard/widgets/upload-file-widget/upload-file-widget.component.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/permissions.service.ts",
+    "app/services/upload-documents.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/dashboard/widgets/upload-file-widget/upload-file-widget.component.ts": [
+    "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/settings.service.ts",
+    "app/services/upload-documents.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/dashboard/widgets/welcome-widget/welcome-widget.component.spec.ts": [
+    "app/components/dashboard/widgets/welcome-widget/welcome-widget.component.ts",
+    "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts",
+    "app/guards/permissions.guard.ts"
+  ],
+  "app/components/dashboard/widgets/welcome-widget/welcome-widget.component.ts": [
+    "app/components/common/logo/brand-mark/brand-mark.component.ts"
+  ],
+  "app/components/dashboard/widgets/widget-frame/widget-frame.component.spec.ts": [
+    "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts",
+    "app/guards/permissions.guard.ts"
+  ],
+  "app/components/dashboard/widgets/widget-frame/widget-frame.component.ts": [],
+  "app/components/document-asn/document-asn.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/document-asn/document-asn.component.ts",
+    "app/data/filter-rule.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/document-asn/document-asn.component.ts": [
+    "app/data/filter-rule-type.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/document-detail/document-detail.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/confirm-dialog/password-removal-confirm-dialog/password-removal-confirm-dialog.component.ts",
+    "app/components/common/custom-fields-dropdown/custom-fields-dropdown.component.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.types.ts",
+    "app/components/document-detail/document-detail.component.ts",
+    "app/data/correspondent.ts",
+    "app/data/custom-field-instance.ts",
+    "app/data/custom-field.ts",
+    "app/data/datatype.ts",
+    "app/data/document-type.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/storage-path.ts",
+    "app/data/tag.ts",
+    "app/data/ui-settings.ts",
+    "app/guards/permissions.guard.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/services/component-router.service.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/open-documents.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/document-detail/document-detail.component.ts": [
+    "app/components/admin/settings/settings.component.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/confirm-dialog/password-removal-confirm-dialog/password-removal-confirm-dialog.component.ts",
+    "app/components/common/confirm-dialog/reprocess-confirm-dialog/reprocess-confirm-dialog.component.ts",
+    "app/components/common/custom-fields-dropdown/custom-fields-dropdown.component.ts",
+    "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/storage-path-edit-dialog/storage-path-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+    "app/components/common/email-document-dialog/email-document-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/date/date.component.ts",
+    "app/components/common/input/document-link/document-link.component.ts",
+    "app/components/common/input/monetary/monetary.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/tags/tags.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/input/textarea/textarea.component.ts",
+    "app/components/common/input/url/url.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/pdf-editor/pdf-editor-edit-mode.ts",
+    "app/components/common/pdf-editor/pdf-editor.component.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.component.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.types.ts",
+    "app/components/common/share-links-dialog/share-links-dialog.component.ts",
+    "app/components/common/suggestions-dropdown/suggestions-dropdown.component.ts",
+    "app/components/document-detail/document-history/document-history.component.ts",
+    "app/components/document-detail/document-version-dropdown/document-version-dropdown.component.ts",
+    "app/components/document-detail/metadata-collapse/metadata-collapse.component.ts",
+    "app/components/document-notes/document-notes.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/correspondent.ts",
+    "app/data/custom-field-instance.ts",
+    "app/data/custom-field.ts",
+    "app/data/datatype.ts",
+    "app/data/document-metadata.ts",
+    "app/data/document-note.ts",
+    "app/data/document-suggestions.ts",
+    "app/data/document-type.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/filter-rule.ts",
+    "app/data/object-with-id.ts",
+    "app/data/storage-path.ts",
+    "app/data/tag.ts",
+    "app/data/ui-settings.ts",
+    "app/data/user.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/file-size.pipe.ts",
+    "app/pipes/safeurl.pipe.ts",
+    "app/services/component-router.service.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/hot-key.service.ts",
+    "app/services/open-documents.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts",
+    "app/utils/http.ts",
+    "app/utils/ngb-iso-date-adapter.ts"
+  ],
+  "app/components/document-detail/document-history/document-history.component.spec.ts": [
+    "app/components/document-detail/document-history/document-history.component.ts",
+    "app/data/auditlog-entry.ts",
+    "app/data/datatype.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/user.service.ts"
+  ],
+  "app/components/document-detail/document-history/document-history.component.ts": [
+    "app/data/auditlog-entry.ts",
+    "app/data/datatype.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/user.service.ts"
+  ],
+  "app/components/document-detail/document-version-dropdown/add-existing-document-version-dialog/add-existing-document-version-dialog.component.spec.ts": [
+    "app/components/document-detail/document-version-dropdown/add-existing-document-version-dialog/add-existing-document-version-dialog.component.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/document-detail/document-version-dropdown/add-existing-document-version-dialog/add-existing-document-version-dialog.component.ts": [
+    "app/components/common/input/document-link/document-link.component.ts"
+  ],
+  "app/components/document-detail/document-version-dropdown/document-version-dropdown.component.spec.ts": [
+    "app/components/document-detail/document-version-dropdown/document-version-dropdown.component.ts",
+    "app/data/document.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/document-detail/document-version-dropdown/document-version-dropdown.component.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/document-detail/document-version-dropdown/add-existing-document-version-dialog/add-existing-document-version-dialog.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/document.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/document-detail/metadata-collapse/metadata-collapse.component.spec.ts": [
+    "app/components/document-detail/metadata-collapse/metadata-collapse.component.ts"
+  ],
+  "app/components/document-detail/metadata-collapse/metadata-collapse.component.ts": [],
+  "app/components/document-list/bulk-editor/bulk-editor.component.spec.ts": [
+    "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/storage-path-edit-dialog/storage-path-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+    "app/components/common/filterable-dropdown/filterable-dropdown.component.ts",
+    "app/components/common/share-link-bundle-dialog/share-link-bundle-dialog.component.ts",
+    "app/components/common/share-link-bundle-manage-dialog/share-link-bundle-manage-dialog.component.ts",
+    "app/components/document-list/bulk-editor/bulk-editor.component.ts",
+    "app/data/correspondent.ts",
+    "app/data/custom-field.ts",
+    "app/data/document-type.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/results.ts",
+    "app/data/storage-path.ts",
+    "app/data/tag.ts",
+    "app/pipes/filter.pipe.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/share-link-bundle.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/document-list/bulk-editor/bulk-editor.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/confirm-dialog/merge-as-versions-confirm-dialog/merge-as-versions-confirm-dialog.component.ts",
+    "app/components/common/confirm-dialog/merge-confirm-dialog/merge-confirm-dialog.component.ts",
+    "app/components/common/confirm-dialog/reprocess-confirm-dialog/reprocess-confirm-dialog.component.ts",
+    "app/components/common/confirm-dialog/rotate-confirm-dialog/rotate-confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/storage-path-edit-dialog/storage-path-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+    "app/components/common/email-document-dialog/email-document-dialog.component.ts",
+    "app/components/common/filterable-dropdown/filterable-dropdown.component.ts",
+    "app/components/common/filterable-dropdown/toggleable-dropdown-button/toggleable-dropdown-button.component.ts",
+    "app/components/common/permissions-dialog/permissions-dialog.component.ts",
+    "app/components/common/share-link-bundle-dialog/share-link-bundle-dialog.component.ts",
+    "app/components/common/share-link-bundle-manage-dialog/share-link-bundle-manage-dialog.component.ts",
+    "app/components/document-list/bulk-editor/custom-fields-bulk-edit-dialog/custom-fields-bulk-edit-dialog.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/custom-field.ts",
+    "app/data/matching-model.ts",
+    "app/data/results.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/open-documents.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/rest/share-link-bundle.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/flatten-tags.ts",
+    "app/utils/query-params.ts"
+  ],
+  "app/components/document-list/bulk-editor/custom-fields-bulk-edit-dialog/custom-fields-bulk-edit-dialog.component.spec.ts": [
+    "app/components/document-list/bulk-editor/custom-fields-bulk-edit-dialog/custom-fields-bulk-edit-dialog.component.ts",
+    "app/data/custom-field.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/document-list/bulk-editor/custom-fields-bulk-edit-dialog/custom-fields-bulk-edit-dialog.component.ts": [
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/date/date.component.ts",
+    "app/components/common/input/document-link/document-link.component.ts",
+    "app/components/common/input/monetary/monetary.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/input/textarea/textarea.component.ts",
+    "app/components/common/input/url/url.component.ts",
+    "app/data/custom-field.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/components/document-list/document-card-large/document-card-large.component.spec.ts": [
+    "app/components/common/custom-field-display/custom-field-display.component.ts",
+    "app/components/common/preview-popup/preview-popup.component.ts",
+    "app/components/document-list/document-card-large/document-card-large.component.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/is-number.pipe.ts",
+    "app/pipes/safeurl.pipe.ts"
+  ],
+  "app/components/document-list/document-card-large/document-card-large.component.ts": [
+    "app/components/common/custom-field-display/custom-field-display.component.ts",
+    "app/components/common/preview-popup/preview-popup.component.ts",
+    "app/components/common/tag/tag.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/document.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/document-type-name.pipe.ts",
+    "app/pipes/is-number.pipe.ts",
+    "app/pipes/storage-path-name.pipe.ts",
+    "app/pipes/username.pipe.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/document-list/document-card-small/document-card-small.component.spec.ts": [
+    "app/components/common/tag/tag.component.ts",
+    "app/components/document-list/document-card-small/document-card-small.component.ts"
+  ],
+  "app/components/document-list/document-card-small/document-card-small.component.ts": [
+    "app/components/common/custom-field-display/custom-field-display.component.ts",
+    "app/components/common/preview-popup/preview-popup.component.ts",
+    "app/components/common/tag/tag.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/document.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/document-type-name.pipe.ts",
+    "app/pipes/is-number.pipe.ts",
+    "app/pipes/storage-path-name.pipe.ts",
+    "app/pipes/username.pipe.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/components/document-list/document-list.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/document-list/document-card-large/document-card-large.component.ts",
+    "app/components/document-list/document-card-small/document-card-small.component.ts",
+    "app/components/document-list/document-list.component.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/saved-view.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/sortable.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/filter.pipe.ts",
+    "app/pipes/username.pipe.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/components/document-list/document-list.component.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/components/common/custom-field-display/custom-field-display.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/preview-popup/preview-popup.component.ts",
+    "app/components/common/tag/tag.component.ts",
+    "app/components/document-list/bulk-editor/bulk-editor.component.ts",
+    "app/components/document-list/document-card-large/document-card-large.component.ts",
+    "app/components/document-list/document-card-small/document-card-small.component.ts",
+    "app/components/document-list/filter-editor/filter-editor.component.ts",
+    "app/components/document-list/save-view-config-dialog/save-view-config-dialog.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/filter-rule.ts",
+    "app/data/saved-view.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/document-type-name.pipe.ts",
+    "app/pipes/storage-path-name.pipe.ts",
+    "app/pipes/username.pipe.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/hot-key.service.ts",
+    "app/services/open-documents.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/websocket-status.service.ts",
+    "app/utils/filter-rules.ts"
+  ],
+  "app/components/document-list/filter-editor/filter-editor.component.spec.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/components/common/custom-fields-query-dropdown/custom-fields-query-dropdown.component.ts",
+    "app/components/common/dates-dropdown/dates-dropdown.component.ts",
+    "app/components/common/filterable-dropdown/filterable-dropdown.component.ts",
+    "app/components/common/filterable-dropdown/toggleable-dropdown-button/toggleable-dropdown-button.component.ts",
+    "app/components/common/permissions-filter-dropdown/permissions-filter-dropdown.component.ts",
+    "app/components/document-list/filter-editor/filter-editor.component.ts",
+    "app/data/correspondent.ts",
+    "app/data/custom-field-query.ts",
+    "app/data/custom-field.ts",
+    "app/data/document-type.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/storage-path.ts",
+    "app/data/tag.ts",
+    "app/data/user.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/pipes/filter.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/search.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/settings.service.ts",
+    "app/utils/custom-field-query-element.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/document-list/filter-editor/filter-editor.component.ts": [
+    "app/components/common/custom-fields-query-dropdown/custom-fields-query-dropdown.component.ts",
+    "app/components/common/dates-dropdown/dates-dropdown.component.ts",
+    "app/components/common/filterable-dropdown/filterable-dropdown.component.ts",
+    "app/components/common/filterable-dropdown/toggleable-dropdown-button/toggleable-dropdown-button.component.ts",
+    "app/components/common/permissions-filter-dropdown/permissions-filter-dropdown.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/custom-field-query.ts",
+    "app/data/custom-field.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/filter-rule.ts",
+    "app/data/results.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/correspondent.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document-type.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/search.service.ts",
+    "app/services/rest/storage-path.service.ts",
+    "app/services/rest/tag.service.ts",
+    "app/utils/custom-field-query-element.ts",
+    "app/utils/filter-rules.ts",
+    "app/utils/flatten-tags.ts"
+  ],
+  "app/components/document-list/save-view-config-dialog/save-view-config-dialog.component.spec.ts": [
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/document-list/save-view-config-dialog/save-view-config-dialog.component.ts",
+    "app/services/rest/group.service.ts",
+    "app/services/rest/user.service.ts"
+  ],
+  "app/components/document-list/save-view-config-dialog/save-view-config-dialog.component.ts": [
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/data/saved-view-icons.ts",
+    "app/data/user.ts"
+  ],
+  "app/components/document-notes/document-notes.component.spec.ts": [
+    "app/components/document-notes/document-notes.component.ts",
+    "app/data/document-note.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/document-notes.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/document-notes/document-notes.component.ts": [
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/document-note.ts",
+    "app/data/user.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/rest/document-notes.service.ts",
+    "app/services/rest/user.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/file-drop/file-drop.component.spec.ts": [
+    "app/components/common/toasts/toasts.component.ts",
+    "app/components/file-drop/file-drop.component.ts",
+    "app/services/permissions.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/upload-documents.service.ts"
+  ],
+  "app/components/file-drop/file-drop.component.ts": [
+    "app/services/permissions.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "app/services/upload-documents.service.ts"
+  ],
+  "app/components/loading-component/loading.component.spec.ts": [
+    "app/components/loading-component/loading.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts"
+  ],
+  "app/components/loading-component/loading.component.ts": [
+    "app/components/with-permissions/with-permissions.component.ts"
+  ],
+  "app/components/manage/document-attributes/custom-fields/custom-fields.component.spec.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/manage/document-attributes/custom-fields/custom-fields.component.ts",
+    "app/data/custom-field-query.ts",
+    "app/data/custom-field.ts",
+    "app/data/filter-rule-type.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/document-attributes/custom-fields/custom-fields.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/custom-field-edit-dialog/custom-field-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/custom-field-query.ts",
+    "app/data/custom-field.ts",
+    "app/data/filter-rule-type.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/document-attributes/document-attributes.component.spec.ts": [
+    "app/components/manage/document-attributes/custom-fields/custom-fields.component.ts",
+    "app/components/manage/document-attributes/document-attributes.component.ts",
+    "app/components/manage/document-attributes/management-list/management-list.component.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/components/manage/document-attributes/document-attributes.component.ts": [
+    "app/components/common/clearable-badge/clearable-badge.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/manage/document-attributes/custom-fields/custom-fields.component.ts",
+    "app/components/manage/document-attributes/management-list/correspondent-list/correspondent-list.component.ts",
+    "app/components/manage/document-attributes/management-list/document-type-list/document-type-list.component.ts",
+    "app/components/manage/document-attributes/management-list/management-list.component.ts",
+    "app/components/manage/document-attributes/management-list/storage-path-list/storage-path-list.component.ts",
+    "app/components/manage/document-attributes/management-list/tag-list/tag-list.component.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/correspondent-list/correspondent-list.component.spec.ts": [
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/manage/document-attributes/management-list/correspondent-list/correspondent-list.component.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/services/rest/correspondent.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/correspondent-list/correspondent-list.component.ts": [
+    "app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts",
+    "app/components/manage/document-attributes/management-list/management-list.component.ts",
+    "app/data/correspondent.ts",
+    "app/data/filter-rule-type.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/correspondent.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/document-type-list/document-type-list.component.spec.ts": [
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/manage/document-attributes/management-list/document-type-list/document-type-list.component.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/services/rest/document-type.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/document-type-list/document-type-list.component.ts": [
+    "app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.ts",
+    "app/components/manage/document-attributes/management-list/management-list.component.ts",
+    "app/data/document-type.ts",
+    "app/data/filter-rule-type.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/document-type.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/management-list.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/permissions-dialog/permissions-dialog.component.ts",
+    "app/components/manage/document-attributes/management-list/management-list.component.ts",
+    "app/components/manage/document-attributes/management-list/tag-list/tag-list.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/matching-model.ts",
+    "app/data/tag.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts",
+    "app/services/rest/tag.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/management-list.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/permissions-dialog/permissions-dialog.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/matching-model.ts",
+    "app/data/object-with-permissions.ts",
+    "app/data/results.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/sortable.directive.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/storage-path-list/storage-path-list.component.spec.ts": [
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/manage/document-attributes/management-list/storage-path-list/storage-path-list.component.ts",
+    "app/data/storage-path.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/services/rest/storage-path.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/storage-path-list/storage-path-list.component.ts": [
+    "app/components/common/edit-dialog/storage-path-edit-dialog/storage-path-edit-dialog.component.ts",
+    "app/components/manage/document-attributes/management-list/management-list.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/storage-path.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/storage-path.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/tag-list/tag-list.component.spec.ts": [
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/manage/document-attributes/management-list/tag-list/tag-list.component.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/services/rest/tag.service.ts"
+  ],
+  "app/components/manage/document-attributes/management-list/tag-list/tag-list.component.ts": [
+    "app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+    "app/components/manage/document-attributes/management-list/management-list.component.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/tag.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/directives/sortable.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/tag.service.ts"
+  ],
+  "app/components/manage/mail/mail.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-account-edit-dialog/mail-account-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/password/password.component.ts",
+    "app/components/common/input/permissions/permissions-form/permissions-form.component.ts",
+    "app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+    "app/components/common/input/permissions/permissions-user/permissions-user.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/switch/switch.component.ts",
+    "app/components/common/input/tags/tags.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/permissions-dialog/permissions-dialog.component.ts",
+    "app/components/manage/mail/mail.component.ts",
+    "app/data/mail-account.ts",
+    "app/data/mail-rule.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/mail-account.service.ts",
+    "app/services/rest/mail-rule.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/mail/mail.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-account-edit-dialog/mail-account-edit-dialog.component.ts",
+    "app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/permissions-dialog/permissions-dialog.component.ts",
+    "app/components/manage/mail/processed-mail-dialog/processed-mail-dialog.component.ts",
+    "app/components/with-permissions/with-permissions.component.ts",
+    "app/data/mail-account.ts",
+    "app/data/mail-rule.ts",
+    "app/data/object-with-permissions.ts",
+    "app/data/ui-settings.ts",
+    "app/directives/if-owner.directive.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-paperless-service.ts",
+    "app/services/rest/mail-account.service.ts",
+    "app/services/rest/mail-rule.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/mail/processed-mail-dialog/processed-mail-dialog.component.spec.ts": [
+    "app/components/manage/mail/processed-mail-dialog/processed-mail-dialog.component.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/components/manage/mail/processed-mail-dialog/processed-mail-dialog.component.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/data/mail-rule.ts",
+    "app/data/processed-mail.ts",
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/rest/processed-mail.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/saved-views/saved-views.component.spec.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/common/input/check/check.component.ts",
+    "app/components/common/input/drag-drop-select/drag-drop-select.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/manage/saved-views/saved-views.component.ts",
+    "app/data/saved-view.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/saved-views/saved-views.component.ts": [
+    "app/components/common/confirm-button/confirm-button.component.ts",
+    "app/components/common/input/drag-drop-select/drag-drop-select.component.ts",
+    "app/components/common/input/number/number.component.ts",
+    "app/components/common/input/select/select.component.ts",
+    "app/components/common/input/text/text.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/common/permissions-dialog/permissions-dialog.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/document.ts",
+    "app/data/saved-view-icons.ts",
+    "app/data/saved-view.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/workflows/workflows.component.spec.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/manage/workflows/workflows.component.ts",
+    "app/data/workflow-action.ts",
+    "app/data/workflow-trigger.ts",
+    "app/data/workflow.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/workflow.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/manage/workflows/workflows.component.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/common/edit-dialog/edit-dialog.component.ts",
+    "app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts",
+    "app/components/common/page-header/page-header.component.ts",
+    "app/components/loading-component/loading.component.ts",
+    "app/data/workflow.ts",
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/workflow.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/components/not-found/not-found.component.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/logo/logo.component.ts",
+    "app/components/not-found/not-found.component.ts"
+  ],
+  "app/components/not-found/not-found.component.ts": [
+    "app/components/common/logo/logo.component.ts"
+  ],
+  "app/components/with-permissions/with-permissions.component.spec.ts": [
+    "app/components/with-permissions/with-permissions.component.ts"
+  ],
+  "app/components/with-permissions/with-permissions.component.ts": [
+    "app/services/permissions.service.ts"
+  ],
+  "app/data/auditlog-entry.ts": [
+    "app/data/user.ts"
+  ],
+  "app/data/correspondent.ts": [
+    "app/data/matching-model.ts"
+  ],
+  "app/data/custom-field-instance.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/custom-field-query.ts": [
+    "app/data/custom-field.ts"
+  ],
+  "app/data/custom-field.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/datatype.ts": [],
+  "app/data/document-metadata.ts": [],
+  "app/data/document-note.ts": [
+    "app/data/object-with-id.ts",
+    "app/data/user.ts"
+  ],
+  "app/data/document-suggestions.ts": [],
+  "app/data/document-type.ts": [
+    "app/data/matching-model.ts"
+  ],
+  "app/data/document.ts": [
+    "app/data/custom-field-instance.ts",
+    "app/data/document-note.ts",
+    "app/data/object-with-permissions.ts"
+  ],
+  "app/data/filter-rule-type.ts": [
+    "app/data/datatype.ts"
+  ],
+  "app/data/filter-rule.ts": [],
+  "app/data/group.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/mail-account.ts": [
+    "app/data/object-with-permissions.ts"
+  ],
+  "app/data/mail-rule.ts": [
+    "app/data/object-with-permissions.ts"
+  ],
+  "app/data/matching-model.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/object-with-id.ts": [],
+  "app/data/object-with-permissions.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/paperless-config.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/paperless-task.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/processed-mail.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/results.ts": [
+    "app/data/document.ts"
+  ],
+  "app/data/saved-view-icons.ts": [],
+  "app/data/saved-view.ts": [
+    "app/data/document.ts",
+    "app/data/filter-rule.ts",
+    "app/data/object-with-permissions.ts"
+  ],
+  "app/data/share-link-bundle.ts": [
+    "app/data/share-link.ts"
+  ],
+  "app/data/share-link.ts": [
+    "app/data/object-with-permissions.ts"
+  ],
+  "app/data/storage-keys.ts": [],
+  "app/data/storage-path.ts": [
+    "app/data/matching-model.ts"
+  ],
+  "app/data/system-status.ts": [],
+  "app/data/tag.ts": [
+    "app/data/matching-model.ts"
+  ],
+  "app/data/ui-settings.ts": [
+    "app/components/common/pdf-editor/pdf-editor-edit-mode.ts",
+    "app/components/common/pdf-viewer/pdf-viewer.types.ts",
+    "app/data/paperless-config.ts",
+    "app/data/user.ts"
+  ],
+  "app/data/user-profile.ts": [],
+  "app/data/user.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/websocket-document-updated-message.ts": [],
+  "app/data/websocket-documents-deleted-message.ts": [],
+  "app/data/websocket-progress-message.ts": [],
+  "app/data/workflow-action.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/workflow-trigger.ts": [
+    "app/data/object-with-id.ts"
+  ],
+  "app/data/workflow.ts": [
+    "app/data/object-with-id.ts",
+    "app/data/workflow-action.ts",
+    "app/data/workflow-trigger.ts"
+  ],
+  "app/directives/if-object-permissions.directive.spec.ts": [
+    "app/directives/if-object-permissions.directive.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/directives/if-object-permissions.directive.ts": [
+    "app/data/object-with-permissions.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/directives/if-owner.directive.spec.ts": [
+    "app/directives/if-owner.directive.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/directives/if-owner.directive.ts": [
+    "app/data/object-with-permissions.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/directives/if-permissions.directive.spec.ts": [
+    "app/directives/if-permissions.directive.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/directives/if-permissions.directive.ts": [
+    "app/services/permissions.service.ts"
+  ],
+  "app/directives/sortable.directive.spec.ts": [
+    "app/directives/sortable.directive.ts"
+  ],
+  "app/directives/sortable.directive.ts": [],
+  "app/guards/dirty-doc.guard.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/guards/dirty-doc.guard.ts"
+  ],
+  "app/guards/dirty-doc.guard.ts": [],
+  "app/guards/dirty-form.guard.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/guards/dirty-form.guard.ts"
+  ],
+  "app/guards/dirty-form.guard.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts"
+  ],
+  "app/guards/dirty-saved-view.guard.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/document-list/document-list.component.ts",
+    "app/guards/dirty-saved-view.guard.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/guards/dirty-saved-view.guard.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/components/document-list/document-list.component.ts",
+    "app/data/ui-settings.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/guards/permissions.guard.spec.ts": [
+    "app/guards/permissions.guard.ts",
+    "app/services/permissions.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/guards/permissions.guard.ts": [
+    "app/services/permissions.service.ts",
+    "app/services/toast.service.ts"
+  ],
+  "app/interceptors/api-version.interceptor.spec.ts": [
+    "app/interceptors/api-version.interceptor.ts",
+    "environments/environment.ts"
+  ],
+  "app/interceptors/api-version.interceptor.ts": [
+    "environments/environment.ts"
+  ],
+  "app/interceptors/auth-expiry.interceptor.spec.ts": [
+    "app/interceptors/auth-expiry.interceptor.ts",
+    "app/utils/navigation.ts"
+  ],
+  "app/interceptors/auth-expiry.interceptor.ts": [
+    "app/utils/navigation.ts"
+  ],
+  "app/interceptors/csrf.interceptor.spec.ts": [
+    "app/interceptors/csrf.interceptor.ts"
+  ],
+  "app/interceptors/csrf.interceptor.ts": [],
+  "app/pipes/correspondent-name.pipe.spec.ts": [
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/pipes/correspondent-name.pipe.ts": [
+    "app/pipes/object-name.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/correspondent.service.ts"
+  ],
+  "app/pipes/custom-date.pipe.spec.ts": [
+    "app/pipes/custom-date.pipe.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/pipes/custom-date.pipe.ts": [
+    "app/data/ui-settings.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/pipes/document-title.pipe.spec.ts": [
+    "app/pipes/document-title.pipe.ts"
+  ],
+  "app/pipes/document-title.pipe.ts": [],
+  "app/pipes/document-type-name.pipe.spec.ts": [
+    "app/pipes/document-type-name.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/pipes/document-type-name.pipe.ts": [
+    "app/pipes/object-name.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/document-type.service.ts"
+  ],
+  "app/pipes/file-size.pipe.spec.ts": [
+    "app/pipes/file-size.pipe.ts"
+  ],
+  "app/pipes/file-size.pipe.ts": [],
+  "app/pipes/filter.pipe.spec.ts": [
+    "app/data/matching-model.ts",
+    "app/pipes/filter.pipe.ts"
+  ],
+  "app/pipes/filter.pipe.ts": [
+    "app/data/matching-model.ts",
+    "app/utils/text-search.ts"
+  ],
+  "app/pipes/is-number.pipe.spec.ts": [
+    "app/pipes/is-number.pipe.ts"
+  ],
+  "app/pipes/is-number.pipe.ts": [],
+  "app/pipes/object-name.pipe.spec.ts": [
+    "app/data/matching-model.ts",
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts",
+    "app/services/rest/correspondent.service.ts"
+  ],
+  "app/pipes/object-name.pipe.ts": [
+    "app/data/matching-model.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/pipes/safeurl.pipe.spec.ts": [
+    "app/pipes/safeurl.pipe.ts"
+  ],
+  "app/pipes/safeurl.pipe.ts": [
+    "environments/environment.ts"
+  ],
+  "app/pipes/storage-path-name.pipe.spec.ts": [
+    "app/pipes/storage-path-name.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/pipes/storage-path-name.pipe.ts": [
+    "app/pipes/object-name.pipe.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/storage-path.service.ts"
+  ],
+  "app/pipes/username.pipe.spec.ts": [
+    "app/pipes/username.pipe.ts",
+    "app/services/permissions.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/pipes/username.pipe.ts": [
+    "app/data/user.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/user.service.ts"
+  ],
+  "app/pipes/yes-no.pipe.spec.ts": [
+    "app/pipes/yes-no.pipe.ts"
+  ],
+  "app/pipes/yes-no.pipe.ts": [],
+  "app/services/chat.service.spec.ts": [
+    "app/services/chat.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/chat.service.ts": [
+    "environments/environment.ts"
+  ],
+  "app/services/component-router.service.spec.ts": [
+    "app/services/component-router.service.ts"
+  ],
+  "app/services/component-router.service.ts": [],
+  "app/services/config.service.spec.ts": [
+    "app/data/paperless-config.ts",
+    "app/services/config.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/config.service.ts": [
+    "app/data/paperless-config.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/django-messages.service.spec.ts": [
+    "app/services/django-messages.service.ts"
+  ],
+  "app/services/django-messages.service.ts": [],
+  "app/services/document-list-view.service.spec.ts": [
+    "app/app-routing.module.ts",
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/filter-rule.ts",
+    "app/data/saved-view.ts",
+    "app/data/storage-keys.ts",
+    "app/data/ui-settings.ts",
+    "app/guards/permissions.guard.ts",
+    "app/services/document-list-view.service.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/document-list-view.service.ts": [
+    "app/data/document.ts",
+    "app/data/filter-rule.ts",
+    "app/data/results.ts",
+    "app/data/saved-view.ts",
+    "app/data/storage-keys.ts",
+    "app/data/ui-settings.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts",
+    "app/utils/filter-rules.ts",
+    "app/utils/query-params.ts"
+  ],
+  "app/services/hot-key.service.spec.ts": [
+    "app/services/hot-key.service.ts"
+  ],
+  "app/services/hot-key.service.ts": [
+    "app/components/common/hotkey-dialog/hotkey-dialog.component.ts"
+  ],
+  "app/services/open-documents.service.spec.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/data/storage-keys.ts",
+    "app/services/open-documents.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/open-documents.service.ts": [
+    "app/components/common/confirm-dialog/confirm-dialog.component.ts",
+    "app/data/document.ts",
+    "app/data/storage-keys.ts",
+    "app/services/rest/document.service.ts"
+  ],
+  "app/services/permissions.service.spec.ts": [
+    "app/data/document.ts",
+    "app/services/permissions.service.ts"
+  ],
+  "app/services/permissions.service.ts": [
+    "app/data/object-with-permissions.ts",
+    "app/data/user.ts"
+  ],
+  "app/services/profile.service.spec.ts": [
+    "app/services/profile.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/profile.service.ts": [
+    "app/data/user-profile.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/abstract-name-filter-service.spec.ts": [
+    "app/services/rest/abstract-name-filter-service.ts",
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/abstract-name-filter-service.ts": [
+    "app/data/object-with-id.ts",
+    "app/data/object-with-permissions.ts",
+    "app/services/rest/abstract-paperless-service.ts"
+  ],
+  "app/services/rest/abstract-paperless-service.spec.ts": [
+    "app/services/rest/abstract-paperless-service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/abstract-paperless-service.ts": [
+    "app/data/object-with-id.ts",
+    "app/data/results.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/correspondent.service.spec.ts": [
+    "app/services/rest/abstract-name-filter-service.spec.ts",
+    "app/services/rest/correspondent.service.ts"
+  ],
+  "app/services/rest/correspondent.service.ts": [
+    "app/data/correspondent.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/services/rest/custom-fields.service.spec.ts": [
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/custom-fields.service.ts"
+  ],
+  "app/services/rest/custom-fields.service.ts": [
+    "app/data/custom-field.ts",
+    "app/services/rest/abstract-paperless-service.ts"
+  ],
+  "app/services/rest/document-notes.service.spec.ts": [
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/document-notes.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/document-notes.service.ts": [
+    "app/data/document-note.ts",
+    "app/services/rest/abstract-paperless-service.ts"
+  ],
+  "app/services/rest/document-type.service.spec.ts": [
+    "app/services/rest/abstract-name-filter-service.spec.ts",
+    "app/services/rest/document-type.service.ts"
+  ],
+  "app/services/rest/document-type.service.ts": [
+    "app/data/document-type.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/services/rest/document.service.spec.ts": [
+    "app/data/custom-field.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/ui-settings.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/document.service.ts": [
+    "app/data/auditlog-entry.ts",
+    "app/data/custom-field.ts",
+    "app/data/document-metadata.ts",
+    "app/data/document-suggestions.ts",
+    "app/data/document.ts",
+    "app/data/filter-rule.ts",
+    "app/data/results.ts",
+    "app/data/ui-settings.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-paperless-service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/settings.service.ts",
+    "app/utils/query-params.ts"
+  ],
+  "app/services/rest/group.service.spec.ts": [
+    "app/services/rest/abstract-name-filter-service.spec.ts",
+    "app/services/rest/group.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/group.service.ts": [
+    "app/data/group.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/services/rest/log.service.spec.ts": [
+    "app/services/rest/log.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/log.service.ts": [
+    "environments/environment.ts"
+  ],
+  "app/services/rest/mail-account.service.spec.ts": [
+    "app/data/mail-account.ts",
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/mail-account.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/mail-account.service.ts": [
+    "app/data/mail-account.ts",
+    "app/services/rest/abstract-paperless-service.ts"
+  ],
+  "app/services/rest/mail-rule.service.spec.ts": [
+    "app/data/mail-rule.ts",
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/mail-rule.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/mail-rule.service.ts": [
+    "app/data/mail-rule.ts",
+    "app/services/rest/abstract-paperless-service.ts"
+  ],
+  "app/services/rest/processed-mail.service.spec.ts": [
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/processed-mail.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/processed-mail.service.ts": [
+    "app/data/processed-mail.ts",
+    "app/services/rest/abstract-paperless-service.ts"
+  ],
+  "app/services/rest/remote-version.service.spec.ts": [
+    "app/services/rest/remote-version.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/remote-version.service.ts": [
+    "environments/environment.ts"
+  ],
+  "app/services/rest/saved-view.service.spec.ts": [
+    "app/data/ui-settings.ts",
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/saved-view.service.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/saved-view.service.ts": [
+    "app/data/results.ts",
+    "app/data/saved-view.ts",
+    "app/data/ui-settings.ts",
+    "app/services/rest/abstract-paperless-service.ts",
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts"
+  ],
+  "app/services/rest/search.service.spec.ts": [
+    "app/data/ui-settings.ts",
+    "app/services/rest/search.service.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/search.service.ts": [
+    "app/data/correspondent.ts",
+    "app/data/custom-field.ts",
+    "app/data/document-type.ts",
+    "app/data/document.ts",
+    "app/data/group.ts",
+    "app/data/mail-account.ts",
+    "app/data/mail-rule.ts",
+    "app/data/saved-view.ts",
+    "app/data/storage-path.ts",
+    "app/data/tag.ts",
+    "app/data/ui-settings.ts",
+    "app/data/user.ts",
+    "app/data/workflow.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/share-link-bundle.service.spec.ts": [
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/share-link-bundle.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/share-link-bundle.service.ts": [
+    "app/data/share-link-bundle.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/services/rest/share-link.service.spec.ts": [
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/share-link.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/share-link.service.ts": [
+    "app/data/share-link.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/services/rest/storage-path.service.spec.ts": [
+    "app/services/rest/abstract-name-filter-service.spec.ts",
+    "app/services/rest/storage-path.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/storage-path.service.ts": [
+    "app/data/storage-path.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/services/rest/tag.service.spec.ts": [
+    "app/services/rest/abstract-name-filter-service.spec.ts",
+    "app/services/rest/tag.service.ts"
+  ],
+  "app/services/rest/tag.service.ts": [
+    "app/data/tag.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/services/rest/user.service.spec.ts": [
+    "app/services/rest/abstract-name-filter-service.spec.ts",
+    "app/services/rest/user.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/user.service.ts": [
+    "app/data/user.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/abstract-name-filter-service.ts"
+  ],
+  "app/services/rest/workflow.service.spec.ts": [
+    "app/data/workflow-action.ts",
+    "app/data/workflow-trigger.ts",
+    "app/data/workflow.ts",
+    "app/services/rest/abstract-paperless-service.spec.ts",
+    "app/services/rest/workflow.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/rest/workflow.service.ts": [
+    "app/data/workflow.ts",
+    "app/services/rest/abstract-paperless-service.ts"
+  ],
+  "app/services/settings.service.spec.ts": [
+    "app/data/custom-field.ts",
+    "app/data/document.ts",
+    "app/data/paperless-config.ts",
+    "app/data/saved-view.ts",
+    "app/data/ui-settings.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/toast.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/settings.service.ts": [
+    "app/data/document.ts",
+    "app/data/paperless-config.ts",
+    "app/data/saved-view.ts",
+    "app/data/ui-settings.ts",
+    "app/data/user.ts",
+    "app/services/permissions.service.ts",
+    "app/services/rest/custom-fields.service.ts",
+    "app/services/toast.service.ts",
+    "app/utils/color.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/system-status.service.spec.ts": [
+    "app/services/system-status.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/system-status.service.ts": [
+    "app/data/system-status.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/tasks.service.spec.ts": [
+    "app/data/paperless-task.ts",
+    "app/services/tasks.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/tasks.service.ts": [
+    "app/data/paperless-task.ts",
+    "app/data/results.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/toast.service.spec.ts": [
+    "app/services/toast.service.ts"
+  ],
+  "app/services/toast.service.ts": [],
+  "app/services/trash.service.spec.ts": [
+    "app/services/trash.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/trash.service.ts": [
+    "app/data/document.ts",
+    "app/data/results.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/upload-documents.service.spec.ts": [
+    "app/services/upload-documents.service.ts",
+    "app/services/websocket-status.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/upload-documents.service.ts": [
+    "app/services/rest/document.service.ts",
+    "app/services/websocket-status.service.ts"
+  ],
+  "app/services/websocket-status.service.spec.ts": [
+    "app/services/rest/document.service.ts",
+    "app/services/settings.service.ts",
+    "app/services/websocket-status.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/services/websocket-status.service.ts": [
+    "app/data/user.ts",
+    "app/data/websocket-document-updated-message.ts",
+    "app/data/websocket-documents-deleted-message.ts",
+    "app/data/websocket-progress-message.ts",
+    "app/services/settings.service.ts",
+    "environments/environment.ts"
+  ],
+  "app/utils/color.spec.ts": [
+    "app/utils/color.ts"
+  ],
+  "app/utils/color.ts": [],
+  "app/utils/custom-field-query-element.spec.ts": [
+    "app/data/custom-field-query.ts",
+    "app/utils/custom-field-query-element.ts"
+  ],
+  "app/utils/custom-field-query-element.ts": [
+    "app/data/custom-field-query.ts"
+  ],
+  "app/utils/filter-rules.spec.ts": [
+    "app/data/filter-rule-type.ts",
+    "app/data/filter-rule.ts",
+    "app/utils/filter-rules.ts"
+  ],
+  "app/utils/filter-rules.ts": [
+    "app/data/filter-rule-type.ts",
+    "app/data/filter-rule.ts"
+  ],
+  "app/utils/flatten-tags.spec.ts": [
+    "app/data/tag.ts",
+    "app/utils/flatten-tags.ts"
+  ],
+  "app/utils/flatten-tags.ts": [
+    "app/data/tag.ts"
+  ],
+  "app/utils/http.spec.ts": [
+    "app/utils/http.ts"
+  ],
+  "app/utils/http.ts": [],
+  "app/utils/navigation.ts": [],
+  "app/utils/ngb-date-parser-formatter.spec.ts": [
+    "app/services/settings.service.ts",
+    "app/utils/ngb-date-parser-formatter.ts"
+  ],
+  "app/utils/ngb-date-parser-formatter.ts": [
+    "app/services/settings.service.ts"
+  ],
+  "app/utils/ngb-input-date-picker-config.spec.ts": [
+    "app/utils/ngb-input-date-picker-config.ts"
+  ],
+  "app/utils/ngb-input-date-picker-config.ts": [],
+  "app/utils/ngb-iso-date-adapter.spec.ts": [
+    "app/utils/ngb-iso-date-adapter.ts"
+  ],
+  "app/utils/ngb-iso-date-adapter.ts": [],
+  "app/utils/popper-options.spec.ts": [
+    "app/utils/popper-options.ts"
+  ],
+  "app/utils/popper-options.ts": [],
+  "app/utils/query-params.spec.ts": [
+    "app/data/custom-field-query.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/filter-rule.ts",
+    "app/utils/query-params.ts"
+  ],
+  "app/utils/query-params.ts": [
+    "app/data/custom-field-query.ts",
+    "app/data/filter-rule-type.ts",
+    "app/data/filter-rule.ts",
+    "app/services/document-list-view.service.ts"
+  ],
+  "app/utils/text-search.spec.ts": [
+    "app/utils/text-search.ts"
+  ],
+  "app/utils/text-search.ts": [],
+  "environments/environment.e2e.ts": [],
+  "environments/environment.prod.ts": [],
+  "environments/environment.ts": [],
+  "main.ts": [
+    "app/app-routing.module.ts",
+    "app/app.component.ts",
+    "app/guards/dirty-doc.guard.ts",
+    "app/guards/dirty-saved-view.guard.ts",
+    "app/guards/permissions.guard.ts",
+    "app/interceptors/api-version.interceptor.ts",
+    "app/interceptors/auth-expiry.interceptor.ts",
+    "app/interceptors/csrf.interceptor.ts",
+    "app/pipes/correspondent-name.pipe.ts",
+    "app/pipes/document-title.pipe.ts",
+    "app/pipes/document-type-name.pipe.ts",
+    "app/pipes/filter.pipe.ts",
+    "app/pipes/storage-path-name.pipe.ts",
+    "app/pipes/username.pipe.ts",
+    "app/services/settings.service.ts",
+    "app/utils/ngb-date-parser-formatter.ts",
+    "app/utils/ngb-input-date-picker-config.ts",
+    "app/utils/ngb-iso-date-adapter.ts"
+  ],
+  "polyfills.ts": [],
+  "test/mocks/pdfjs-legacy-build-pdf.ts": [],
+  "test/mocks/pdfjs-web-pdf_viewer.ts": []
+}

@@ -1,0 +1,754 @@
+[
+  {
+    "id": "paperless-xlang-applicationconfigurationviewset-0",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `ApplicationConfigurationViewSet` in `src/paperless/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/paperless/views.py",
+    "view": "ApplicationConfigurationViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/admin/config/config.component.spec.ts",
+      "src-ui/src/app/components/admin/config/config.component.ts",
+      "src-ui/src/app/services/config.service.spec.ts",
+      "src-ui/src/app/services/config.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/config.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 2,
+      "adversary_f1": {
+        "path_guess": 0.0,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-bulkeditobjectsview-1",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `BulkEditObjectsView` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "BulkEditObjectsView",
+    "expected_files": [
+      "src-ui/src/app/components/manage/document-attributes/management-list/management-list.component.spec.ts",
+      "src-ui/src/app/components/manage/document-attributes/management-list/management-list.component.ts",
+      "src-ui/src/app/pipes/correspondent-name.pipe.spec.ts",
+      "src-ui/src/app/pipes/document-type-name.pipe.spec.ts",
+      "src-ui/src/app/pipes/object-name.pipe.spec.ts",
+      "src-ui/src/app/pipes/object-name.pipe.ts",
+      "src-ui/src/app/pipes/storage-path-name.pipe.spec.ts",
+      "src-ui/src/app/services/rest/abstract-name-filter-service.spec.ts",
+      "src-ui/src/app/services/rest/abstract-name-filter-service.ts",
+      "src-ui/src/app/services/rest/correspondent.service.ts",
+      "src-ui/src/app/services/rest/document-type.service.ts",
+      "src-ui/src/app/services/rest/group.service.ts",
+      "src-ui/src/app/services/rest/share-link-bundle.service.ts",
+      "src-ui/src/app/services/rest/share-link.service.ts",
+      "src-ui/src/app/services/rest/storage-path.service.ts",
+      "src-ui/src/app/services/rest/tag.service.ts",
+      "src-ui/src/app/services/rest/user.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/abstract-name-filter-service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 3,
+      "adversary_f1": {
+        "path_guess": 0.0,
+        "hub_guess": 0.059
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-chatstreamingview-2",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `ChatStreamingView` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "ChatStreamingView",
+    "expected_files": [
+      "src-ui/src/app/components/chat/chat/chat.component.spec.ts",
+      "src-ui/src/app/components/chat/chat/chat.component.ts",
+      "src-ui/src/app/services/chat.service.spec.ts",
+      "src-ui/src/app/services/chat.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/chat.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 2,
+      "adversary_f1": {
+        "path_guess": 0.25,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-correspondentviewset-3",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `CorrespondentViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "CorrespondentViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/common/edit-dialog/correspondent-edit-dialog/correspondent-edit-dialog.component.ts",
+      "src-ui/src/app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.ts",
+      "src-ui/src/app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts",
+      "src-ui/src/app/components/document-detail/document-detail.component.spec.ts",
+      "src-ui/src/app/components/document-detail/document-detail.component.ts",
+      "src-ui/src/app/components/document-detail/document-history/document-history.component.spec.ts",
+      "src-ui/src/app/components/document-detail/document-history/document-history.component.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.ts",
+      "src-ui/src/app/components/document-list/filter-editor/filter-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/filter-editor/filter-editor.component.ts",
+      "src-ui/src/app/components/manage/document-attributes/management-list/correspondent-list/correspondent-list.component.spec.ts",
+      "src-ui/src/app/components/manage/document-attributes/management-list/correspondent-list/correspondent-list.component.ts",
+      "src-ui/src/app/pipes/correspondent-name.pipe.ts",
+      "src-ui/src/app/pipes/object-name.pipe.spec.ts",
+      "src-ui/src/app/services/rest/correspondent.service.spec.ts",
+      "src-ui/src/app/services/rest/correspondent.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/correspondent.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 10,
+      "adversary_f1": {
+        "path_guess": 0.211,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-disconnectsocialaccountview-4",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `DisconnectSocialAccountView` in `src/paperless/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/paperless/views.py",
+    "view": "DisconnectSocialAccountView",
+    "expected_files": [
+      "src-ui/src/app/components/common/profile-edit-dialog/profile-edit-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/profile-edit-dialog/profile-edit-dialog.component.ts",
+      "src-ui/src/app/services/profile.service.spec.ts",
+      "src-ui/src/app/services/profile.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/profile.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 2,
+      "adversary_f1": {
+        "path_guess": 0.0,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-documenttypeviewset-5",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `DocumentTypeViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "DocumentTypeViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/common/edit-dialog/document-type-edit-dialog/document-type-edit-dialog.component.ts",
+      "src-ui/src/app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/edit-dialog/mail-rule-edit-dialog/mail-rule-edit-dialog.component.ts",
+      "src-ui/src/app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts",
+      "src-ui/src/app/components/document-detail/document-detail.component.spec.ts",
+      "src-ui/src/app/components/document-detail/document-detail.component.ts",
+      "src-ui/src/app/components/document-detail/document-history/document-history.component.spec.ts",
+      "src-ui/src/app/components/document-detail/document-history/document-history.component.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.ts",
+      "src-ui/src/app/components/document-list/filter-editor/filter-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/filter-editor/filter-editor.component.ts",
+      "src-ui/src/app/components/manage/document-attributes/management-list/document-type-list/document-type-list.component.spec.ts",
+      "src-ui/src/app/components/manage/document-attributes/management-list/document-type-list/document-type-list.component.ts",
+      "src-ui/src/app/pipes/document-type-name.pipe.ts",
+      "src-ui/src/app/services/rest/document-type.service.spec.ts",
+      "src-ui/src/app/services/rest/document-type.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/document-type.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 10,
+      "adversary_f1": {
+        "path_guess": 0.333,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-globalsearchview-6",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `GlobalSearchView` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "GlobalSearchView",
+    "expected_files": [
+      "src-ui/src/app/components/app-frame/app-frame.component.spec.ts",
+      "src-ui/src/app/components/app-frame/global-search/global-search.component.spec.ts",
+      "src-ui/src/app/components/app-frame/global-search/global-search.component.ts",
+      "src-ui/src/app/components/document-list/filter-editor/filter-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/filter-editor/filter-editor.component.ts",
+      "src-ui/src/app/services/rest/search.service.spec.ts",
+      "src-ui/src/app/services/rest/search.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/search.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 4,
+      "adversary_f1": {
+        "path_guess": 0.286,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-groupviewset-7",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `GroupViewSet` in `src/paperless/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/paperless/views.py",
+    "view": "GroupViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/admin/settings/settings.component.spec.ts",
+      "src-ui/src/app/components/admin/settings/settings.component.ts",
+      "src-ui/src/app/components/admin/users-groups/users-groups.component.spec.ts",
+      "src-ui/src/app/components/admin/users-groups/users-groups.component.ts",
+      "src-ui/src/app/components/common/edit-dialog/group-edit-dialog/group-edit-dialog.component.ts",
+      "src-ui/src/app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/edit-dialog/user-edit-dialog/user-edit-dialog.component.ts",
+      "src-ui/src/app/components/common/input/permissions/permissions-group/permissions-group.component.spec.ts",
+      "src-ui/src/app/components/common/input/permissions/permissions-group/permissions-group.component.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/save-view-config-dialog/save-view-config-dialog.component.spec.ts",
+      "src-ui/src/app/services/rest/group.service.spec.ts",
+      "src-ui/src/app/services/rest/group.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/group.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 8,
+      "adversary_f1": {
+        "path_guess": 0.308,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-logviewset-8",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `LogViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "LogViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/admin/logs/logs.component.spec.ts",
+      "src-ui/src/app/components/admin/logs/logs.component.ts",
+      "src-ui/src/app/services/rest/log.service.spec.ts",
+      "src-ui/src/app/services/rest/log.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/log.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 2,
+      "adversary_f1": {
+        "path_guess": 0.0,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-processedmailviewset-9",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `ProcessedMailViewSet` in `src/paperless_mail/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/paperless_mail/views.py",
+    "view": "ProcessedMailViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/manage/mail/processed-mail-dialog/processed-mail-dialog.component.ts",
+      "src-ui/src/app/services/rest/processed-mail.service.spec.ts",
+      "src-ui/src/app/services/rest/processed-mail.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/processed-mail.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 2,
+      "adversary_f1": {
+        "path_guess": 0.333,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-savedviewviewset-10",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `SavedViewViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "SavedViewViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/admin/settings/settings.component.spec.ts",
+      "src-ui/src/app/components/admin/settings/settings.component.ts",
+      "src-ui/src/app/components/app-frame/app-frame.component.spec.ts",
+      "src-ui/src/app/components/app-frame/app-frame.component.ts",
+      "src-ui/src/app/components/dashboard/dashboard.component.spec.ts",
+      "src-ui/src/app/components/dashboard/dashboard.component.ts",
+      "src-ui/src/app/components/dashboard/widgets/saved-view-widget/saved-view-widget.component.ts",
+      "src-ui/src/app/components/document-detail/document-detail.component.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.ts",
+      "src-ui/src/app/components/document-list/document-list.component.spec.ts",
+      "src-ui/src/app/components/document-list/document-list.component.ts",
+      "src-ui/src/app/components/manage/document-attributes/custom-fields/custom-fields.component.ts",
+      "src-ui/src/app/components/manage/saved-views/saved-views.component.spec.ts",
+      "src-ui/src/app/components/manage/saved-views/saved-views.component.ts",
+      "src-ui/src/app/services/rest/saved-view.service.spec.ts",
+      "src-ui/src/app/services/rest/saved-view.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/saved-view.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 10,
+      "adversary_f1": {
+        "path_guess": 0.312,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-sharelinkbundleviewset-11",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `ShareLinkBundleViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "ShareLinkBundleViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/common/share-link-bundle-manage-dialog/share-link-bundle-manage-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/share-link-bundle-manage-dialog/share-link-bundle-manage-dialog.component.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.ts",
+      "src-ui/src/app/services/rest/share-link-bundle.service.spec.ts",
+      "src-ui/src/app/services/rest/share-link-bundle.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/share-link-bundle.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 3,
+      "adversary_f1": {
+        "path_guess": 0.333,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-sharelinkviewset-12",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `ShareLinkViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "ShareLinkViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/common/share-links-dialog/share-links-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/share-links-dialog/share-links-dialog.component.ts",
+      "src-ui/src/app/services/rest/share-link.service.spec.ts",
+      "src-ui/src/app/services/rest/share-link.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/share-link.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 2,
+      "adversary_f1": {
+        "path_guess": 0.0,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-statisticsview-13",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `StatisticsView` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "StatisticsView",
+    "expected_files": [
+      "src-ui/src/app/components/dashboard/dashboard.component.spec.ts",
+      "src-ui/src/app/components/dashboard/dashboard.component.ts",
+      "src-ui/src/app/components/dashboard/widgets/statistics-widget/statistics-widget.component.spec.ts",
+      "src-ui/src/app/components/dashboard/widgets/statistics-widget/statistics-widget.component.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/components/dashboard/widgets/statistics-widget/statistics-widget.component.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 2,
+      "adversary_f1": {
+        "path_guess": 0.0,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-tagviewset-14",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `TagViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "TagViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/common/edit-dialog/edit-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/edit-dialog/tag-edit-dialog/tag-edit-dialog.component.ts",
+      "src-ui/src/app/components/common/input/tags/tags.component.spec.ts",
+      "src-ui/src/app/components/common/input/tags/tags.component.ts",
+      "src-ui/src/app/components/common/tag/tag.component.spec.ts",
+      "src-ui/src/app/components/common/tag/tag.component.ts",
+      "src-ui/src/app/components/document-detail/document-detail.component.spec.ts",
+      "src-ui/src/app/components/document-detail/document-detail.component.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.ts",
+      "src-ui/src/app/components/document-list/filter-editor/filter-editor.component.spec.ts",
+      "src-ui/src/app/components/document-list/filter-editor/filter-editor.component.ts",
+      "src-ui/src/app/components/manage/document-attributes/management-list/management-list.component.spec.ts",
+      "src-ui/src/app/components/manage/document-attributes/management-list/tag-list/tag-list.component.spec.ts",
+      "src-ui/src/app/components/manage/document-attributes/management-list/tag-list/tag-list.component.ts",
+      "src-ui/src/app/services/rest/tag.service.spec.ts",
+      "src-ui/src/app/services/rest/tag.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/tag.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 10,
+      "adversary_f1": {
+        "path_guess": 0.294,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-tasksviewset-15",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `TasksViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "TasksViewSet",
+    "expected_files": [
+      "src-ui/src/app/app.component.ts",
+      "src-ui/src/app/components/admin/tasks/tasks.component.spec.ts",
+      "src-ui/src/app/components/admin/tasks/tasks.component.ts",
+      "src-ui/src/app/components/app-frame/app-frame.component.spec.ts",
+      "src-ui/src/app/components/app-frame/app-frame.component.ts",
+      "src-ui/src/app/components/common/system-status-dialog/system-status-dialog.component.spec.ts",
+      "src-ui/src/app/components/common/system-status-dialog/system-status-dialog.component.ts",
+      "src-ui/src/app/services/tasks.service.spec.ts",
+      "src-ui/src/app/services/tasks.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/tasks.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 5,
+      "adversary_f1": {
+        "path_guess": 0.222,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-trashview-16",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `TrashView` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "TrashView",
+    "expected_files": [
+      "src-ui/src/app/components/admin/trash/trash.component.spec.ts",
+      "src-ui/src/app/components/admin/trash/trash.component.ts",
+      "src-ui/src/app/services/trash.service.spec.ts",
+      "src-ui/src/app/services/trash.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/trash.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 2,
+      "adversary_f1": {
+        "path_guess": 0.25,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  },
+  {
+    "id": "paperless-xlang-workflowviewset-17",
+    "repo": "repos/paperless-ngx",
+    "tier": 4,
+    "kind": "impact",
+    "query": "The HTTP API served by `WorkflowViewSet` in `src/documents/views.py` is changing. List every frontend source file that depends on it: files that send requests to it, and files that directly import one of those.",
+    "target": "src/documents/views.py",
+    "view": "WorkflowViewSet",
+    "expected_files": [
+      "src-ui/src/app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts",
+      "src-ui/src/app/components/manage/workflows/workflows.component.spec.ts",
+      "src-ui/src/app/components/manage/workflows/workflows.component.ts",
+      "src-ui/src/app/services/rest/workflow.service.spec.ts",
+      "src-ui/src/app/services/rest/workflow.service.ts"
+    ],
+    "oracle": {
+      "backend": "ast route table, Django first-match order",
+      "frontend": "harvested request URLs",
+      "imports": "madge 8 --ts-config",
+      "relation": "url_callers_plus_direct_importers",
+      "direct_callers": [
+        "src-ui/src/app/services/rest/workflow.service.ts"
+      ]
+    },
+    "gates": {
+      "max_depth": 1,
+      "directories": 3,
+      "adversary_f1": {
+        "path_guess": 0.2,
+        "hub_guess": 0.0
+      }
+    },
+    "provenance": {
+      "url": "https://github.com/paperless-ngx/paperless-ngx.git",
+      "revision": "1f374cd65652ff8991f1d7e1efe49354876ac5c2",
+      "annotation": "Django view -> Angular URL callers -> madge direct importers."
+    }
+  }
+]
