@@ -1,0 +1,86 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.32s
+1/74 hono-impact-handler-58 importers_tool: correct=True opens=0 searches=0 error=None
+2/74 hono-impact-compress-56 importers_tool: correct=True opens=0 searches=0 error=None
+3/74 hono-impact-concurrent-57 importers_tool: correct=True opens=0 searches=0 error=None
+4/74 hono-impact-index-23 importers_tool: correct=True opens=0 searches=0 error=None
+5/74 hono-impact-index-60 importers_tool: correct=True opens=0 searches=0 error=None
+6/74 hono-impact-index-26 importers_tool: correct=True opens=0 searches=0 error=None
+7/74 hono-impact-index-36 importers_tool: correct=True opens=0 searches=0 error=None
+8/74 hono-impact-accept-53 importers_tool: correct=True opens=0 searches=0 error=None
+9/74 hono-impact-color-55 importers_tool: correct=True opens=0 searches=0 error=None
+10/74 hono-impact-websocket-19 importers_tool: correct=True opens=0 searches=0 error=None
+11/74 hono-impact-page-1 importers_tool: correct=True opens=0 searches=0 error=None
+12/74 hono-impact-conninfo-16 importers_tool: correct=True opens=0 searches=0 error=None
+13/74 hono-impact-conninfo-20 importers_tool: correct=True opens=0 searches=0 error=None
+14/74 hono-impact-conninfo-7 importers_tool: correct=True opens=0 searches=0 error=None
+15/74 hono-impact-index-25 importers_tool: correct=True opens=0 searches=0 error=None
+16/74 hono-impact-serve-static-module-12 importers_tool: correct=True opens=0 searches=0 error=None
+17/74 hono-impact-ssg-18 importers_tool: correct=True opens=0 searches=0 error=None
+18/74 hono-impact-websocket-15 importers_tool: correct=True opens=0 searches=0 error=None
+19/74 hono-impact-handler-21 importers_tool: correct=True opens=0 searches=0 error=None
+20/74 hono-impact-index-49 importers_tool: correct=False opens=0 searches=0 error=None
+21/74 hono-impact-index-51 importers_tool: correct=False opens=0 searches=0 error=None
+22/74 hono-impact-jsx-dev-runtime-39 importers_tool: correct=True opens=0 searches=0 error=None
+23/74 hono-impact-page-preact-4 importers_tool: correct=True opens=0 searches=0 error=None
+24/74 hono-impact-page-react-0 importers_tool: correct=True opens=0 searches=0 error=None
+25/74 hono-impact-page-react-5 importers_tool: correct=True opens=0 searches=0 error=None
+26/74 hono-impact-serve-static-17 importers_tool: correct=True opens=0 searches=0 error=None
+27/74 hono-impact-serve-static-8 importers_tool: correct=True opens=0 searches=0 error=None
+28/74 hono-impact-ssg-10 importers_tool: correct=True opens=0 searches=0 error=None
+29/74 commerce-impact-image-5 importers_tool: correct=False opens=0 searches=0 error=None
+30/74 commerce-impact-price-3 importers_tool: correct=False opens=0 searches=0 error=None
+31/74 commerce-impact-product-6 importers_tool: correct=False opens=0 searches=0 error=None
+32/74 commerce-impact-cart-4 importers_tool: correct=False opens=0 searches=0 error=None
+33/74 commerce-impact-label-0 importers_tool: correct=False opens=0 searches=0 error=None
+34/74 typedi-impact-resolve-to-type-wrapper-3 importers_tool: correct=True opens=0 searches=0 error=None
+35/74 typedi-impact-cannot-inject-value-2 importers_tool: correct=True opens=0 searches=0 error=None
+36/74 typedi-impact-inject-1 importers_tool: correct=True opens=0 searches=0 error=None
+37/74 typedi-impact-inject-many-0 importers_tool: correct=True opens=0 searches=0 error=None
+38/74 hono-impact-handler-58 importers_tool: correct=True opens=0 searches=0 error=None
+39/74 hono-impact-compress-56 importers_tool: correct=True opens=0 searches=0 error=None
+40/74 hono-impact-concurrent-57 importers_tool: correct=True opens=0 searches=0 error=None
+41/74 hono-impact-index-23 importers_tool: correct=True opens=0 searches=0 error=None
+42/74 hono-impact-index-60 importers_tool: correct=True opens=0 searches=0 error=None
+43/74 hono-impact-index-26 importers_tool: correct=True opens=0 searches=0 error=None
+44/74 hono-impact-index-36 importers_tool: correct=True opens=0 searches=0 error=None
+45/74 hono-impact-accept-53 importers_tool: correct=True opens=0 searches=0 error=None
+46/74 hono-impact-color-55 importers_tool: correct=True opens=0 searches=0 error=None
+47/74 hono-impact-websocket-19 importers_tool: correct=True opens=0 searches=0 error=None
+48/74 hono-impact-page-1 importers_tool: correct=True opens=0 searches=0 error=None
+49/74 hono-impact-conninfo-16 importers_tool: correct=True opens=0 searches=0 error=None
+50/74 hono-impact-conninfo-20 importers_tool: correct=True opens=0 searches=0 error=None
+51/74 hono-impact-conninfo-7 importers_tool: correct=True opens=0 searches=0 error=None
+52/74 hono-impact-index-25 importers_tool: correct=True opens=0 searches=0 error=None
+53/74 hono-impact-serve-static-module-12 importers_tool: correct=True opens=0 searches=0 error=None
+54/74 hono-impact-ssg-18 importers_tool: correct=True opens=0 searches=0 error=None
+55/74 hono-impact-websocket-15 importers_tool: correct=True opens=0 searches=0 error=None
+56/74 hono-impact-handler-21 importers_tool: correct=True opens=0 searches=0 error=None
+57/74 hono-impact-index-49 importers_tool: correct=False opens=0 searches=0 error=None
+58/74 hono-impact-index-51 importers_tool: correct=False opens=0 searches=0 error=None
+59/74 hono-impact-jsx-dev-runtime-39 importers_tool: correct=True opens=0 searches=0 error=None
+60/74 hono-impact-page-preact-4 importers_tool: correct=True opens=0 searches=0 error=None
+61/74 hono-impact-page-react-0 importers_tool: correct=True opens=0 searches=0 error=None
+62/74 hono-impact-page-react-5 importers_tool: correct=True opens=0 searches=0 error=None
+63/74 hono-impact-serve-static-17 importers_tool: correct=True opens=0 searches=0 error=None
+64/74 hono-impact-serve-static-8 importers_tool: correct=True opens=0 searches=0 error=None
+65/74 hono-impact-ssg-10 importers_tool: correct=True opens=0 searches=0 error=None
+66/74 commerce-impact-image-5 importers_tool: correct=False opens=0 searches=0 error=None
+67/74 commerce-impact-price-3 importers_tool: correct=False opens=0 searches=0 error=None
+68/74 commerce-impact-product-6 importers_tool: correct=False opens=0 searches=0 error=None
+69/74 commerce-impact-cart-4 importers_tool: correct=False opens=0 searches=0 error=None
+70/74 commerce-impact-label-0 importers_tool: correct=False opens=0 searches=0 error=None
+71/74 typedi-impact-resolve-to-type-wrapper-3 importers_tool: correct=True opens=0 searches=0 error=None
+72/74 typedi-impact-cannot-inject-value-2 importers_tool: correct=True opens=0 searches=0 error=None
+73/74 typedi-impact-inject-1 importers_tool: correct=True opens=0 searches=0 error=None
+74/74 typedi-impact-inject-many-0 importers_tool: correct=True opens=0 searches=0 error=None
+Traceback (most recent call last):
+  File "C:\Users\giann\Documents\Code Arch\eval\run_agent.py", line 241, in <module>
+    if __name__=='__main__': main()
+                             ^^^^^^
+  File "C:\Users\giann\Documents\Code Arch\eval\run_agent.py", line 205, in main
+    summary=summarize([r for r in rows if r['arm'] in ('without_map','with_map')])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\giann\Documents\Code Arch\eval\run.py", line 205, in summarize
+    result[arm]['accuracy'] = result[arm]['correct']/len(subset)
+                              ~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+ZeroDivisionError: division by zero
