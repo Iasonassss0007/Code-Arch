@@ -57,21 +57,27 @@ def safe_file(root, rel):
 
 class Session:
     """Tool outputs are the only observations supplied to either policy."""
-    def __init__(self, source, query, map_text, max_actions=12, map_files=None):
+    def __init__(self, source, query, map_text, max_actions=12, map_files=None, importers=None):
         self.source = source
         self.query = query
         self.paths = sorted(p.relative_to(source).as_posix() for p in source.rglob('*') if p.is_file() and p.suffix in SOURCE_SUFFIXES and '.git' not in p.parts)
         # On-demand files the map points at (e.g. .codearch/imports.md). Served
         # by exact path, and only to the arm that was given the map.
         self.map_files = dict(map_files or {})
+        # importers_tool arm: path -> {transitive importer: hop count}, the
+        # import index served as a query instead of as text to read.
+        self.importers = importers
         self.trace = []
         self.opened = set()
         self.searches = 0
+        self.lookups = 0
         self.answer = []
         self.max_actions = max_actions
         task = {'query': query, 'files': self.paths, 'map': map_text}
         if self.map_files:
             task['map_files'] = sorted(self.map_files)
+        if importers:
+            task['tools'] = ['importers']
         self.observe('task', task)
 
     def observe(self, kind, value):
@@ -101,6 +107,13 @@ class Session:
                         hits.append({'path':rel, 'line':line, 'text':text, 'score':weight})
             hits.sort(key=lambda x:(-x['score'], x['path'], x['line']))
             self.observe('search', {'hits':hits[:50], 'truncated':len(hits)>50})
+        elif kind == 'importers' and self.importers:
+            rel = action['path']
+            if rel not in self.paths:
+                raise ValueError('Only inventoried source files may be queried')
+            self.lookups += 1
+            found = self.importers(rel)
+            self.observe('importers', {'path':rel, 'importers':[{'path':p, 'depth':d} for p, d in sorted(found.items(), key=lambda x:(x[1], x[0]))]})
         elif kind == 'answer':
             answer = action['files']
             if not isinstance(answer, list) or not all(isinstance(x,str) and x in self.paths for x in answer):

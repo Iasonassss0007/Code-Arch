@@ -152,3 +152,31 @@ def test_ceiling_walks_the_index_and_scores_inside_the_oracle_scope():
     assert row["recall"] == 1.0
     assert 0 < row["f1"] < 1          # bench/x.ts is outside what madge scanned
     assert row["f1_scoped"] == 1.0
+
+
+def test_session_importers_tool_returns_transitive_set_by_depth(tmp_path):
+    from run import Session
+    from check_import_index import parse_index
+    for f in ("a.ts", "b.ts", "c.ts"):
+        (tmp_path / f).write_text("x", encoding="utf-8")
+    back = parse_index("a.ts ← b.ts\nb.ts ← c.ts")
+    s = Session(tmp_path, "q", "", importers=lambda rel: B.importers(back, rel))
+    assert json.loads(s.trace[0]["content"])["tools"] == ["importers"]
+    s.action({"tool": "importers", "path": "a.ts"})
+    assert json.loads(s.trace[-1]["content"])["importers"] == [
+        {"path": "b.ts", "depth": 1}, {"path": "c.ts", "depth": 2}]
+    assert s.lookups == 1
+    with pytest.raises(ValueError):
+        s.action({"tool": "importers", "path": ".codearch/imports.md"})
+
+
+def test_importers_tool_is_refused_without_the_arm_and_prompt_only_extends(tmp_path):
+    from run import Session
+    from openrouter_agent import SYSTEM_IMPACT, system_for
+    (tmp_path / "a.ts").write_text("x", encoding="utf-8")
+    with pytest.raises(ValueError):
+        Session(tmp_path, "q", "").action({"tool": "importers", "path": "a.ts"})
+    impact = {"kind": "impact"}
+    assert system_for(impact) == system_for(impact, "with_map") == SYSTEM_IMPACT
+    assert system_for(impact, "importers_tool").startswith(SYSTEM_IMPACT)
+    assert '"importers"' in system_for(impact, "importers_tool")
