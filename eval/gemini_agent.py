@@ -28,6 +28,9 @@ MAX_TOKENS = 2048
 THINKING = {
     'gemini-3.6-flash': {'thinkingLevel': 'minimal'},
     'gemini-3.1-flash-lite': {'thinkingBudget': 0},
+    # Probed 2026-09-14: valid single-JSON action in 8.3 s on a 3.3k-token
+    # impact transcript (thinkingBudget 0 is rejected with HTTP 400).
+    'gemini-3.5-flash-lite': {'thinkingLevel': 'minimal'},
 }
 
 # Free-tier Flash quotas are reported around 10 requests/minute per model.
@@ -52,17 +55,18 @@ ACTION_SCHEMA = {
 }
 
 
-def payload(request, model, system=SYSTEM):
+def payload(request, model, system=SYSTEM, max_tokens=None):
     if model not in THINKING:
         raise ValueError(f'No verified thinking setting for {model}; probe it and add it to THINKING')
+    cap = max_tokens or MAX_TOKENS
     return {'systemInstruction': {'parts': [{'text': system}]},
             'contents': [{'role': 'user', 'parts': [{'text': json.dumps(request, ensure_ascii=False)}]}],
-            'generationConfig': {'temperature': 0, 'seed': SEED, 'maxOutputTokens': MAX_TOKENS,
+            'generationConfig': {'temperature': 0, 'seed': SEED, 'maxOutputTokens': cap,
                                  'responseMimeType': 'application/json', 'responseSchema': ACTION_SCHEMA,
                                  'thinkingConfig': THINKING[model]}}
 
 
-def parse(result, model, system=SYSTEM):
+def parse(result, model, system=SYSTEM, max_tokens=None):
     u = result.get('usageMetadata') or {}
     usage = None
     if 'promptTokenCount' in u:
@@ -73,7 +77,7 @@ def parse(result, model, system=SYSTEM):
     meta = {'model': result.get('modelVersion', model), 'provider': 'google-ai-studio-free',
             'id': result.get('responseId'), 'usage': usage,
             'system_sha256': hashlib.sha256(system.encode()).hexdigest(),
-            'temperature': 0, 'seed': SEED, 'max_tokens': MAX_TOKENS, 'thinking': THINKING.get(model)}
+            'temperature': 0, 'seed': SEED, 'max_tokens': max_tokens or MAX_TOKENS, 'thinking': THINKING.get(model)}
     candidate = (result.get('candidates') or [{}])[0]
     meta['finish_reason'] = candidate.get('finishReason')
     text = ''.join(part.get('text', '') for part in (candidate.get('content') or {}).get('parts') or [])
@@ -90,12 +94,12 @@ def parse(result, model, system=SYSTEM):
     return {'action': action, 'metadata': meta}
 
 
-def complete(request, model=None, system=SYSTEM, opener=urllib.request.urlopen, sleep=time.sleep, clock=time.monotonic):
+def complete(request, model=None, system=SYSTEM, opener=urllib.request.urlopen, sleep=time.sleep, clock=time.monotonic, max_tokens=None):
     model = model or os.environ.get('CODEARCH_EVAL_MODEL', DEFAULT_MODEL)
     key = os.environ.get('GEMINI_API_KEY')
     if not key:
         raise RuntimeError('GEMINI_API_KEY is not configured')
-    body = json.dumps(payload(request, model, system)).encode()
+    body = json.dumps(payload(request, model, system, max_tokens)).encode()
     for attempt in range(RETRIES + 1):
         wait = _last[0] + MIN_INTERVAL - clock()
         if wait > 0:
@@ -106,10 +110,23 @@ def complete(request, model=None, system=SYSTEM, opener=urllib.request.urlopen, 
                                      headers={'x-goog-api-key': key, 'Content-Type': 'application/json'})
         try:
             with opener(req, timeout=180) as response:
-                return parse(json.load(response), model, system)
+                return parse(json.load(response), model, system, max_tokens)
         except urllib.error.HTTPError as exc:
             if exc.code in RETRY_STATUS and attempt < RETRIES:
-                sleep(30 * (attempt + 1))
+                # 429 bodies carry RetryInfo.retryDelay ("38s") and the quota
+                # id (e.g. GenerateRequestsPerDayPerProjectPerModel-FreeTier,
+                # 500 req/day). Honor the delay instead of blind backoff; a
+                # per-day cap still won't clear, and the run stops honestly.
+                delay = 30 * (attempt + 1)
+                try:
+                    detail = json.loads(exc.read().decode(errors='replace'))
+                    for d in detail.get('error', {}).get('details', []):
+                        rd = d.get('retryDelay', '')
+                        if rd.endswith('s'):
+                            delay = min(float(rd[:-1]), 300.0)
+                except (ValueError, TypeError):
+                    pass
+                sleep(delay)
                 continue
             # "HTTP" in the message is what run_agent.provider_failure keys on.
             raise RuntimeError(f'Gemini HTTP {exc.code}') from None

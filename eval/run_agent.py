@@ -7,8 +7,10 @@ import tempfile
 import time
 from pathlib import Path
 from run import ROOT, CRATE, Session, bridge, safe_file, set_f1, summarize
-from openrouter_agent import complete, SYSTEM, SYSTEM_IMPACT, system_for
+from openrouter_agent import (complete, SYSTEM, SYSTEM_IMPACT, system_for,
+                              MAX_TOKENS_M1, MAX_TOKENS_IMPACT)
 import gemini_agent
+import groq_agent
 
 # The path CODEBASE.md names for the reverse import index.
 IMPORTS_REL='.codearch/imports.md'
@@ -74,6 +76,8 @@ def backend_for(provider):
     """(complete function, default model) for a provider name."""
     if provider=='gemini':
         return gemini_agent.complete,gemini_agent.DEFAULT_MODEL
+    if provider=='groq':
+        return groq_agent.complete,groq_agent.DEFAULT_MODEL
     if provider=='openrouter':
         return complete,'qwen/qwen3.5-flash-02-23'
     raise ValueError(f'Unknown provider: {provider}')
@@ -83,15 +87,20 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--tasks',type=Path,default=ROOT/'tasks-real.json')
     p.add_argument('--out',type=Path,default=ROOT/'results-agent')
-    p.add_argument('--provider',choices=['openrouter','gemini'],default='openrouter')
+    p.add_argument('--provider',choices=['openrouter','gemini','groq'],default='openrouter')
     p.add_argument('--model',default=None,help="default: the provider's default model")
     p.add_argument('--repeats',type=int,default=2)
+    p.add_argument('--arms',default='without_map,with_map',
+                   help="comma-separated subset of without_map,with_map,index_only. index_only serves no map text, only .codearch/imports.md on demand")
     p.add_argument('--max-cost',type=float,default=1.0,help='Stop between episodes when reported USD reaches this cap')
     p.add_argument('--resume',action='store_true')
     args=p.parse_args()
     backend,default_model=backend_for(args.provider)
     args.model=args.model or default_model
     if args.repeats<1 or args.max_cost<=0: raise ValueError('Positive repeats and cost required')
+    ALL_ARMS=[a.strip() for a in args.arms.split(',') if a.strip()]
+    if not ALL_ARMS or any(a not in ('without_map','with_map','index_only') for a in ALL_ARMS) or len(set(ALL_ARMS))!=len(ALL_ARMS):
+        raise ValueError("--arms must be a unique subset of without_map,with_map,index_only")
     tasks=json.loads(args.tasks.read_text(encoding='utf-8'))
     if not tasks or len({t['id'] for t in tasks})!=len(tasks): raise ValueError('Invalid task IDs')
     args.out.mkdir(parents=True,exist_ok=True)
@@ -117,7 +126,7 @@ def main():
             for file in sorted(source.rglob('*')):
                 if file.is_file() and '.git' not in file.parts:
                     corpus[file.relative_to(ROOT).as_posix()]=hashlib.sha256(file.read_bytes()).hexdigest()
-        config={'provider':args.provider,'model':args.model,'repeats':args.repeats,'tasks':tasks,'revisions':revisions,
+        config={'provider':args.provider,'model':args.model,'repeats':args.repeats,'arms':ALL_ARMS,'tasks':tasks,'revisions':revisions,
                 'corpus_sha256':corpus,'map_sha256':{k:hashlib.sha256(v.encode()).hexdigest() for k,v in maps.items()},
                 'imports_sha256':{k:hashlib.sha256(v.encode()).hexdigest() for k,v in imports.items()},
                 'system_prompt':SYSTEM,'system_prompt_impact':SYSTEM_IMPACT,'max_actions':12,'temperature':0,'seed':24301,
@@ -143,18 +152,28 @@ def main():
         for trial in range(args.repeats):
             for i,task in enumerate(tasks):
                 for rel in task['expected_files']: safe_file(ROOT/task['repo'],rel)
-                arms=['without_map','with_map'] if (i+trial)%2==0 else ['with_map','without_map']
+                # Arm order rotates deterministically so no arm always moves first.
+                rot=(i+trial)%len(ALL_ARMS)
+                arms=ALL_ARMS[rot:]+ALL_ARMS[:rot]
                 for arm in arms:
                     if (task['id'],trial,arm) in done: continue
                     prior=usage([c for row in rows for c in row['calls']])
                     if prior['cost_usd']>=args.max_cost: raise RuntimeError('Cost cap reached; checkpoint saved')
                     if rows and not prior['complete']: raise RuntimeError('Missing usage; stopping rather than estimating spend')
-                    with_map=arm=='with_map'
-                    session=Session((ROOT/task['repo']).resolve(),task['query'],maps[task['repo']] if with_map else '',
-                                    map_files={IMPORTS_REL:imports[task['repo']]} if with_map else None)
+                    # index_only: no map text in context, imports.md openable on
+                    # demand. Tests whether the index alone (the artifact the
+                    # offline proxy vindicates) beats map-text-in-context.
+                    has_index=arm in ('with_map','index_only')
+                    session=Session((ROOT/task['repo']).resolve(),task['query'],maps[task['repo']] if arm=='with_map' else '',
+                                    map_files={IMPORTS_REL:imports[task['repo']]} if has_index else None)
                     system=system_for(task)
+                    # Impact answers hold 2-20 paths; 512 truncates them
+                    # (recorded live on the Gemini probe). M1 tasks keep 512.
+                    cap=MAX_TOKENS_IMPACT if task.get('kind')=='impact' else MAX_TOKENS_M1
                     start=time.monotonic()
-                    calls,error=episode(session,args.model,lambda request,model=None:backend(request,model=model,system=system))
+                    calls,error=episode(session,args.model,
+                                        lambda request,model=None:backend(
+                                            request,model=model,system=system,max_tokens=cap))
                     row={'task':task['id'],'trial':trial,'tier':task['tier'],'arm':arm,
                          'correct':error is None and session.answer==sorted(set(task['expected_files'])),
                          'f1':0.0 if error else set_f1(session.answer,task['expected_files']),
@@ -164,18 +183,31 @@ def main():
                          'elapsed_seconds':round(time.monotonic()-start,3)}
                     rows.append(row)
                     write_json(checkpoint,{'config':config,'episodes':rows})
-                    print(f"{len(rows)}/{len(tasks)*args.repeats*2} {task['id']} {arm}: correct={row['correct']} opens={row['files_opened']} searches={row['searches']} error={error}",flush=True)
+                    print(f"{len(rows)}/{len(tasks)*args.repeats*len(ALL_ARMS)} {task['id']} {arm}: correct={row['correct']} opens={row['files_opened']} searches={row['searches']} error={error}",flush=True)
                     if error and ('HTTP' in error or not row['usage']['complete']):
                         raise RuntimeError('Provider failure; checkpoint saved, no further calls')
         counts=iter(bridge(helper,{'op':'tokens','texts':[e['content'] for row in rows for e in row['trace']]}))
         for row in rows: row['tokens']=sum(next(counts) for _ in row['trace'])
-        summary=summarize(rows)
+        def aggregate(subset):
+            n=len(subset)
+            return {'episodes':n,'correct':sum(r['correct'] for r in subset),
+                    'mean_f1':sum(r.get('f1',float(r['correct'])) for r in subset)/n if n else 0.0,
+                    'tokens':sum(r['tokens'] for r in subset),
+                    'files_opened':sum(r['files_opened'] for r in subset),
+                    'searches':sum(r['searches'] for r in subset),
+                    'provider_usage':usage([c for r in subset for c in r['calls']])}
+        # Classic pair keeps the recorded gate comparable; extra arms aggregate
+        # the same way beside it.
+        summary=summarize([r for r in rows if r['arm'] in ('without_map','with_map')])
         for arm in ['without_map','with_map']:
-            summary[arm]['provider_usage']=usage([c for row in rows if row['arm']==arm for c in row['calls']])
+            summary[arm]['provider_usage']=usage([c for r in rows if r['arm']==arm for c in r['calls']])
+        extra={arm:aggregate([r for r in rows if r['arm']==arm]) for arm in ALL_ARMS if arm not in ('without_map','with_map')}
         a=summary['without_map']['provider_usage']; b=summary['with_map']['provider_usage']
-        summary['provider_token_savings_percent']=100*(1-(b['prompt_tokens']+b['completion_tokens'])/(a['prompt_tokens']+a['completion_tokens']))
-        report={'schema':2,'config':config,'summary':summary,
-                'by_tier':{str(t):summarize([r for r in rows if r['tier']==t]) for t in sorted({r['tier'] for r in rows})},
+        a_total=a['prompt_tokens']+a['completion_tokens']
+        summary['provider_token_savings_percent']=(100*(1-(b['prompt_tokens']+b['completion_tokens'])/a_total)
+                                                    if a_total else None)
+        report={'schema':3,'config':config,'summary':summary,'extra_arms':extra,
+                'by_tier':{str(t):summarize([r for r in rows if r['tier']==t and r['arm'] in ('without_map','with_map')]) for t in sorted({r['tier'] for r in rows})},
                 'episodes':rows}
         write_json(args.out/'report.json',report)
         for repo,text in maps.items(): (args.out/(Path(repo).name+'-CODEBASE.md')).write_text(text,encoding='utf-8')
@@ -187,9 +219,16 @@ def main():
         for arm in ['without_map','with_map']:
             s=summary[arm]; u=s['provider_usage']
             lines.append(f"| {arm} | {s['mean_f1']:.3f} | {s['correct']}/{s['episodes']} | {s['tokens']} | {u['prompt_tokens']+u['completion_tokens']} | {s['files_opened']} | {s['searches']} | {u['cost_usd']:.6f} |")
-        lines+=['',f"Context-token savings: {summary['token_savings_percent']:.2f}%; provider-token savings: {summary['provider_token_savings_percent']:.2f}%; mean-F1 delta: {summary['f1_delta']:+.3f}; accuracy delta: {summary['accuracy_delta_pp']:.2f} pp.",
+        for arm,s in extra.items():
+            u=s['provider_usage']
+            lines.append(f"| {arm} | {s['mean_f1']:.3f} | {s['correct']}/{s['episodes']} | {s['tokens']} | {u['prompt_tokens']+u['completion_tokens']} | {s['files_opened']} | {s['searches']} | {u['cost_usd']:.6f} |")
+        lines+=['',f"Context-token savings: {summary['token_savings_percent']:.2f}%; "
+                + (f"provider-token savings: {summary['provider_token_savings_percent']:.2f}%"
+                   if summary['provider_token_savings_percent'] is not None else
+                   'provider-token savings: n/a (no provider usage)')
+                + f"; mean-F1 delta: {summary['f1_delta']:+.3f}; accuracy delta: {summary['accuracy_delta_pp']:.2f} pp.",
                 '', 'Context counts each observation/action once; provider usage includes repeated conversation input and system prompt. Both include map cost. Provider-reported USD includes any caching effects.',
-                '', ('Impact tasks: transitive importers from madge over the whole checkout, scored by set F1. The with_map arm may open `.codearch/imports.md`. Repeated trials on the same task are correlated. Not a code-change evaluation.' if impact else
+                '', ('Impact tasks: transitive importers from madge over the whole checkout, scored by set F1. The with_map and index_only arms may open `.codearch/imports.md`. Repeated trials on the same task are correlated. Not a code-change evaluation.' if impact else
                      'This is a small file-location benchmark, not a code-change evaluation. Repeated trials on the same task are correlated. Tier 3 uses TypeDI runtime/decorator indirection, not a large enterprise application. Labels require separate review.')]
         (args.out/'report.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
         print('\n'.join(lines))
