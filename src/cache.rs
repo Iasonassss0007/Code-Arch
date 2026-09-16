@@ -37,7 +37,9 @@ use std::path::Path;
 /// `extends`) for `contract::route_join`.
 /// v5: `FileParse` gains `url_segment_seqs` (per-literal segment sequences
 /// for most-specific-wins in `route_join`).
-pub const FORMAT: u32 = 5;
+/// v6: `http` no longer set by a base-URL config name alone; cached flags
+/// from v5 would keep the old answer.
+pub const FORMAT: u32 = 6;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StoredFile {
