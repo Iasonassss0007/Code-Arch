@@ -333,6 +333,10 @@ The two providers are:
   `gemini_agent.py`). Usage is recorded at cost 0.0. Google's free-tier terms
   let submitted content be used to improve Google's products. The benchmark
   sends public repository code, the generated map and the index.
+  With billing enabled on the key's project, set `CODEARCH_GEMINI_PAID=1`:
+  calls are priced at list rates (`PRICES`, implicit-cache discounts ignored,
+  so the figure is an upper bound) and `--max-cost` becomes a real cap.
+  `gemini-3.6-flash` free tier is 20 requests/day, about 4 impact episodes.
 
 Only models whose settings were probed live are accepted (`THINKING` in
 `gemini_agent.py`):

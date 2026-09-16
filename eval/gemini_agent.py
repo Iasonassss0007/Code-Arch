@@ -13,7 +13,7 @@ import time
 import urllib.error
 import urllib.request
 
-from openrouter_agent import SYSTEM
+from openrouter_agent import IMPORTERS_TOOL, SYSTEM
 
 BASE = 'https://generativelanguage.googleapis.com/v1beta'
 DEFAULT_MODEL = 'gemini-3.1-flash-lite'
@@ -41,6 +41,14 @@ RETRY_STATUS = {429, 500, 503}
 
 _last = [0.0]
 
+# Paid tier (billing enabled on the key's project): usage is priced at list
+# rates, USD per 1M tokens (input, output), ai.google.dev/gemini-api/docs/pricing
+# as of 2026-09-16. Implicit-cache discounts are ignored, so the recorded cost
+# is an upper bound and run_agent's --max-cost cap stops early, never late.
+PAID = os.environ.get('CODEARCH_GEMINI_PAID') == '1'
+PRICES = {'gemini-3.6-flash': (0.75, 3.75), 'gemini-3.8-flash': (0.75, 3.75),
+          'gemini-3.5-flash': (1.50, 9.00), 'gemini-3.5-flash-lite': (0.30, 2.50)}
+
 # The harness's action shape, enforced at the sampler. A live probe had
 # gemini-3.6-flash answer {"action": "search", ...}; JSON mode alone allows it.
 ACTION_SCHEMA = {
@@ -55,6 +63,15 @@ ACTION_SCHEMA = {
 }
 
 
+def schema_for(system):
+    # The enum is visible to the sampler: offering `importers` to arms whose
+    # prompt lacks the tool made gemini-3.6-flash call it there (4/30 episodes).
+    if IMPORTERS_TOOL in system:
+        return ACTION_SCHEMA
+    props = dict(ACTION_SCHEMA['properties'], tool={'type': 'STRING', 'enum': ['search', 'open', 'answer']})
+    return dict(ACTION_SCHEMA, properties=props)
+
+
 def payload(request, model, system=SYSTEM, max_tokens=None):
     if model not in THINKING:
         raise ValueError(f'No verified thinking setting for {model}; probe it and add it to THINKING')
@@ -62,11 +79,14 @@ def payload(request, model, system=SYSTEM, max_tokens=None):
     return {'systemInstruction': {'parts': [{'text': system}]},
             'contents': [{'role': 'user', 'parts': [{'text': json.dumps(request, ensure_ascii=False)}]}],
             'generationConfig': {'temperature': 0, 'seed': SEED, 'maxOutputTokens': cap,
-                                 'responseMimeType': 'application/json', 'responseSchema': ACTION_SCHEMA,
+                                 'responseMimeType': 'application/json', 'responseSchema': schema_for(system),
                                  'thinkingConfig': THINKING[model]}}
 
 
-def parse(result, model, system=SYSTEM, max_tokens=None):
+def parse(result, model, system=SYSTEM, max_tokens=None, paid=None):
+    paid = PAID if paid is None else paid
+    if paid and model not in PRICES:
+        raise ValueError(f'No verified paid price for {model}')
     u = result.get('usageMetadata') or {}
     usage = None
     if 'promptTokenCount' in u:
@@ -74,7 +94,10 @@ def parse(result, model, system=SYSTEM, max_tokens=None):
         usage = {'prompt_tokens': u['promptTokenCount'],
                  'completion_tokens': u.get('candidatesTokenCount', 0) + u.get('thoughtsTokenCount', 0),
                  'cost': 0.0}
-    meta = {'model': result.get('modelVersion', model), 'provider': 'google-ai-studio-free',
+        if paid:
+            pin, pout = PRICES[model]
+            usage['cost'] = (usage['prompt_tokens'] * pin + usage['completion_tokens'] * pout) / 1e6
+    meta = {'model': result.get('modelVersion', model), 'provider': 'google-ai-studio-paid' if paid else 'google-ai-studio-free',
             'id': result.get('responseId'), 'usage': usage,
             'system_sha256': hashlib.sha256(system.encode()).hexdigest(),
             'temperature': 0, 'seed': SEED, 'max_tokens': max_tokens or MAX_TOKENS, 'thinking': THINKING.get(model)}

@@ -1,0 +1,13 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.75s
+1/48 paperless-xlang-applicationconfigurationviewset-0 without_map: correct=True opens=1 searches=2 error=None
+2/48 paperless-xlang-applicationconfigurationviewset-0 with_map: correct=True opens=3 searches=3 error=None
+3/48 paperless-xlang-applicationconfigurationviewset-0 importers_tool: correct=False opens=2 searches=1 error=None
+4/48 paperless-xlang-bulkeditobjectsview-1 with_map: correct=False opens=1 searches=1 error=Unknown tool: importers
+5/48 paperless-xlang-bulkeditobjectsview-1 importers_tool: correct=False opens=0 searches=0 error=Gemini HTTP 429
+Traceback (most recent call last):
+  File "C:\Users\giann\Documents\Code Arch\eval\run_agent.py", line 247, in <module>
+    if __name__=='__main__': main()
+                             ^^^^^^
+  File "C:\Users\giann\Documents\Code Arch\eval\run_agent.py", line 192, in main
+    raise RuntimeError('Provider failure; checkpoint saved, no further calls')
+RuntimeError: Provider failure; checkpoint saved, no further calls
