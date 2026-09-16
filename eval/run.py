@@ -13,7 +13,7 @@ CRATE = ROOT.parent
 STOP = set('a an the to of in at by and or for with from is this that'.split())
 
 def stem(word):
-    """Plural normalization, mirroring `stem` in src/label/validate.rs.
+    """Plural normalization (mirrored `stem` in the removed src/label/validate.rs, tag v0.2-with-llm).
 
     Metric v2 (2026-09-13): `ies` -> `y`, trailing `s` unless `ss`/`us`/`is`,
     len > 3. Both sides stem so errors are false accepts only. v1 numbers stay

@@ -1483,3 +1483,21 @@ labels and split memo preserved; an existing `CODEBASE.md` is never touched; the
 M1 harness still reproduces 32/40 → 40/40. The default is 1.1–3× faster (debug
 build: hono 1.4 s vs 4.3 s cold, 0.76 s vs 1.48 s warm). Map code is kept, opt-in,
 and unchanged.
+
+## 2026-09-17 — local-model labeling removed (0.3.0)
+
+The labeler only named domains in the opt-in map, lost on its own benchmark
+(best of four models 60% name specificity against the derived labeler's 75%;
+the LoRA path was never trained and would have needed ~55 pp on the 0.5B base),
+and was the only part needing a native toolchain (CMake, libclang, llama.cpp).
+Removed: `src/label/llm.rs`, `src/label/validate.rs`, the `llm` feature and
+`llama-cpp-2`, `--labeler`/`--model`/`--llm-threads`/`--lora`/`--lora-scale`,
+the label cache (`cache::FORMAT` 7), `eval-support`'s model branch and
+`clusters` op, and the model scorers, sweep and LoRA scripts with their data.
+Kept: the recorded reports (`labels-llm-report*`, `labels-sweep-report*`,
+`results-llm/`) and every section above as history. Full code: git tag
+`v0.2-with-llm`.
+
+Gate: `codearch --map` output byte-identical to the pre-removal binary on hono,
+commerce, typedi, realworld and paperless-ngx (21 files); eval checkouts clean.
+218 Rust tests (25 model tests removed) and 65 harness tests (14 removed) pass.

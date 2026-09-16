@@ -84,7 +84,6 @@ Map options (each requires `--map`):
 --seed <n>            clustering seed; changes tie-breaks only
 --no-index            skip .codearch/index.json
 --no-git              ignore git history (no co-change signal)
---labeler, --model    local-model naming (see below)
 ```
 
 A directory literally named `importers` or `callers` is analyzed with
@@ -216,59 +215,6 @@ interval. An interval that does not include 0 is a clear effect.
 
 </details>
 
-## Optional: local model labeling
-
-By default, domain names in the map are derived deterministically from directory
-structure, symbols and dependencies. No model is involved and output is
-byte-identical across runs.
-
-A small local model can name domains instead. It is **opt-in**, needs a native
-toolchain, and currently produces worse names than the default.
-
-### Prerequisites
-
-1. **CMake**, to build llama.cpp. Visual Studio bundles one at
-   `Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin` (add it to PATH);
-   otherwise install CMake directly.
-2. **LLVM / libclang**: `llama-cpp-sys-2` generates bindings with bindgen, which
-   needs libclang (`winget install LLVM.LLVM` on Windows). If the build reports
-   `Unable to find libclang`, set `LIBCLANG_PATH` to the directory containing it.
-
-### Build and run
-
-```
-cargo build --release --features llm
-codearch /path/to/repo --map --labeler llm --model /path/to/model.gguf
-```
-
-The tested model is Qwen2.5-Coder-1.5B-Instruct Q4_K_M (~1.1 GB) from
-[Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF).
-`--llm-threads <n>` sets inference threads (default: all cores).
-
-### What the model is allowed to do
-
-The model never sees source code. It receives structured facts from earlier
-deterministic stages (directory names, top symbols, entry points, external
-dependencies) and returns a name and one sentence, constrained by a GBNF grammar.
-
-Every generated name is checked against that evidence. A name whose words trace to
-nothing in the cluster, collides with a sibling or exceeds the length cap is replaced
-by the derived name. The summary is checked word by word the same way; an ungrounded
-summary keeps the generated name and uses the derived sentence. The run reports both
-fallback counts.
-
-Before enabling it:
-
-- **It is slower.** CPU inference takes minutes per repository rather than seconds.
-- **Determinism becomes conditional** on the model file and llama.cpp version.
-- **It currently produces worse names.** On 20 frozen production clusters,
-  Qwen2.5-Coder-1.5B scores 60% name specificity against the derived labeler's 75%,
-  and it is the best of four swept models (`python eval/score_sweep.py`).
-
-A LoRA fine-tune path is wired (`eval/harvest_lora.py`, `eval/train_lora.py`,
-`--lora`), with adoption gated at derived parity (75%). No adapter has been trained;
-it is optional research, not needed to use the tool.
-
 ## Development
 
 ```
@@ -276,7 +222,7 @@ cargo test
 python -m pytest -q eval/test_*.py
 ```
 
-243 Rust tests and 79 harness tests pass. `code_arch_architecture.md` records the
+218 Rust tests and 65 harness tests pass. `code_arch_architecture.md` records the
 design, every milestone, and every measured result. The benchmark harness, task
 builders and reproduction commands are documented in `eval/README.md`; paid runs
 need a provider key (`GEMINI_API_KEY`, `OPENROUTER_API_KEY` or `GROQ_API_KEY`), which
@@ -284,7 +230,7 @@ is never written to artifacts.
 
 ## Status
 
-A working tool at version 0.2. The lookups (`importers`, `callers`, `agents`, MCP) are the
+A working tool at version 0.3. The lookups (`importers`, `callers`, `agents`, MCP) are the
 recommended interface. Coverage is TypeScript, JavaScript and Python; other
 ecosystems and route frameworks are not supported yet.
 

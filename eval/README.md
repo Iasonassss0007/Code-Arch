@@ -173,73 +173,17 @@ only when explicitly run. It is not needed to reproduce the fallback scores.
 The lexical groundedness metric treats untraceable generic "Core" as a failure;
 this flags lack of traceability, not a claim that the model hallucinated code.
 
-## Head-to-head: local model vs derived labeler
+## Local-model labeling (removed in 0.3)
 
-`score_llm_labels.py` scores both labelers over the same frozen references in a
-single invocation, so neither arm can be advantaged by a code change made
-between runs. It re-runs the derived baseline rather than reading
-`labels-real-report.json`, and never overwrites that frozen derived record.
+The head-to-head (`score_llm_labels.py`) and multi-model sweep (`score_sweep.py`)
+compared local GGUF models against the derived labeler on the frozen 20 clusters.
+No model won: the best, Qwen2.5-Coder-1.5B, reached 60% name specificity against
+the derived labeler's 75%. The model labeler, its scorers and the LoRA pipeline were
+removed in codearch 0.3; the full code is at git tag `v0.2-with-llm`.
 
-```powershell
-cargo build --features llm
-python eval/score_llm_labels.py [path\to\model.gguf]
-```
-
-The model defaults to `models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`. Writes
-`labels-llm-report.md` and `.json`. Takes about two minutes on CPU for 20
-clusters. Measured result: the derived labeler wins on name specificity, 75% to
-55%; see the M0.5 section of `code_arch_architecture.md`.
-
-`labels-llm-report-prompt-v1.md` and `.json` are the superseded first run, kept
-deliberately. The only difference between the two is the wording of
-`build_prompt` in `src/label/validate.rs`: v1 asked for "a word shown above" and
-scored 40%, v2 asks for the most specific word and scores 55%. Fifteen points of
-the original gap were prompt design, not model capability. Re-running the scorer
-overwrites `labels-llm-report.*` but never the `-prompt-v1` copies.
-
-Read the two groundedness figures carefully. The reported `groundedness` covers
-**name and summary together** and requires every word to trace to an input
-token, while the in-product guard in `src/label/validate.rs` checks **only the
-name** and accepts it if **any** word traces. The generated summary is therefore
-unvalidated in the product, and every one of the model's groundedness failures
-under prompt v2 comes from summary prose rather than from the name — name-only
-groundedness is 100%. `unsupported_tokens` in the JSON attributes each failure
-token by token.
-
-Treat the name+summary figure with care when comparing a generator against the
-derived template. `BOILERPLATE` in `run.py:14` is the derived template's own
-connective vocabulary, so the derived arm cannot fail the metric on prose while
-any free-text sentence must. It measures conformity to that template, not
-accuracy.
-
-## Multi-model sweep (M6)
-
-`score_sweep.py` scores the derived baseline plus every model in
-`models-sweep.json` whose GGUF file is present, in one invocation by identical
-v2 code. Missing files are skipped with the exact `hf download` command, never
-a failure. The winner rule (specificity, then fewer summary fallbacks, then
-smaller file) is fixed in the script, not chosen after seeing numbers.
-
-```powershell
-cargo build --features llm
-python eval/score_sweep.py [--models ID ...] [--models-dir DIR]
-```
-
-Writes `labels-sweep-report.md` and `.json` (table, fallback rates, CPU wall
-time per model, rule winner, gap to derived). Never touches
-`labels-real-report.*` or `labels-llm-report.*`. Measured result on four
-models: derived 75% still beats the best model (Qwen2.5-Coder-1.5B, 60%),
-so `derived` stays the default. See the M6 section of
-`code_arch_architecture.md` for the table and findings.
-
-`build_lora_pairs.py` exports the frozen clusters as `lora-pairs.jsonl`
-(`{input, completion}` in the labeler's exact shape, prompts stored
-structured so rendering cannot drift). The references carry acceptable names
-but no gold summaries, so this is the name-head seed format — summary
-supervision needs teacher distillation over harvested production clusters,
-which is deferred. Hermetic tests live in `test_sweep.py` (registry shape,
-winner rule, markdown rendering, pair export; no model, no build, no
-network).
+The recorded results stay in the repository as history: `labels-llm-report.*`,
+`labels-llm-report-prompt-v1.*`, `labels-sweep-report.*` and `results-llm/`. See the
+M0.5, M6-lite and M6 sections of `code_arch_architecture.md`.
 
 ## Exit status
 
