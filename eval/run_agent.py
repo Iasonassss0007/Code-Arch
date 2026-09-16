@@ -136,7 +136,7 @@ def main():
             target=Path(tmp)/(source.name+'.md')
             state=Path(tmp)/(source.name+'-codearch')
             # --codearch-dir keeps imports.md out of the pinned checkout.
-            subprocess.run([str(binary),str(source),'--out',str(target),'--no-index','--codearch-dir',str(state)],capture_output=True,check=True)
+            subprocess.run([str(binary),str(source),'--map','--out',str(target),'--no-index','--codearch-dir',str(state)],capture_output=True,check=True)
             maps[repo]=target.read_text(encoding='utf-8')
             imports[repo]=(state/'imports.md').read_text(encoding='utf-8')
             # Written only when codearch found route links.

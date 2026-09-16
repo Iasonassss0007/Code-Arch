@@ -31,7 +31,7 @@ EXAMPLES = 5
 def render(binary, source, state, no_git):
     """One codearch run. Returns (index.json, imports.md text, stdout)."""
     state.mkdir(parents=True, exist_ok=True)
-    cmd = [str(binary), str(source), "--out", str(state / "CODEBASE.md"),
+    cmd = [str(binary), str(source), "--map", "--out", str(state / "CODEBASE.md"),
            "--codearch-dir", str(state)]
     if no_git:
         cmd.append("--no-git")

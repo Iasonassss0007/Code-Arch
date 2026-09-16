@@ -260,7 +260,7 @@ def main():
             # --codearch-dir keeps imports.md out of the corpus checkout, same
             # pattern as run_agent.py. The map text is unchanged: it always
             # names the canonical .codearch/imports.md.
-            subprocess.run([str(binary),str(source),'--out',str(target),'--no-index',
+            subprocess.run([str(binary),str(source),'--map','--out',str(target),'--no-index',
                             '--codearch-dir',str(state)],capture_output=True,check=True)
             maps[repo] = target.read_text(encoding='utf-8')
         for i, task in enumerate(tasks):

@@ -214,11 +214,11 @@ routes line present only when `routes.md` exists.
 
 | Gate | Result | Notes |
 |---|---|---|
-| 1 `--map` byte-identical (5 repos) | | |
-| 2 default indexes = `--map` indexes | | |
-| 3 parity | | |
-| 4 timings default vs `--map` | | |
-| 5 cache sequence | | |
-| 6 user files untouched | | |
-| 7 tests | | |
-| C1 M1 harness reproduction | | |
+| 1 `--map` byte-identical (5 repos) | **pass** | 21 output files (CODEBASE.md, index.json, imports.md, routes.md, per repo) hashed from the pre-change binary (`cc5a80d`), identical after the change |
+| 2 default indexes = `--map` indexes | **pass** | imports.md identical on all 5, routes.md on paperless-ngx; default wrote no CODEBASE.md / index.json |
+| 3 parity | **pass** | `check_query_parity.py` on default runs: 42/42 |
+| 4 timings default vs `--map` | reported | debug build, ms. Cold: hono 1,419 vs 4,344; commerce 871 vs 1,499; typedi 560 vs 1,154; realworld 596 vs 686; paperless-ngx 2,847 vs 3,254. Warm: hono 755 vs 1,482; paperless-ngx 1,118 vs 1,416. Parsing dominates paperless-ngx, so its gain is smaller |
+| 5 cache sequence | **pass** | hono `--map` → default → `--map`: third run parse-cache 377/377 hits, git from cache, CODEBASE.md / imports.md / index.json identical to the first; unit test keeps seeded labels and split memo |
+| 6 user files untouched | **pass** | fixture copy: generated CODEBASE.md hash unchanged after a default run, note printed; `agents --write` on a CRLF file appends, keeps CRLF, second run "already up to date"; missing index exits 2 |
+| 7 tests | **pass** | cargo 238 + 5 (7 agents, 1 index-only, 2 CLI added); pytest 79 |
+| C1 M1 harness reproduction | **pass** | `eval/run.py` with `--map`: without_map 32/40, with_map 40/40 as recorded. `check_import_index.py`: 34 tasks, recall 1.000, F1 0.979 (committed report is the older 37-task set) |

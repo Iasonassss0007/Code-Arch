@@ -76,7 +76,7 @@ def main():
                 raise ValueError(f"{repo} is not at its pinned revision")
             state = Path(tmp) / name
             state.mkdir()
-            subprocess.run([str(binary), str(source), "--out", str(state / "CODEBASE.md"),
+            subprocess.run([str(binary), str(source), "--map", "--out", str(state / "CODEBASE.md"),
                             "--no-index", "--codearch-dir", str(state)], capture_output=True, check=True)
             text = (state / "imports.md").read_text(encoding="utf-8")
             (args.out / f"{name}-imports.md").write_text(text, encoding="utf-8")
