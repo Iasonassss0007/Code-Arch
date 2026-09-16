@@ -83,7 +83,7 @@ pub struct FileParse {
     #[serde(default)]
     pub url_segment_seqs: Vec<Vec<String>>,
     /// TS: the file text names an HTTP client (`HttpClient`, `this.http.`,
-    /// `fetch(`, `axios`, `apiBaseUrl`).
+    /// `fetch(`, `axios`).
     #[serde(default)]
     pub http: bool,
     /// TS: base classes named in `extends` clauses, generics stripped.
@@ -224,7 +224,9 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
 }
 
 /// Text evidence that a TS file sends HTTP requests itself.
-const HTTP_MARKERS: &[&str] = &["HttpClient", "this.http.", "fetch(", "axios", "apiBaseUrl"];
+/// Client names only: a project's own config field (e.g. a base-URL setting)
+/// would make the rule agree with one codebase's conventions.
+const HTTP_MARKERS: &[&str] = &["HttpClient", "this.http.", "fetch(", "axios"];
 
 /// Object keys whose values are client-side route paths (Angular and React
 /// router config), never request URLs.
@@ -1049,11 +1051,13 @@ urlpatterns = [
         assert!(out.url_segments.contains(&"tags".to_string()));
         assert!(!out.url_segments.contains(&"Save".to_string()), "prose is not route evidence");
         let base = parse(
-            "export abstract class AbstractPaperlessService { url = `${environment.apiBaseUrl}x/` }
+            "export abstract class BaseService { http = inject(HttpClient); url = `${environment.apiBaseUrl}x/` }
 ",
             Language::Ts,
         );
         assert!(base.http);
+        let config_only = parse("export const url = `${environment.apiBaseUrl}x/`\n", Language::Ts);
+        assert!(!config_only.http, "a base-URL setting is not an HTTP client");
     }
 
     #[test]
