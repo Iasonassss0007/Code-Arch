@@ -253,10 +253,35 @@ pub fn route_join(inv: &Inventory, parsed: &[FileParse]) -> Vec<RouteLink> {
             break;
         }
     }
-    let callers: Vec<(FileId, HashSet<&str>)> = ts
+    let callers: Vec<(FileId, HashSet<&str>, Vec<Vec<&str>>)> = ts
         .iter()
         .filter(|p| http.contains(&p.file))
-        .map(|p| (p.file, p.url_segments.iter().map(String::as_str).collect()))
+        .map(|p| {
+            (
+                p.file,
+                p.url_segments.iter().map(String::as_str).collect(),
+                p.url_segment_seqs
+                    .iter()
+                    .map(|s| s.iter().map(String::as_str).collect())
+                    .collect(),
+            )
+        })
+        .collect();
+
+    // Every route key (mount dropped) across all views, for
+    // most-specific-wins: `` `…documents/chat/` `` holds `documents`, but
+    // only as the prefix of the longer `documents/chat` route.
+    let all_keys: HashSet<Vec<String>> = routes
+        .iter()
+        .map(|(_, r)| {
+            r.segments
+                .iter()
+                .enumerate()
+                .filter(|&(i, s)| !(i == 0 && mount.contains(s.as_str())))
+                .map(|(_, s)| s.clone())
+                .collect::<Vec<String>>()
+        })
+        .filter(|k: &Vec<String>| !k.is_empty())
         .collect();
 
     let mut links: HashMap<(String, FileId), (Vec<String>, Vec<FileId>)> = HashMap::new();
@@ -278,8 +303,8 @@ pub fn route_join(inv: &Inventory, parsed: &[FileParse]) -> Vec<RouteLink> {
         };
         let entry = links.entry((r.view.clone(), view_file)).or_default();
         entry.0.push(key.join("/"));
-        for (file, segs) in &callers {
-            if key.iter().all(|k| segs.contains(k)) {
+        for (file, segs, seqs) in &callers {
+            if key.iter().all(|k| segs.contains(k)) && !shadowed(&key, seqs, &all_keys) {
                 entry.1.push(*file);
             }
         }
@@ -298,6 +323,33 @@ pub fn route_join(inv: &Inventory, parsed: &[FileParse]) -> Vec<RouteLink> {
         .collect();
     out.sort_by(|a, b| (a.view_file, &a.view).cmp(&(b.view_file, &b.view)));
     out
+}
+
+/// Most-specific-wins within one file: key K is shadowed when at least one
+/// literal holds all of K's segments and every such literal also holds a
+/// strictly longer route key that extends K as a prefix. A URL spread over
+/// several literals (`resourceName = 'tags'` beside `'bulk_edit/'`) has no
+/// single literal holding K, so it still matches; a bare `'tags'` matches
+/// nothing longer, so it still matches. Only a prefix occurrence — K as the
+/// start of a longer route in the same literal — is evidence the file meant
+/// the longer route.
+fn shadowed(key: &[&str], seqs: &[Vec<&str>], all_keys: &HashSet<Vec<String>>) -> bool {
+    let mut covered = false;
+    for s in seqs {
+        if !key.iter().all(|k| s.contains(k)) {
+            continue;
+        }
+        covered = true;
+        let longer = all_keys.iter().any(|k2| {
+            k2.len() > key.len()
+                && k2.iter().zip(key.iter()).all(|(x, k)| x == k)
+                && k2.iter().all(|x| s.contains(&x.as_str()))
+        });
+        if !longer {
+            return false;
+        }
+    }
+    covered
 }
 
 /// `.codearch/routes.md`: one section per view, its routes, its callers.
@@ -686,8 +738,7 @@ class ProfileView: ...
     }
 
     #[test]
-    fn route_join_ignores_tests_and_ambiguous_views() {
-        let (mut inv, parsed) = parse_files(&[
+    fn route_join_ignores_tests_and_ambiguous_views() {        let (mut inv, parsed) = parse_files(&[
             ("src/urls.py", Language::Python, "urlpatterns = [path('api/tags/', TagView.as_view()), path('api/exports/', ExportView.as_view())]
 "),
             ("src/a.py", Language::Python, "class TagView: ...
@@ -705,5 +756,40 @@ class ExportView: ...
         assert_eq!(links.len(), 1, "{links:?}");
         assert_eq!(links[0].view, "ExportView");
         assert!(route_join(&inv, &parsed[3..]).is_empty(), "no Python routes, no links");
+    }
+
+    #[test]
+    fn route_join_prefers_the_longer_route_in_one_literal() {
+        // `` `…documents/chat/` `` names `documents` only as the prefix of
+        // the longer `documents/chat` route: the file calls the chat view,
+        // not the bare documents view. A sibling file with a bare
+        // `'documents'` word still matches the documents view, and a file
+        // spreading the URL over two literals still matches the long key.
+        let (inv, parsed) = parse_files(&[
+            ("src/urls.py", Language::Python,
+             "urlpatterns = [path('api/documents/', DocView.as_view()), path('api/documents/chat/', ChatView.as_view())]
+"),
+            ("src/views.py", Language::Python, "class DocView: ...
+class ChatView: ...
+"),
+            ("ui/chat.service.ts", Language::Ts,
+             "export class ChatService { constructor(private http: HttpClient) {} ask() { return this.http.post(`${environment.apiBaseUrl}documents/chat/`, {}) } }
+"),
+            ("ui/doc.service.ts", Language::Ts,
+             "export class DocService { constructor(private http: HttpClient) {} resourceName = 'documents' }
+"),
+            ("ui/spread.service.ts", Language::Ts,
+             "export class SpreadService extends DocService { resourceName = 'documents'; chat() { return this.url + 'chat/' } }
+"),
+        ]);
+        let links = route_join(&inv, &parsed);
+        let callers = |view: &str| -> Vec<String> {
+            links.iter().find(|l| l.view == view).map(|l| {
+                l.callers.iter().map(|c| inv.get(*c).rel.clone()).collect()
+            }).unwrap_or_default()
+        };
+        assert_eq!(callers("ChatView"), vec!["ui/chat.service.ts", "ui/spread.service.ts"]);
+        assert_eq!(callers("DocView"), vec!["ui/doc.service.ts", "ui/spread.service.ts"],
+            "chat.service names documents only inside documents/chat");
     }
 }
