@@ -13,7 +13,7 @@ import time
 import urllib.error
 import urllib.request
 
-from openrouter_agent import IMPORTERS_TOOL, SYSTEM
+from openrouter_agent import IMPORTERS_TOOL, ROUTES_TOOL, SYSTEM
 
 BASE = 'https://generativelanguage.googleapis.com/v1beta'
 DEFAULT_MODEL = 'gemini-3.1-flash-lite'
@@ -66,9 +66,15 @@ ACTION_SCHEMA = {
 def schema_for(system):
     # The enum is visible to the sampler: offering `importers` to arms whose
     # prompt lacks the tool made gemini-3.6-flash call it there (4/30 episodes).
+    # Tools and their argument fields appear only where the prompt names them.
+    tools = ['search', 'open', 'answer']
+    props = dict(ACTION_SCHEMA['properties'])
     if IMPORTERS_TOOL in system:
-        return ACTION_SCHEMA
-    props = dict(ACTION_SCHEMA['properties'], tool={'type': 'STRING', 'enum': ['search', 'open', 'answer']})
+        tools.append('importers')
+    if ROUTES_TOOL in system:
+        tools.append('route_callers')
+        props['view'] = {'type': 'STRING'}
+    props['tool'] = {'type': 'STRING', 'enum': tools}
     return dict(ACTION_SCHEMA, properties=props)
 
 

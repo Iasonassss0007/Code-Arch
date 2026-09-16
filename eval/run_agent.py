@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from run import ROOT, CRATE, Session, bridge, safe_file, set_f1, summarize
 from openrouter_agent import (complete, SYSTEM, SYSTEM_IMPACT, system_for,
-                              MAX_TOKENS_M1, MAX_TOKENS_IMPACT, IMPORTERS_TOOL)
+                              MAX_TOKENS_M1, MAX_TOKENS_IMPACT, IMPORTERS_TOOL, ROUTES_TOOL)
 import gemini_agent
 from build_tasks_nav import importers as walk_importers
 from check_import_index import parse_index
@@ -16,7 +16,20 @@ import groq_agent
 
 # The path CODEBASE.md names for the reverse import index.
 IMPORTS_REL='.codearch/imports.md'
-ARMS=('without_map','with_map','index_only','importers_tool')
+ARMS=('without_map','with_map','index_only','importers_tool','routes_tool')
+
+
+def parse_routes(text):
+    """`.codearch/routes.md` -> {view name: [caller paths]}."""
+    out={}
+    view=None
+    for line in text.splitlines():
+        if line.startswith('## `'):
+            view=line[4:line.index('`',4)]
+            out[view]=[]
+        elif view and line.startswith('- `') and line.endswith('`'):
+            out[view].append(line[3:-1])
+    return out
 
 
 def episode(session, model, request_fn=complete):
@@ -111,7 +124,7 @@ def main():
     subprocess.run(['cargo','build','--locked','--bins'],cwd=CRATE,check=True)
     helper=CRATE/'target/debug'/('eval-support'+suffix)
     binary=CRATE/'target/debug'/('codearch'+suffix)
-    maps={}; imports={}; corpus={}; revisions={}
+    maps={}; imports={}; routes={}; corpus={}; revisions={}
     with tempfile.TemporaryDirectory(prefix='codearch-agent-') as tmp:
         for repo in sorted({t['repo'] for t in tasks}):
             source=(ROOT/repo).resolve()
@@ -126,12 +139,16 @@ def main():
             subprocess.run([str(binary),str(source),'--out',str(target),'--no-index','--codearch-dir',str(state)],capture_output=True,check=True)
             maps[repo]=target.read_text(encoding='utf-8')
             imports[repo]=(state/'imports.md').read_text(encoding='utf-8')
+            # Written only when codearch found route links.
+            routes[repo]=(state/'routes.md').read_text(encoding='utf-8') if (state/'routes.md').exists() else ''
             for file in sorted(source.rglob('*')):
                 if file.is_file() and '.git' not in file.parts:
                     corpus[file.relative_to(ROOT).as_posix()]=hashlib.sha256(file.read_bytes()).hexdigest()
         config={'provider':args.provider,'model':args.model,'repeats':args.repeats,'arms':ALL_ARMS,'tasks':tasks,'revisions':revisions,
                 'corpus_sha256':corpus,'map_sha256':{k:hashlib.sha256(v.encode()).hexdigest() for k,v in maps.items()},
                 'imports_sha256':{k:hashlib.sha256(v.encode()).hexdigest() for k,v in imports.items()},
+                'routes_sha256':{k:hashlib.sha256(v.encode()).hexdigest() for k,v in routes.items()},
+                'system_prompt_routes_tool':SYSTEM_IMPACT+IMPORTERS_TOOL+ROUTES_TOOL,
                 'system_prompt':SYSTEM,'system_prompt_impact':SYSTEM_IMPACT,'system_prompt_importers_tool':SYSTEM_IMPACT+IMPORTERS_TOOL,'max_actions':12,'temperature':0,'seed':24301,
                 'source_sha256':{str(f.relative_to(CRATE)):hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted((CRATE/'src').rglob('*.rs'))+[CRATE/'Cargo.lock',ROOT/'run.py',Path(__file__),ROOT/'openrouter_agent.py']}}
         checkpoint=args.out/'checkpoint.json'
@@ -169,7 +186,8 @@ def main():
                     has_index=arm in ('with_map','index_only')
                     session=Session((ROOT/task['repo']).resolve(),task['query'],maps[task['repo']] if arm=='with_map' else '',
                                     map_files={IMPORTS_REL:imports[task['repo']]} if has_index else None,
-                                    importers=(lambda rel,back=parse_index(imports[task['repo']]):walk_importers(back,rel)) if arm=='importers_tool' else None)
+                                    importers=(lambda rel,back=parse_index(imports[task['repo']]):walk_importers(back,rel)) if arm in ('importers_tool','routes_tool') else None,
+                                    route_callers=parse_routes(routes[task['repo']]) if arm=='routes_tool' else None)
                     system=system_for(task,arm)
                     # Impact answers hold 2-20 paths; 512 truncates them
                     # (recorded live on the Gemini probe). M1 tasks keep 512.
@@ -182,7 +200,7 @@ def main():
                          'correct':error is None and session.answer==sorted(set(task['expected_files'])),
                          'f1':0.0 if error else set_f1(session.answer,task['expected_files']),
                          'expected':sorted(set(task['expected_files'])),
-                         'answer':session.answer,'files_opened':len(session.opened),'searches':session.searches,'lookups':session.lookups,
+                         'answer':session.answer,'files_opened':len(session.opened),'searches':session.searches,'lookups':session.lookups,'route_lookups':session.route_lookups,
                          'tokens':0,'error':error,'calls':calls,'usage':usage(calls),'trace':session.trace,
                          'elapsed_seconds':round(time.monotonic()-start,3)}
                     rows.append(row)
@@ -222,6 +240,8 @@ def main():
         write_json(args.out/'report.json',report)
         for repo,text in maps.items(): (args.out/(Path(repo).name+'-CODEBASE.md')).write_text(text,encoding='utf-8')
         for repo,text in imports.items(): (args.out/(Path(repo).name+'-imports.md')).write_text(text,encoding='utf-8')
+        for repo,text in routes.items():
+            if text: (args.out/(Path(repo).name+'-routes.md')).write_text(text,encoding='utf-8')
         impact=all(t.get('kind')=='impact' for t in tasks)
         lines=['# M1v2 real-agent evaluation (impact)' if impact else '# M1 real-agent evaluation','',f'Model: `{args.model}`. {len(tasks)} tasks, {args.repeats} fresh trials per arm.',
                '', '| Arm | Mean F1 | Exact | Context tokens | Provider tokens | Files opened | Searches | USD |',

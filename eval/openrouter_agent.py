@@ -28,9 +28,16 @@ IMPORTERS_TOOL = '''
 {"tool":"importers","path":"relative/path.ts"} returns every file that imports that path, directly (depth 1) or transitively (depth 2+), from a static import index. It may miss runtime or string-based coupling.'''
 
 
+# routes_tool arm: the importers tool plus the cross-language hop it cannot see.
+ROUTES_TOOL = '''
+{"tool":"route_callers","view":"ViewClassName"} returns frontend files whose request URLs name a route served by that backend view, from a static route index. It may miss URLs built at runtime and may include files that merely mention the route's words.'''
+
+
 def system_for(task, arm=None):
     if task.get('kind') != 'impact':
         return SYSTEM
+    if arm == 'routes_tool':
+        return SYSTEM_IMPACT + IMPORTERS_TOOL + ROUTES_TOOL
     return SYSTEM_IMPACT + IMPORTERS_TOOL if arm == 'importers_tool' else SYSTEM_IMPACT
 
 
