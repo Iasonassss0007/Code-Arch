@@ -1,18 +1,13 @@
 [package]
 name = "codearch"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
 description = "Local code-graph lookups for coding agents: importers and cross-language route callers"
 repository = "https://github.com/Iasonassss0007/Code-Arch"
 default-run = "codearch"
 
-[features]
-default = []
-llm = ["dep:llama-cpp-2"]
-
 [dependencies]
-llama-cpp-2 = { version = "0.1.156", optional = true }
 anyhow = "1.0.104"
 clap = { version = "4.6.6", features = ["derive"] }
 ignore = "0.4.33"

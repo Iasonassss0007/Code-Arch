@@ -1,4 +1,4 @@
-//! JSON-only bridge to the production tokenizer and labeler for M1.
+//! JSON-only bridge to the production tokenizer and derived labeler for the eval harness.
 use codearch::label::{ClusterSummary, DerivedLabeler, Labeler};
 use serde_json::{Value, json};
 use std::io::{self, Read};
@@ -16,40 +16,6 @@ fn main() -> anyhow::Result<()> {
     io::stdin().read_to_string(&mut input)?;
     let v: Value = serde_json::from_str(&input)?;
     let result = match v["op"].as_str() {
-        Some("clusters") => {
-            // Production stages, frozen before any labels are generated.
-            let inv =
-                codearch::inventory::collect(std::path::Path::new(v["root"].as_str().unwrap()))?;
-            let profile = codearch::profile::detect(&inv);
-            let routes = codearch::profile::route_hints(&profile, &inv);
-            let parsed = codearch::parse::parse_all(&inv);
-            let res = codearch::resolve::resolve_all(&inv, &parsed, &profile.mappings, &profile.package_dirs);
-            let graph = codearch::graph::build(&inv, &res, &codearch::git::CoChange::default(), &[]);
-            let part = if graph.edge_count() == 0 {
-                codearch::cluster::directory_partition(&inv)
-            } else {
-                codearch::cluster::partition_targeting(
-                    &graph,
-                    codearch::DEFAULT_MAX_DOMAINS,
-                    0x5EED,
-                )
-            };
-            let scores = codearch::rank::score(&graph, &routes, &[]);
-            let summaries =
-                codearch::label::summarize(&inv, &parsed, &res, &graph, &part, &scores, &routes);
-            json!(
-                summaries
-                    .iter()
-                    .map(|s| json!({
-                        "id": s.id, "dirs": s.dirs, "top_symbols": s.top_symbols,
-                        "external_deps": s.external_deps, "entry_points": s.entry_points,
-                        "depends_on": s.depends_on, "depended_on_by": s.depended_on_by,
-                        "file_count": s.size(),
-                        "files": s.files.iter().map(|&f| &inv.get(f).rel).collect::<Vec<_>>()
-                    }))
-                    .collect::<Vec<_>>()
-            )
-        }
         Some("tokens") => {
             // Fail instead of silently estimating benchmark tokens.
             let bpe = tiktoken_rs::cl100k_base()?;
@@ -61,29 +27,10 @@ fn main() -> anyhow::Result<()> {
             )
         }
         Some("labels") => {
-            // `model` selects the labeler under test. Absent means the derived
-            // baseline, so existing scoring runs are unchanged.
-            let labeler: Box<dyn Labeler> = match v["model"].as_str() {
-                None => Box::new(DerivedLabeler),
-                #[cfg(feature = "llm")]
-                Some(path) => {
-                    let threads = std::thread::available_parallelism()
-                        .map_or(4, |n| n.get() as i32);
-                    let lora = v["lora"].as_str().map(std::path::Path::new);
-                    let scale = v["lora_scale"].as_f64().unwrap_or(1.0) as f32;
-                    Box::new(codearch::label::llm::LlmLabeler::load_with_lora(
-                        std::path::Path::new(path),
-                        lora,
-                        scale,
-                        threads,
-                    )?)
-                }
-                #[cfg(not(feature = "llm"))]
-                Some(_) => anyhow::bail!(
-                    "eval-support was built without the `llm` feature.
-Rebuild with: cargo build --features llm"
-                ),
-            };
+            if v.get("model").is_some() {
+                anyhow::bail!("model labeling was removed in codearch 0.3 (see tag v0.2-with-llm)");
+            }
+            let labeler = DerivedLabeler;
 
             let mut siblings = std::collections::HashMap::<String, Vec<String>>::new();
             let mut labels = Vec::new();
@@ -111,7 +58,7 @@ Rebuild with: cargo build --features llm"
                 taken.push(label.name.clone());
                 labels.push(json!({"id": c["id"], "name": label.name, "summary": label.summary}));
             }
-            json!({"labels": labels, "fell_back": labeler.fell_back(), "summary_fell_back": labeler.summary_fell_back()})
+            json!({"labels": labels})
         }
         _ => anyhow::bail!("unknown operation"),
     };

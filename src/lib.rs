@@ -1,6 +1,6 @@
 //! Code Arch — analyze a repository locally and emit a compact navigation map.
 //!
-//! Pipeline (M3 covers stages 0-10; the LLM labeler in stage 9 is optional):
+//! Pipeline (stages 0-10):
 //!
 //! ```text
 //! 0  Inventory   walk, classify, exclude
@@ -11,12 +11,12 @@
 //! 5  Graph       weighted multi-signal graph
 //! 6  Cluster     modularity clustering with a connectivity guarantee
 //! 7  Rank        importance scoring
-//! 9  Label       names and summaries          <- the only model stage
+//! 9  Label       names and summaries
 //! 10 Render      budget-aware assembly
 //! ```
 //!
-//! Every stage but 9 is deterministic: a run on unchanged input reproduces
-//! byte for byte.
+//! Every stage is deterministic: a run on unchanged input reproduces byte for
+//! byte.
 
 pub mod agents;
 pub mod cluster;
@@ -50,16 +50,6 @@ pub const DEFAULT_BUDGET: usize = 4_000;
 /// More domains than this is a listing, not a map.
 pub const DEFAULT_MAX_DOMAINS: usize = 12;
 
-/// Which stage 9 implementation to use.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum LabelerKind {
-    /// Deterministic, no model, no network. The default.
-    #[default]
-    Derived,
-    /// Local GGUF model via llama.cpp. Requires the `llm` build feature.
-    Llm,
-}
-
 pub struct Options {
     pub root: PathBuf,
     pub out: Option<PathBuf>,
@@ -74,13 +64,6 @@ pub struct Options {
     /// Where `.codearch` outputs go (default: `<root>/.codearch`). The root map
     /// still names the canonical location; relocating is for tooling.
     pub codearch_dir: Option<PathBuf>,
-    pub labeler: LabelerKind,
-    pub model_path: Option<PathBuf>,
-    pub llm_threads: Option<i32>,
-    /// Trained LoRA adapter applied on top of `model_path` (M6 path).
-    pub lora_path: Option<PathBuf>,
-    /// llama.cpp `--lora-scale`; 1.0 is the trained strength.
-    pub lora_scale: f32,
     /// Build the full map (`CODEBASE.md`, `index.json`). When false, the run
     /// stops after contracts and writes only the lookup indexes. The library
     /// default stays `true`; the CLI defaults to indexes only (`--map` opts in).
@@ -98,11 +81,6 @@ impl Default for Options {
             write_index: true,
             no_git: false,
             codearch_dir: None,
-            labeler: LabelerKind::Derived,
-            model_path: None,
-            llm_threads: None,
-            lora_path: None,
-            lora_scale: 1.0,
             map: true,
         }
     }
@@ -132,76 +110,10 @@ impl Timer {
     }
 }
 
-/// Identity of the generative labeler: model path plus size and mtime, so a
-/// swapped model file invalidates stored labels without hashing gigabytes.
-fn model_identity(path: &PathBuf) -> String {
-    let sig = std::fs::metadata(path)
-        .ok()
-        .and_then(|m| m.modified().ok())
-        .map(|t| {
-            t.duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs().to_string())
-                .unwrap_or_default()
-        })
-        .unwrap_or_default();
-    let size = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
-    format!("{}:{size}:{sig}", path.display())
-}
-
-/// Cache key for one LLM label: everything the label may depend on, and
-/// nothing it cannot see. Member rels are sorted — importance order shifts
-/// with scores, membership is what the label describes.
-fn label_evidence_key(
-    inv: &inventory::Inventory,
-    s: &label::ClusterSummary,
-    model: &str,
-) -> String {
-    let mut rels: Vec<&str> = s.files.iter().map(|&f| inv.get(f).rel.as_str()).collect();
-    rels.sort_unstable();
-    cache::sha_hex(
-        format!(
-            "llm|{model}|{}|{}|{}|{}|{}",
-            rels.join(","),
-            s.dirs.join(","),
-            s.top_symbols.join(","),
-            s.entry_points.join(","),
-            s.external_deps.join(","),
-        )
-        .as_bytes(),
-    )
-}
-
-/// One label through the shared cache-or-compute path. Used by the flat run
-/// and the split run alike, so names agree wherever the same evidence meets
-/// the same `taken` order.
-fn label_one(
-    labeler: &Box<dyn label::Labeler>,
-    store: &mut cache::Store,
-    llm_model_id: &Option<String>,
-    inv: &inventory::Inventory,
-    s: &label::ClusterSummary,
-    taken: &mut Vec<String>,
-) -> Label {
-    let key = llm_model_id
-        .as_ref()
-        .map(|model| label_evidence_key(inv, s, model));
-    if let Some(cached) = key.as_ref().and_then(|k| store.labels_llm.get(k)) {
-        taken.push(cached.name.clone());
-        return Label {
-            name: cached.name.clone(),
-            summary: cached.summary.clone(),
-        };
-    }
-    let l = labeler.label(s, taken);
-    if let Some(k) = key {
-        store.labels_llm.insert(
-            k,
-            cache::StoredLabel {
-                name: l.name.clone(),
-                summary: l.summary.clone(),
-            },
-        );
-    }
+/// One label. Used by the flat run and the split run alike, so names agree
+/// wherever the same evidence meets the same `taken` order.
+fn label_one(s: &label::ClusterSummary, taken: &mut Vec<String>) -> Label {
+    let l = DerivedLabeler.label(s, taken);
     taken.push(l.name.clone());
     l
 }
@@ -209,11 +121,7 @@ fn label_one(
 /// Fingerprint for the split-verdict memo: file set and contents, git HEAD
 /// (or its absence), and every option the verdict can depend on. Sorted so
 /// HashMap order never leaks into the decision.
-fn split_fingerprint(
-    store: &cache::Store,
-    opts: &Options,
-    llm_model_id: &Option<String>,
-) -> String {
+fn split_fingerprint(store: &cache::Store, opts: &Options) -> String {
     let mut parts: Vec<String> = store
         .files
         .iter()
@@ -227,11 +135,6 @@ fn split_fingerprint(
     parts.push(format!("nogit:{}", opts.no_git));
     parts.push(format!("budget:{}:{}", opts.budget, opts.max_domains));
     parts.push(format!("seed:{}", opts.seed));
-    parts.push(format!(
-        "labeler:{:?}:{}",
-        opts.labeler,
-        llm_model_id.as_deref().unwrap_or("")
-    ));
     cache::sha_hex(parts.join("\n").as_bytes())
 }
 
@@ -272,11 +175,6 @@ pub struct RunReport {
     /// The domain cap could not be met without merging groups of files that
     /// share no dependency at all. Reported rather than forced.
     pub over_domain_cap: bool,
-    /// Clusters the chosen labeler could not name itself. Always 0 for the
-    /// derived labeler; reported rather than hidden for the model path.
-    pub labels_fell_back: usize,
-    /// Generated names kept with a derived summary (summary guard only).
-    pub labels_summary_fell_back: usize,
     /// Cross-language contract pairs fused into the graph: exact URL matches
     /// plus shared rare symbol shapes.
     pub contracts: usize,
@@ -429,8 +327,6 @@ pub fn run(opts: &Options) -> Result<RunReport> {
             used_directory_fallback: false,
             truncated: false,
             over_domain_cap: false,
-            labels_fell_back: 0,
-            labels_summary_fell_back: 0,
             contracts: contracts.len() + semantic_contracts.len(),
             url_contracts: contracts.len(),
             semantic_contracts: semantic_contracts.len(),
@@ -451,12 +347,7 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     // Split-verdict memo: identical inputs decide identically, so a warm
     // re-run skips rebuilding the flat map just to measure it again. Any
     // content, history, or option change re-probes exactly.
-    let llm_model_id = if opts.labeler == LabelerKind::Llm {
-        opts.model_path.as_ref().map(model_identity)
-    } else {
-        None
-    };
-    let fingerprint = split_fingerprint(&store, opts, &llm_model_id);
+    let fingerprint = split_fingerprint(&store, opts);
     let memo_split = match &store.split_decision {
         Some(d) if d.fingerprint == fingerprint => Some(d.split),
         _ => None,
@@ -498,58 +389,12 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     // 9 — Label
     let summaries = label::summarize(&inv, &parsed, &res, &g, &part, &scores, &routes);
     timer.done("summarize");
-    let labeler: Box<dyn Labeler> = match opts.labeler {
-        LabelerKind::Derived => Box::new(DerivedLabeler),
-        #[cfg(feature = "llm")]
-        LabelerKind::Llm => {
-            let path = opts
-                .model_path
-                .as_ref()
-                .context("--labeler llm requires --model <path.gguf>")?;
-            let threads = opts.llm_threads.unwrap_or_else(|| {
-                std::thread::available_parallelism().map_or(4, |n| n.get() as i32)
-            });
-            let lora = opts
-                .lora_path
-                .as_deref()
-                .and_then(|p| p.to_str())
-                .map(std::path::Path::new);
-            Box::new(label::llm::LlmLabeler::load_with_lora(
-                path,
-                lora,
-                opts.lora_scale,
-                threads,
-            )?)
-        }
-        #[cfg(not(feature = "llm"))]
-        LabelerKind::Llm => anyhow::bail!(
-            "this binary was built without the `llm` feature.
-Rebuild with: cargo build --release --features llm"
-        ),
-    };
     let mut taken: Vec<String> = Vec::new();
     let mut labels: Vec<Label> = Vec::with_capacity(summaries.len());
     // `summarize` already ordered domains most-important first, so the domain
     // a reader cares about most wins the unqualified name.
-    //
-    // LLM labels consult the cache by evidence hash; derived labels always
-    // recompute (milliseconds post-split), so there is exactly one labeling
-    // path and no subset-dedup divergence. A hit skips inference, not the
-    // fallback accounting below — a stored label already survived it.
-    let llm_model_id = if opts.labeler == LabelerKind::Llm {
-        opts.model_path.as_ref().map(model_identity)
-    } else {
-        None
-    };
     for s in &summaries {
-        labels.push(label_one(
-            &labeler,
-            &mut store,
-            &llm_model_id,
-            &inv,
-            s,
-            &mut taken,
-        ));
+        labels.push(label_one(s, &mut taken));
     }
     timer.done("label");
 
@@ -651,9 +496,6 @@ Rebuild with: cargo build --release --features llm"
             &summaries,
             &labels,
             &mut taken,
-            &labeler,
-            &mut store,
-            &llm_model_id,
         )?
     };
 
@@ -722,8 +564,6 @@ Rebuild with: cargo build --release --features llm"
         used_directory_fallback,
         truncated: rendered.as_ref().map(|r| r.truncated).unwrap_or(false),
         over_domain_cap: summaries.len() > opts.max_domains,
-        labels_fell_back: labeler.fell_back(),
-        labels_summary_fell_back: labeler.summary_fell_back(),
         contracts: contracts.len() + semantic_contracts.len(),
         url_contracts: contracts.len(),
         semantic_contracts: semantic_contracts.len(),
@@ -757,9 +597,6 @@ fn render_split(
     summaries: &[label::ClusterSummary],
     labels: &[Label],
     taken: &mut Vec<String>,
-    labeler: &Box<dyn label::Labeler>,
-    store: &mut cache::Store,
-    llm_model_id: &Option<String>,
 ) -> anyhow::Result<(String, Option<serde_json::Value>, usize, usize)> {
     let mut units = split::coarse(g, rels, opts.seed, opts.max_domains);
 
@@ -825,7 +662,7 @@ fn render_split(
     let mut coarse_labels: Vec<Label> = Vec::with_capacity(units.len());
     for (unit, s) in units.iter().zip(&coarse_summaries) {
         if unit.kind == split::UnitKind::Full {
-            coarse_labels.push(label_one(labeler, store, llm_model_id, inv, s, taken));
+            coarse_labels.push(label_one(s, taken));
         } else {
             coarse_labels.push(bucket_label(unit));
         }
@@ -965,13 +802,8 @@ mod tests {
         std::fs::remove_file(tmp.join("CODEBASE.md")).unwrap();
         std::fs::remove_file(state.join("index.json")).unwrap();
         // Entries only a map run fills; the index-only run must carry them over.
-        let mut seeded = cache::Store::load(&state);
-        seeded.labels_llm.insert(
-            "k".into(),
-            cache::StoredLabel { name: "Kept".into(), summary: "kept".into() },
-        );
-        let split_before = seeded.split_decision.clone().map(|d| d.fingerprint);
-        seeded.save(&state).unwrap();
+        let split_before = cache::Store::load(&state).split_decision.map(|d| d.fingerprint);
+        assert!(split_before.is_some());
 
         let idx = run(&Options { map: false, ..map_opts }).unwrap();
         let idx_index = std::fs::read_to_string(&idx.imports_path).unwrap();
@@ -984,7 +816,6 @@ mod tests {
         assert_eq!(idx_index, full_index);
         assert_eq!(idx.import_edges, full.import_edges);
         assert_eq!(idx.domains, 0);
-        assert!(after.labels_llm.contains_key("k"));
         assert_eq!(after.split_decision.map(|d| d.fingerprint), split_before);
     }
 
@@ -1260,17 +1091,17 @@ mod tests {
             ..Default::default()
         };
         let opts = Options::default();
-        let fp1 = split_fingerprint(&store, &opts, &None);
+        let fp1 = split_fingerprint(&store, &opts);
         // Same inputs → same verdict key.
-        assert_eq!(fp1, split_fingerprint(&store, &opts, &None));
+        assert_eq!(fp1, split_fingerprint(&store, &opts));
         // Any content change → different key.
         let mut store2 = store.clone();
         store2.files.get_mut("a.ts").unwrap().hash = "h2".to_string();
-        assert_ne!(fp1, split_fingerprint(&store2, &opts, &None));
+        assert_ne!(fp1, split_fingerprint(&store2, &opts));
         // Budget is part of the key: the verdict is budget-relative.
         let mut opts2 = Options::default();
         opts2.budget += 1;
-        assert_ne!(fp1, split_fingerprint(&store, &opts2, &None));
+        assert_ne!(fp1, split_fingerprint(&store, &opts2));
     }
 
     fn walk_files(dir: &std::path::Path) -> Vec<(PathBuf, String)> {

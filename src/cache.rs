@@ -18,8 +18,6 @@
 //! git     HEAD sha match -> reuse stored pairs/churn mapped through the
 //!         current inventory (missing paths dropped). History is a pure
 //!         function of HEAD, so same HEAD means same signal.
-//! labels  LLM path only, keyed by evidence hash. Derived labels recompute
-//!         (milliseconds post-split) so there is exactly one labeling path.
 //! ```
 
 use crate::parse::FileParse;
@@ -39,7 +37,9 @@ use std::path::Path;
 /// for most-specific-wins in `route_join`).
 /// v6: `http` no longer set by a base-URL config name alone; cached flags
 /// from v5 would keep the old answer.
-pub const FORMAT: u32 = 6;
+/// v7: the local-model label cache (`labels_llm`) is removed with the model
+/// labeler.
+pub const FORMAT: u32 = 7;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StoredFile {
@@ -64,12 +64,6 @@ pub struct StoredGit {
     pub commits_read: usize,
 }
 
-#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
-pub struct StoredLabel {
-    pub name: String,
-    pub summary: String,
-}
-
 /// Memoized split verdict: same fingerprint, same decision, without
 /// rebuilding the flat map to measure it again. The fingerprint covers
 /// everything the verdict can depend on — file set and contents, git HEAD,
@@ -86,7 +80,6 @@ pub struct Store {
     pub version: u32,
     pub files: HashMap<String, StoredFile>,
     pub git: Option<StoredGit>,
-    pub labels_llm: HashMap<String, StoredLabel>,
     pub split_decision: Option<SplitDecision>,
 }
 

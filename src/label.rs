@@ -3,14 +3,12 @@
 //! Job    Name and describe clusters the graph already found.
 //! In     ClusterSummary — deterministic, compact, no raw source
 //! Out    { name, summary } per cluster
-//! Fails  Generation failure -> derived name and templated summary. A run
-//!        never blocks on the model.
+//! Fails  Cannot fail: names derive from directories, symbols and dependencies.
 //!
-//! The model never sees source code and never invents a relationship: every
-//! field of `ClusterSummary` is produced by an earlier deterministic stage.
-//! M0 ships only `DerivedLabeler`, the declared fallback path. The llama.cpp
-//! implementation slots in behind the same trait at M0.5, which is why the
-//! trait exists now rather than later.
+//! Every field of `ClusterSummary` is produced by an earlier deterministic stage.
+//! A local-model labeler existed from M0.5 to 0.2 and was removed in 0.3: it
+//! lost to `DerivedLabeler` on the frozen set (best model 60% name specificity
+//! against 75%). It remains in git history at tag `v0.2-with-llm`.
 
 use crate::cluster::Partition;
 use crate::graph::CodeGraph;
@@ -19,10 +17,6 @@ use crate::parse::FileParse;
 use crate::resolve::Resolution;
 use crate::types::{FileId, RouteHint};
 use std::collections::HashMap;
-
-#[cfg(feature = "llm")]
-pub mod llm;
-pub mod validate;
 
 /// Directory names that describe layout, not domain.
 const GENERIC_SEGMENTS: &[&str] = &[
@@ -90,18 +84,6 @@ pub struct Label {
 /// and one sentence satisfies it.
 pub trait Labeler {
     fn label(&self, summary: &ClusterSummary, siblings: &[String]) -> Label;
-
-    /// How many clusters this labeler could not name itself and had to derive.
-    /// Zero for labelers that cannot fail, which is why it has a default.
-    fn fell_back(&self) -> usize {
-        0
-    }
-
-    /// Generated names kept with a derived summary because the generated
-    /// sentence failed the summary guard. Zero for labelers without a model.
-    fn summary_fell_back(&self) -> usize {
-        0
-    }
 }
 
 /// The deterministic fallback: no model, no network, no invention.
