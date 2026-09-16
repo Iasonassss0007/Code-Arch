@@ -129,10 +129,9 @@ instead, as are names that collide with a sibling or exceed the length cap. A
 confident but wrong name is worse than a plain one, because the agent will trust
 it. The run reports how many domains fell back.
 
-The generated *summary* is not checked. This is a known gap, not a design
-choice: the guard validates the name and lets the sentence underneath it through
-unvalidated. Measurement shows that is where the model's untraceable vocabulary
-actually appears.
+The generated *summary* is checked the same way, word by word. If any word
+traces to nothing in the evidence, the generated name is kept and the derived
+sentence replaces the summary. The run reports how many summaries fell back.
 
 Three consequences worth knowing before enabling it:
 
@@ -168,7 +167,9 @@ kinds: exact URL paths and shared rare symbol shapes (`createUser` ↔
 `create_user`). The LoRA fine-tune path is harvested and wired end to end
 (66 production clusters; `python eval/train_lora.py` trains against
 llama.cpp and gates the adapter on the frozen 20-cluster set; adoption
-requires derived-parity 75%).
+requires derived-parity 75%). No adapter has been trained: training is
+optional research, not needed to use the tool, and the derived labeler
+stays the default.
 What the maps are worth is reported in `code_arch_architecture.md` rather
 than summarized favourably here — including negative ones: on a 24-task
 file-location benchmark, supplying the full map did not improve a coding
