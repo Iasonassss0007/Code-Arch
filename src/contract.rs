@@ -183,11 +183,19 @@ pub struct RouteLink {
 /// Match      every remaining route segment appears among the file's
 ///            literal segments. Segment sets, not order: a template's
 ///            pieces are spread over fields and constructor assignments.
+///            Literals in non-request positions (module paths, subscript
+///            keys, router paths, form/DOM accessors, `.replace()` patterns,
+///            `#` fragments) never contribute segments, and a key occurring
+///            only as the prefix of a longer route in the same literal
+///            matches the longer route, not the prefix.
 /// ```
 ///
-/// Deliberate limits: single common-word routes (`tasks`, `status`) match
-/// UI files that use the word as a router path; measured on paperless-ngx
-/// against the xlang oracle, precision 0.78 and recall 1.00 over 43 views.
+/// Deliberate limits: `logo` matches a component whose CSS class list
+/// (`['logo'].concat(...).join(' ')`) and Angular file metadata
+/// (`templateUrl`, `styleUrls`) reuse the word — telling a class name from
+/// a request word there needs dataflow the segment scan does not have.
+/// Measured on paperless-ngx against the xlang oracle, precision 0.98 and
+/// recall 1.00 over 43 views (one false positive: that `logo` component).
 pub fn route_join(inv: &Inventory, parsed: &[FileParse]) -> Vec<RouteLink> {
     let routes: Vec<(FileId, &crate::parse::Route)> = parsed
         .iter()
