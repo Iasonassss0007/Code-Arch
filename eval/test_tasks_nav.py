@@ -182,6 +182,24 @@ def test_importers_tool_is_refused_without_the_arm_and_prompt_only_extends(tmp_p
     assert '"importers"' in system_for(impact, "importers_tool")
 
 
+def test_query_parity_comparisons_match_cli_json_to_eval_walks():
+    from check_query_parity import importers_equal, callers_equal
+    cli = {"target": "a.ts",
+           "importers": [{"path": "b.ts", "depth": 1}, {"path": "c.ts", "depth": 2}]}
+    assert importers_equal(cli, {"b.ts": 1, "c.ts": 2})
+    assert not importers_equal(cli, {"b.ts": 1})
+    assert not importers_equal(
+        {"target": "a.ts", "importers": [{"path": "b.ts", "depth": 2}]},
+        {"b.ts": 1})
+    assert importers_equal({"target": "a.ts", "importers": []}, {})
+    cli_routes = {"view": "V", "matches": [
+        {"file": "a.py", "routes": ["x"], "callers": ["f1.ts"]},
+        {"file": "b.py", "routes": ["y"], "callers": ["f2.ts", "f1.ts"]}]}
+    assert callers_equal(cli_routes, ["f1.ts", "f2.ts"])
+    assert not callers_equal(cli_routes, ["f1.ts"])
+    assert callers_equal({"view": "V", "matches": []}, [])
+
+
 def test_session_route_callers_tool_serves_the_route_index(tmp_path):
     from run import Session
     from run_agent import parse_routes

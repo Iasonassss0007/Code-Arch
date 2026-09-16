@@ -29,6 +29,7 @@ pub mod inventory;
 pub mod label;
 pub mod parse;
 pub mod profile;
+pub mod query;
 pub mod rank;
 pub mod render;
 pub mod resolve;
@@ -517,6 +518,7 @@ Rebuild with: cargo build --release --features llm"
         cochange_pairs: cc.has_history().then(|| cc.pairs.len()),
         contracts: contracts.len(),
         semantic_contracts: semantic_contracts.len(),
+        has_routes: !route_links.is_empty(),
         budget: opts.budget,
     };
     let out_path = opts

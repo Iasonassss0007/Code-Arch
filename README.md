@@ -36,6 +36,23 @@ outside the map budget), and `.codearch/index.json` unless `--no-index` is passe
 
 Currently parses TypeScript, JavaScript and Python.
 
+### Querying the index
+
+The map advertises the lookups, but agents should call them instead of reading
+the index files — every measured win came from lookups, never from map text:
+
+```
+codearch importers <file> [--depth N] [--json] [--repo PATH] [--codearch-dir DIR]
+codearch callers <View> [--json] [--repo PATH] [--codearch-dir DIR]
+```
+
+`importers` lists every file importing `<file>`, directly (depth 1) or
+transitively, one `depth  path` line each. `callers` lists the frontend files
+calling a backend view (only when `.codearch/routes.md` exists). `--json`
+prints one object for scripting. Both read the index as written and never
+re-analyze: stderr says `index written <N> minutes ago`, and an agent seeing a
+stale index re-runs `codearch` itself.
+
 ### What to commit
 
 Commit the map, ignore the cache: `CODEBASE.md`, `.codearch/domains/`,

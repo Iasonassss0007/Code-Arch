@@ -7,15 +7,16 @@
 //! ```
 
 use anyhow::Result;
-use clap::Parser;
-use codearch::{LabelerKind, Options, DEFAULT_BUDGET, DEFAULT_MAX_DOMAINS};
+use clap::{Parser, Subcommand};
+use codearch::{query, LabelerKind, Options, DEFAULT_BUDGET, DEFAULT_MAX_DOMAINS};
 use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
     name = "codearch",
     about = "Analyze a repository locally and write a compact map for coding agents",
-    version
+    version,
+    args_conflicts_with_subcommands = true
 )]
 struct Cli {
     /// Repository root to analyze.
@@ -61,7 +62,6 @@ struct Cli {
     /// Threads for local inference (default: all available cores).
     #[arg(long)]
     llm_threads: Option<i32>,
-
     /// Trained LoRA adapter applied on top of --model (M6 fine-tune path).
     #[arg(long, requires = "model")]
     lora: Option<PathBuf>,
@@ -69,6 +69,49 @@ struct Cli {
     /// Strength of the LoRA adapter (llama.cpp --lora-scale; default 1.0).
     #[arg(long, default_value_t = 1.0)]
     lora_scale: f32,
+
+    /// Look up the index instead of analyzing: `importers` serves the
+    /// reverse import index, `callers` the route index. A directory
+    /// literally named `importers` or `callers` still analyzes as
+    /// `codearch ./importers`.
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Every file importing FILE, directly (depth 1) or transitively.
+    Importers {
+        /// File to look up, as the agent has it (`src/a.ts`, `./src/a.ts`,
+        /// `src\a.ts`, or an absolute path inside the repo).
+        file: String,
+        /// Deepest hop to report (default: no limit).
+        #[arg(long)]
+        depth: Option<usize>,
+        /// Emit one JSON object instead of `depth  path` lines.
+        #[arg(long)]
+        json: bool,
+        /// Repository root (default: `.`).
+        #[arg(long)]
+        repo: Option<PathBuf>,
+        /// Where imports.md is read from (default: <repo>/.codearch).
+        #[arg(long)]
+        codearch_dir: Option<PathBuf>,
+    },
+    /// Frontend files calling a backend view, from the route index.
+    Callers {
+        /// View name, e.g. `TagViewSet`.
+        view: String,
+        /// Emit one JSON object instead of text blocks.
+        #[arg(long)]
+        json: bool,
+        /// Repository root (default: `.`).
+        #[arg(long)]
+        repo: Option<PathBuf>,
+        /// Where routes.md is read from (default: <repo>/.codearch).
+        #[arg(long)]
+        codearch_dir: Option<PathBuf>,
+    },
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, clap::ValueEnum)]
@@ -90,6 +133,10 @@ impl From<LabelerArg> for LabelerKind {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    if let Some(command) = &cli.command {
+        std::process::exit(run_query(command));
+    }
 
     let opts = Options {
         root: cli.path,
@@ -214,4 +261,142 @@ imports, so merging them further would assert a relationship the code does not h
     }
 
     Ok(())
+}
+
+/// Answer one index lookup. Returns the process exit code: 0 for answers
+/// and clean misses, 2 for a missing index, an out-of-repo path, or bad
+/// arguments. Queries never write anything and never re-analyze.
+fn run_query(command: &Commands) -> i32 {
+    match command {
+        Commands::Importers {
+            file,
+            depth,
+            json,
+            repo,
+            codearch_dir,
+        } => {
+            let repo = repo.clone().unwrap_or_else(|| PathBuf::from("."));
+            let dir = codearch_dir.clone().unwrap_or_else(|| repo.join(".codearch"));
+            let text = match query::index_text(&dir, "imports.md", &repo.display().to_string()) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("{e}");
+                    return 2;
+                }
+            };
+            let target = match query::normalize_target(&repo, file) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("{e}");
+                    return 2;
+                }
+            };
+            let hits = query::importers(&query::parse_imports(&text), &target, *depth);
+            if hits.is_empty() {
+                eprintln!(
+                    "no importers for '{target}': nothing imports it, or it was not analyzed"
+                );
+                if *json {
+                    println!("{}", query::importers_json(&target, &hits));
+                }
+                return 0;
+            }
+            if *json {
+                println!("{}", query::importers_json(&target, &hits));
+            } else {
+                print!("{}", query::importers_text(&hits));
+            }
+            if let Some(mins) = query::index_age_minutes(&dir, "imports.md") {
+                eprintln!("index written {mins} minutes ago");
+            }
+            0
+        }
+        Commands::Callers {
+            view,
+            json,
+            repo,
+            codearch_dir,
+        } => {
+            let repo = repo.clone().unwrap_or_else(|| PathBuf::from("."));
+            let dir = codearch_dir.clone().unwrap_or_else(|| repo.join(".codearch"));
+            let text = match query::index_text(&dir, "routes.md", &repo.display().to_string()) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("{e}");
+                    return 2;
+                }
+            };
+            let index = query::parse_routes(&text);
+            let matches = index.get(view.as_str()).cloned().unwrap_or_default();
+            if matches.is_empty() {
+                let mut reason = format!("no route in the index names this view '{view}'");
+                let suggestions = query::suggest_views(&index, view);
+                if !suggestions.is_empty() {
+                    reason.push_str(&format!("; similar indexed views: {}", suggestions.join(", ")));
+                }
+                eprintln!("{reason}");
+                if *json {
+                    println!("{}", query::callers_json(view, &matches));
+                }
+                return 0;
+            }
+            if *json {
+                println!("{}", query::callers_json(view, &matches));
+            } else {
+                print!("{}", query::callers_text(&matches));
+            }
+            if let Some(mins) = query::index_age_minutes(&dir, "routes.md") {
+                eprintln!("index written {mins} minutes ago");
+            }
+            0
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cli(args: &[&str]) -> Cli {
+        let mut full = vec!["codearch"];
+        full.extend(args);
+        Cli::try_parse_from(full).expect("parses")
+    }
+
+    #[test]
+    fn analysis_invocations_still_parse_as_analysis() {
+        assert!(cli(&["."]).command.is_none());
+        assert_eq!(cli(&["src"]).path, PathBuf::from("src"));
+        assert!(cli(&["--no-git", "eval/fixtures/xlang"]).command.is_none());
+        assert!(cli(&["--budget", "100", "."]).command.is_none());
+    }
+
+    #[test]
+    fn query_subcommands_parse_with_their_flags() {
+        match cli(&["importers", "src/a.ts"]).command {
+            Some(Commands::Importers { file, depth, json, .. }) => {
+                assert_eq!(file, "src/a.ts");
+                assert_eq!(depth, None);
+                assert!(!json);
+            }
+            other => panic!("unexpected parse: {other:?}"),
+        }
+        match cli(&["callers", "TagViewSet", "--json"]).command {
+            Some(Commands::Callers { view, json, .. }) => {
+                assert_eq!(view, "TagViewSet");
+                assert!(json);
+            }
+            other => panic!("unexpected parse: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn dotted_directory_names_still_analyze() {
+        // A directory literally named `importers` is a subcommand spelling;
+        // `./importers` is the documented way to analyze it instead.
+        assert!(cli(&["importers", "src/a.ts"]).command.is_some());
+        let dotted = cli(&["./importers"]);
+        assert!(dotted.command.is_none());
+        assert_eq!(dotted.path, PathBuf::from("./importers"));
+    }
 }
