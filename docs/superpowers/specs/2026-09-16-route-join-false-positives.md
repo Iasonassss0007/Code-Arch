@@ -207,4 +207,8 @@ requests).
 | 0 | baseline | 45 | 13 | 0 | 0.78 | 1.00 | 8/8 | — |
 | 0 | scorer + verify traces (no code change) | 45 | 13 | 0 | 0.78 | 1.00 | 8/8 | — |
 | 1 | exclude module specifiers | 45 | 10 | 0 | 0.82 | 1.00 | 8/8 | kept |
+| 2 | all of step 2 combined | 45 | 6 | 0 | 0.88 | 1.00 | 8/8 | kept |
+| 2-ablate | step 2 without subscript-index rule | 45 | 7 | 0 | 0.87 | 1.00 | 8/8 | — (subscript rule = −1: trash.service `data['documents']`; `SystemStatusView` FP already gone there via the `literal_type` half, so indexed-access `T['status']` = −1) |
+| 2-ablate | step 2 without `path:`-pair rule | 45 | 6 | 0 | 0.88 | 1.00 | 8/8 | — (`path:`-keys −0 on paperless; kept as generic router rule with unit test) |
+| 2-ablate | step 2 without call-arg rules (navigate + accessors) | 45 | 8 | 0 | 0.85 | 1.00 | 8/8 | — (navigate = −1 doc-detail `['documents']`, accessors = −1 doc-detail `.get('custom_fields')`) |
 | | | | | | | | | |

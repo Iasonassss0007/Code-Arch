@@ -203,8 +203,7 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
     };
     let root = tree.root_node();
     out.partial = root.has_error();
-    visit(root, src, false, lang.is_python(), &mut out, 0, false);
-    out.urls.sort();
+    visit(root, src, false, lang.is_python(), &mut out, 0, false);    out.urls.sort();
     out.urls.dedup();
     if lang.is_python() {
         python_routes(root, src, &[], &mut out.routes, 0);
@@ -218,6 +217,24 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
 
 /// Text evidence that a TS file sends HTTP requests itself.
 const HTTP_MARKERS: &[&str] = &["HttpClient", "this.http.", "fetch(", "axios", "apiBaseUrl"];
+
+/// Object keys whose values are client-side route paths (Angular and React
+/// router config), never request URLs.
+const ROUTER_PATH_KEYS: &[&str] = &["path", "redirectTo", "routerLink"];
+
+/// Method names whose string arguments name something other than a request
+/// URL: client-side navigation, DOM lookups, form controls. `get` is absent
+/// on purpose: `form.get('name')` reads a control but `http.get(url)` sends
+/// a request, so it is decided per receiver (see `call_args_are_non_request`).
+const NON_REQUEST_METHODS: &[&str] = &[
+    "navigate",
+    "navigateByUrl",
+    "getElementById",
+    "querySelector",
+    "addControl",
+    "removeControl",
+    "setControl",
+];
 
 /// Longest literal read for route segments. Route strings are short; long
 /// literals are prose, markup or data.
@@ -353,14 +370,30 @@ fn visit(
     let kind = node.kind();
     let line = node.start_position().row + 1;
 
-    // A `string` that is the module path of an import/export statement or
-    // of a `require()`/`import()` call names a file, not a URL. The walker
-    // has no parent pointer, so the flag is threaded down: the statement
-    // marks its `source` child, the call marks its `arguments` child, and
-    // every literal underneath stays out of `url_segments`.
+    // Strings in non-request positions name files, keys or client-side
+    // paths, not URLs. The walker has no parent pointer, so one flag is
+    // threaded down: each construct below marks the child holding its
+    // non-URL text, and every literal underneath stays out of
+    // `url_segments`.
+    //   import/export `source`, `require()`/`import()` arguments: files.
+    //   subscript `index` (`data['documents']`), indexed-access
+    //   `literal_type` (`T['status']`): keys.
+    //   client-side router arguments (`.navigate([...])`,
+    //   `.navigateByUrl(...)`, `path:`/`redirectTo:`/`routerLink:` values):
+    //   browser routes.
+    //   form and DOM accessors (`.get(`, `.getElementById(`, ...): control
+    //   and element names — except `http.get(url)`, which is a request.
     let is_source = IMPORT_NODES.contains(&kind) && node.child_by_field_name("source").is_some();
     let is_import_call =
         kind == "call_expression" && import_call_specifier(node, src).is_some();
+    let skip_args = kind == "call_expression" && call_args_are_non_request(node, src);
+    let router_value = router_path_value(node, src);
+    let subscript_index = (kind == "subscript_expression")
+        .then(|| node.child_by_field_name("index"))
+        .flatten();
+    // `T['status']`: the string sits in a `literal_type` under a
+    // `lookup_type`. Type-level text is never a request URL.
+    let in_type_literal = kind == "literal_type";
 
     if py {
         visit_python(node, src, line, out);
@@ -399,8 +432,8 @@ fn visit(
         }
 
         // Route evidence: short, space-free literals only; UI text and
-        // markup have spaces or length, route strings do not. Module
-        // specifiers are file paths, not URLs, and stay out.
+        // markup have spaces or length, route strings do not. Literals in
+        // non-request positions (flagged above) stay out.
         let literal = match kind {
             "string" if !in_specifier => string_value(node, src),
             "template_string" if !in_specifier => {
@@ -444,11 +477,13 @@ fn visit(
     let source = node.child_by_field_name("source");
     let arguments = node.child_by_field_name("arguments");
     for child in node.children(&mut cursor) {
-        // `source` of an import/export statement, and everything under the
-        // arguments of a `require()`/`import()` call, is a module path.
         let child_spec = in_specifier
             || (is_source && source.is_some_and(|s| s.id() == child.id()))
-            || (is_import_call && arguments.is_some_and(|a| a.id() == child.id()));
+            || ((is_import_call || skip_args)
+                && arguments.is_some_and(|a| a.id() == child.id()))
+            || subscript_index.is_some_and(|ix| ix.id() == child.id())
+            || router_value.is_some_and(|v| v.id() == child.id())
+            || in_type_literal;
         visit(
             child,
             src,
@@ -459,6 +494,48 @@ fn visit(
             child_spec,
         );
     }
+}
+
+/// Callee `object.method` of a call, when member-shaped.
+fn call_method(node: Node, src: &str) -> Option<(String, String)> {
+    let callee = node.child_by_field_name("function")?;
+    if callee.kind() != "member_expression" {
+        return None;
+    }
+    let object = callee.child_by_field_name("object")?;
+    let property = callee.child_by_field_name("property")?;
+    Some((
+        object.utf8_text(src.as_bytes()).ok()?.to_string(),
+        property.utf8_text(src.as_bytes()).ok()?.to_string(),
+    ))
+}
+
+/// Whether a call's `arguments` subtree holds no request URL: client-side
+/// navigation, DOM lookups, form controls. `get` is decided per receiver:
+/// `form.get('name')` reads a control, `http.get(url)` sends a request.
+fn call_args_are_non_request(node: Node, src: &str) -> bool {
+    let Some((object, method)) = call_method(node, src) else {
+        return false;
+    };
+    if NON_REQUEST_METHODS.contains(&method.as_str()) {
+        return true;
+    }
+    method == "get" && !object.contains("http")
+}
+
+/// The `value` child of a `{ path: ... }`-shaped pair whose key names a
+/// client-side route, or `None`. Keys may be identifiers or quoted strings.
+fn router_path_value<'a>(node: Node<'a>, src: &str) -> Option<Node<'a>> {
+    if node.kind() != "pair" {
+        return None;
+    }
+    let key = node.child_by_field_name("key")?;
+    let text = key.utf8_text(src.as_bytes()).ok()?;
+    let name = text.trim_matches(|c| c == '\'' || c == '"');
+    ROUTER_PATH_KEYS
+        .contains(&name)
+        .then(|| node.child_by_field_name("value"))
+        .flatten()
 }
 
 /// Python half of `visit`. Import extraction reads node text rather than
@@ -984,5 +1061,45 @@ urlpatterns = [
             Language::Js,
         );
         assert!(!dyn_import.url_segments.contains(&"tags".to_string()));
+    }
+
+    #[test]
+    fn subscript_keys_are_not_route_evidence() {
+        // `data['documents'] = documents` names an object key, not a URL.
+        let out = parse("data['documents'] = documents\n", Language::Ts);
+        assert!(!out.url_segments.contains(&"documents".to_string()));
+        // Type-level indexed access is a key too: `T['status']`.
+        let ty = parse("function f(x: T['status']) {}\n", Language::Ts);
+        assert!(!ty.url_segments.contains(&"status".to_string()));
+        // A request template still counts.
+        let url = parse("fetch(`${base}documents/1/`)\n", Language::Ts);
+        assert!(url.url_segments.contains(&"documents".to_string()));
+    }
+
+    #[test]
+    fn client_side_router_paths_are_not_route_evidence() {
+        let out = parse("this.router.navigate(['documents', id])\n", Language::Ts);
+        assert!(!out.url_segments.contains(&"documents".to_string()));
+        let by_url = parse("this.router.navigateByUrl('/documents')\n", Language::Ts);
+        assert!(!by_url.url_segments.contains(&"documents".to_string()));
+        let cfg = parse("const r = { path: 'documents', redirectTo: 'trash' }\n", Language::Ts);
+        assert!(!cfg.url_segments.contains(&"documents".to_string()));
+        assert!(!cfg.url_segments.contains(&"trash".to_string()));
+        // Other object values are untouched.
+        let other = parse("const r = { endpoint: 'documents' }\n", Language::Ts);
+        assert!(other.url_segments.contains(&"documents".to_string()));
+    }
+
+    #[test]
+    fn form_and_dom_accessors_are_not_route_evidence_but_http_get_is() {
+        // `form.get('custom_fields')` reads a control.
+        let form = parse("this.documentForm.get('custom_fields')\n", Language::Ts);
+        assert!(!form.url_segments.contains(&"custom_fields".to_string()));
+        let dom = parse("document.getElementById('documents')\n", Language::Ts);
+        assert!(!dom.url_segments.contains(&"documents".to_string()));
+        // `http.get(url)` sends a request: the URL template still counts.
+        let http = parse("this.http.get(`${base}documents/1/`)\n", Language::Ts);
+        assert!(http.url_segments.contains(&"documents".to_string()));
+        assert!(http.http);
     }
 }
