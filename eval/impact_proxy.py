@@ -238,7 +238,7 @@ def main():
             source = (ROOT / repo).resolve()
             state = Path(tmp) / source.name
             state.mkdir()
-            subprocess.run([str(binary), str(source), "--out", str(state / "CODEBASE.md"),
+            subprocess.run([str(binary), str(source), "--map", "--out", str(state / "CODEBASE.md"),
                             "--no-index", "--codearch-dir", str(state)],
                             capture_output=True, check=True)
             maps[repo] = (state / "CODEBASE.md").read_text(encoding="utf-8")

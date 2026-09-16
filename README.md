@@ -8,9 +8,9 @@ guessing:
 - **Which frontend files call this backend endpoint?** Across the language
   boundary, from a Django view to the TypeScript files that request it.
 
-It also writes a compact map of the repository (`CODEBASE.md`). The lookups are the
-part with measured benefit; the map is a secondary output (see
-[What helps agents](#what-helps-agents)).
+Lookups are what measurably help agents (see [What helps agents](#what-helps-agents)),
+so that is all `codearch` builds by default. A human-readable overview of the
+repository (`CODEBASE.md`) is available with `--map`.
 
 Everything runs locally. The tool makes no network connection, needs no account and
 collects nothing.
@@ -29,10 +29,11 @@ cargo install --path .
 ## Quick start
 
 ```
-codearch /path/to/repo                    # analyze once; writes the indexes
 cd /path/to/repo
+codearch                                  # build the lookup indexes (seconds)
 codearch importers src/lib/auth.ts        # who depends on this file
 codearch callers TagViewSet               # which frontend files call this view
+codearch agents --write AGENTS.md         # tell your agents these lookups exist
 ```
 
 ```
@@ -43,8 +44,13 @@ src/documents/views.py  (routes: workflows)
 
 ### Use from an agent
 
-Any agent that can run shell commands can call the two lookups directly. For
-MCP clients, the same lookups are served as tools (`importers`, `route_callers`)
+Any agent that can run shell commands can call the two lookups directly, once it
+knows they exist. `codearch agents` prints a short block saying so;
+`codearch agents --write AGENTS.md` (or `CLAUDE.md`, or whichever file your agent
+reads) adds it between `<!-- codearch:start -->` and `<!-- codearch:end -->` markers.
+Re-running replaces only that block and leaves the rest of the file alone.
+
+For MCP clients, the same lookups are served as tools (`importers`, `route_callers`)
 over stdio:
 
 ```
@@ -57,13 +63,19 @@ restarting the server.
 ## Commands
 
 ```
-codearch [PATH] [OPTIONS]
+codearch [PATH] [--codearch-dir DIR]             # lookup indexes only
+codearch [PATH] --map [MAP OPTIONS]              # indexes plus the CODEBASE.md overview
 codearch importers <file> [--depth N] [--json] [--repo PATH] [--codearch-dir DIR]
 codearch callers <View> [--json] [--repo PATH] [--codearch-dir DIR]
+codearch agents [--write FILE] [--repo PATH] [--codearch-dir DIR]
 codearch mcp [--repo PATH] [--codearch-dir DIR]
 ```
 
-Analysis options:
+```
+--codearch-dir <path> where the indexes are written (default: <repo>/.codearch)
+```
+
+Map options (each requires `--map`):
 
 ```
 --out <path>          where to write the map (default: <repo>/CODEBASE.md)
@@ -72,7 +84,7 @@ Analysis options:
 --seed <n>            clustering seed; changes tie-breaks only
 --no-index            skip .codearch/index.json
 --no-git              ignore git history (no co-change signal)
---codearch-dir <path> where the indexes are written (default: <repo>/.codearch)
+--labeler, --model    local-model naming (see below)
 ```
 
 A directory literally named `importers` or `callers` is analyzed with
@@ -93,16 +105,27 @@ A directory literally named `importers` or `callers` is analyzed with
 
 ### What it writes
 
-| File | Contents |
-|---|---|
-| `CODEBASE.md` | The map: domains, stack, flows, most-imported files, pointers to the indexes |
-| `.codearch/imports.md` | Reverse import index: for every imported file, each file that imports it |
-| `.codearch/routes.md` | Backend views and their frontend callers (only when found) |
-| `.codearch/index.json` | Machine-readable map data (skip with `--no-index`) |
-| `.codearch/cache/` | Parse and git caches for fast re-runs; ignored by the tool's own `.gitignore` |
+| File | Written | Contents |
+|---|---|---|
+| `.codearch/imports.md` | always | Reverse import index: for every imported file, each file that imports it |
+| `.codearch/routes.md` | when route links exist | Backend views and their frontend callers |
+| `.codearch/cache/` | always | Parse and git caches for fast re-runs; ignored by the tool's own `.gitignore` |
+| `CODEBASE.md` | `--map` | The overview: domains, stack, flows, most-imported files |
+| `.codearch/index.json` | `--map` | Machine-readable map data (skip with `--no-index`) |
 
-**What to commit:** the map and indexes, not the cache. A fresh clone with
-`CODEBASE.md` and `.codearch/*.md` can answer lookups immediately.
+**What to commit:** `.codearch/*.md` (and `CODEBASE.md` if you generate it), not the
+cache. A fresh clone can then answer lookups immediately.
+
+Upgrading from 0.1: `codearch` no longer rewrites `CODEBASE.md`. An existing one is
+left in place and the run prints a note; use `--map` to keep refreshing it.
+
+### Map (optional)
+
+`codearch --map` also writes `CODEBASE.md`, a compact overview of the repository for
+people: domains, stack, entry points, flows and the most-imported files. It is not
+meant for agent prompts. Pasted into an agent's instructions it measured slightly
+worse answers at almost twice the tokens (see below); point agents at the lookups
+instead.
 
 ## Supported code
 
@@ -206,7 +229,7 @@ toolchain, and currently produces worse names than the default.
 
 ```
 cargo build --release --features llm
-codearch /path/to/repo --labeler llm --model /path/to/model.gguf
+codearch /path/to/repo --map --labeler llm --model /path/to/model.gguf
 ```
 
 The tested model is Qwen2.5-Coder-1.5B-Instruct Q4_K_M (~1.1 GB) from
@@ -244,7 +267,7 @@ cargo test
 python -m pytest -q eval/test_*.py
 ```
 
-230 Rust tests and 79 harness tests pass. `code_arch_architecture.md` records the
+243 Rust tests and 79 harness tests pass. `code_arch_architecture.md` records the
 design, every milestone, and every measured result. The benchmark harness, task
 builders and reproduction commands are documented in `eval/README.md`; paid runs
 need a provider key (`GEMINI_API_KEY`, `OPENROUTER_API_KEY` or `GROQ_API_KEY`), which
@@ -252,7 +275,7 @@ is never written to artifacts.
 
 ## Status
 
-A working tool at version 0.1. The lookups (`importers`, `callers`, MCP) are the
+A working tool at version 0.2. The lookups (`importers`, `callers`, `agents`, MCP) are the
 recommended interface. Coverage is TypeScript, JavaScript and Python; other
 ecosystems and route frameworks are not supported yet.
 

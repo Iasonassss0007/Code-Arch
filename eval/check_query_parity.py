@@ -2,7 +2,7 @@
 
 For every repo used by `tasks-nav-gated.json` and `tasks-xlang.json`:
 
-1. Run `codearch <repo> --no-index --codearch-dir <tmp>` (outside the pinned
+1. Run `codearch <repo> --codearch-dir <tmp>` (indexes only; outside the pinned
    checkout; afterwards `git -C <repo> status --porcelain` must print nothing).
 2. For each nav task target, compare `codearch importers <target> --json`
    with `build_tasks_nav.importers(parse_index(imports.md), target)`.
@@ -63,8 +63,7 @@ def main():
             source = (ROOT / repo).resolve()
             state = Path(tmp) / source.name
             state.mkdir()
-            subprocess.run([str(exe), str(source), "--out", str(state / "CODEBASE.md"),
-                            "--no-index", "--codearch-dir", str(state)],
+            subprocess.run([str(exe), str(source), "--codearch-dir", str(state)],
                            capture_output=True, check=True)
             dirty = subprocess.check_output(["git", "status", "--porcelain"],
                                             cwd=source, text=True)

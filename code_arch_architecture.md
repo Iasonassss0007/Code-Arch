@@ -1457,3 +1457,29 @@ feature sets. The new Python files are impact_proxy.py, test_impact_proxy.py
 (9 tests), harvest_lora.py, train_lora.py, test_lora_pipeline.py (6 tests).
 The M1 lexical harness reproduces its recorded baseline (40/40 with-map,
 32/40 without) on the current binary.
+
+## 2026-09-17 — lookups first: index-only default, map opt-in (0.2.0)
+
+Spec: `docs/superpowers/specs/2026-09-17-lookups-first-default-design.md`.
+
+The tool's purpose is to help coding agents. Every measured agent benefit came
+from lookups; the map as prompt context never helped:
+
+| What the agent got | Effect vs no help |
+|---|---|
+| Lookups (`importers`, `route_callers`) | F1 +0.372 navigation, +0.126 cross-language, fewer tokens |
+| The map pasted into its prompt | F1 −0.024 navigation, −0.096 cross-language, ~1.8× tokens |
+
+So `codearch [PATH]` now stops after contracts and writes only `imports.md` and
+`routes.md`. Git, graph, clustering, ranking, labeling, flows, `CODEBASE.md` and
+`index.json` run only with `--map`; every map-only flag requires it.
+`codearch agents [--write FILE]` replaces the map's one agent-useful role, pointing
+at the lookups, with a marked block of under 90 words in a file agents already read.
+
+Gates: `--map` output byte-identical to the pre-change binary on five repos (21
+files); the default's indexes identical to `--map`'s; query parity 42/42 on
+default runs; `--map` → default → `--map` stays warm and identical, with cached
+labels and split memo preserved; an existing `CODEBASE.md` is never touched; the
+M1 harness still reproduces 32/40 → 40/40. The default is 1.1–3× faster (debug
+build: hono 1.4 s vs 4.3 s cold, 0.76 s vs 1.48 s warm). Map code is kept, opt-in,
+and unchanged.
