@@ -79,7 +79,10 @@ def score_adapter(base, lora, lora_scale):
         request["lora"] = str(lora)
         request["lora_scale"] = lora_scale
     p = subprocess.run([str(binary)], input=json.dumps(request),
-                       text=True, capture_output=True, check=True)
+                       text=True, capture_output=True)
+    if p.returncode != 0:
+        # e.g. a default build: "eval-support was built without the `llm` feature".
+        raise SystemExit(f"eval-support labels failed: {p.stderr.strip()}")
     response = json.loads(p.stdout)
     generated = response["labels"]
     result = evaluate_labels(clusters, generated)
