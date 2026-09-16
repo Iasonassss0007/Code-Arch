@@ -203,7 +203,7 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
     };
     let root = tree.root_node();
     out.partial = root.has_error();
-    visit(root, src, false, lang.is_python(), &mut out, 0);
+    visit(root, src, false, lang.is_python(), &mut out, 0, false);
     out.urls.sort();
     out.urls.dedup();
     if lang.is_python() {
@@ -336,7 +336,15 @@ fn view_name(node: Node, src: &str) -> Option<String> {
     }
 }
 
-fn visit(node: Node, src: &str, in_export: bool, py: bool, out: &mut FileParse, depth: usize) {
+fn visit(
+    node: Node,
+    src: &str,
+    in_export: bool,
+    py: bool,
+    out: &mut FileParse,
+    depth: usize,
+    in_specifier: bool,
+) {
     if depth > MAX_DEPTH {
         out.partial = true;
         return;
@@ -344,6 +352,15 @@ fn visit(node: Node, src: &str, in_export: bool, py: bool, out: &mut FileParse, 
 
     let kind = node.kind();
     let line = node.start_position().row + 1;
+
+    // A `string` that is the module path of an import/export statement or
+    // of a `require()`/`import()` call names a file, not a URL. The walker
+    // has no parent pointer, so the flag is threaded down: the statement
+    // marks its `source` child, the call marks its `arguments` child, and
+    // every literal underneath stays out of `url_segments`.
+    let is_source = IMPORT_NODES.contains(&kind) && node.child_by_field_name("source").is_some();
+    let is_import_call =
+        kind == "call_expression" && import_call_specifier(node, src).is_some();
 
     if py {
         visit_python(node, src, line, out);
@@ -382,10 +399,13 @@ fn visit(node: Node, src: &str, in_export: bool, py: bool, out: &mut FileParse, 
         }
 
         // Route evidence: short, space-free literals only; UI text and
-        // markup have spaces or length, route strings do not.
+        // markup have spaces or length, route strings do not. Module
+        // specifiers are file paths, not URLs, and stay out.
         let literal = match kind {
-            "string" => string_value(node, src),
-            "template_string" => node.utf8_text(src.as_bytes()).ok().map(str::to_string),
+            "string" if !in_specifier => string_value(node, src),
+            "template_string" if !in_specifier => {
+                node.utf8_text(src.as_bytes()).ok().map(str::to_string)
+            }
             _ => None,
         };
         if let Some(lit) = literal {
@@ -421,8 +441,23 @@ fn visit(node: Node, src: &str, in_export: bool, py: bool, out: &mut FileParse, 
     }
 
     let mut cursor = node.walk();
+    let source = node.child_by_field_name("source");
+    let arguments = node.child_by_field_name("arguments");
     for child in node.children(&mut cursor) {
-        visit(child, src, in_export || kind == EXPORT_NODE, py, out, depth + 1);
+        // `source` of an import/export statement, and everything under the
+        // arguments of a `require()`/`import()` call, is a module path.
+        let child_spec = in_specifier
+            || (is_source && source.is_some_and(|s| s.id() == child.id()))
+            || (is_import_call && arguments.is_some_and(|a| a.id() == child.id()));
+        visit(
+            child,
+            src,
+            in_export || kind == EXPORT_NODE,
+            py,
+            out,
+            depth + 1,
+            child_spec,
+        );
     }
 }
 
@@ -924,5 +959,30 @@ urlpatterns = [
             Language::Ts,
         );
         assert!(base.http);
+    }
+
+    #[test]
+    fn import_specifiers_are_not_route_evidence() {
+        // `tags` in a module path is a file name, not a request URL.
+        let out = parse(
+            "import { X } from '../common/tags/tags.component'\n",
+            Language::Ts,
+        );
+        assert!(!out.url_segments.contains(&"tags".to_string()));
+        assert!(out.refs.iter().any(|r| r.specifier.contains("tags")));
+        // The same word as a resource name is route evidence again.
+        let back = parse(
+            "import { X } from '../common/tags/tags.component'\nresourceName = 'tags'\n",
+            Language::Ts,
+        );
+        assert!(back.url_segments.contains(&"tags".to_string()));
+        // `require()` / `import()` specifiers stay out too.
+        let req = parse("const x = require('../common/tags/tags.component')\n", Language::Js);
+        assert!(!req.url_segments.contains(&"tags".to_string()));
+        let dyn_import = parse(
+            "async function load() { return import('../common/tags/tags.component') }\n",
+            Language::Js,
+        );
+        assert!(!dyn_import.url_segments.contains(&"tags".to_string()));
     }
 }

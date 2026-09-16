@@ -49,3 +49,23 @@ def test_search_guess_ranks_files_by_class_name_overlap():
     full, stripped = X.search_guess('TagViewSet', files, 2)
     assert 'a/other.ts' not in full and 'a/other.ts' not in stripped
     assert set(stripped) == {'a/tag.service.ts', 'a/tag-list.component.ts'}
+
+
+def test_score_routes_parses_markdown_and_counts_fp_fn():
+    import score_routes as S
+    text = ("# Route callers\n"
+            "\n## `TagViewSet` — `src/views.py`\n\nRoutes: `tags`\n\n"
+            "- `ui/tag.service.ts`\n- `ui/extra.ts`\n"
+            "\n## `DocView` — `src/views.py`\n\nRoutes: `documents`\n\n"
+            "- `ui/doc.service.ts`\n")
+    pred = S.parse(text)
+    assert pred == {'TagViewSet': {'ui/tag.service.ts', 'ui/extra.ts'},
+                    'DocView': {'ui/doc.service.ts'}}
+    gold = {'TagViewSet': {'ui/tag.service.ts'}, 'DocView': {'ui/doc.service.ts'}}
+    tp, fp, fn, rows = S.score(pred, gold)
+    assert (tp, fp, fn) == (2, 1, 0)
+    assert rows == [('FP', 'TagViewSet', 'ui/extra.ts')]
+    tp2, fp2, fn2, rows2 = S.score({'TagViewSet': set()}, gold)
+    assert (tp2, fp2, fn2) == (0, 0, 2)
+    assert sorted(rows2) == [('FN', 'DocView', 'ui/doc.service.ts'),
+                             ('FN', 'TagViewSet', 'ui/tag.service.ts')]
