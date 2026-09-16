@@ -889,7 +889,7 @@ up from 44 at M1.
 
 Spec: `docs/superpowers/specs/2026-09-11-reverse-import-index-design.md`.
 
-The representation research (`research/codearch-representation/report/rebuild/`)
+The representation research (`research/codearch-representation/report/rebuild/`, a local workspace kept out of the repository)
 produced one structural result large enough to act on. On direct-dependency
 questions an explicit edge list scored 1.000 and the prose map 0.000. The map
 had no file-level dependency information at all: stage 10 dropped `in_edges`

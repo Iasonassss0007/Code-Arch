@@ -10,3 +10,18 @@ research/codearch-representation/experiments/repos/
 research/codearch-representation/experiments/incr_work/
 # Local session transcripts accidentally saved under eval/
 eval/*.txt
+/20[0-9][0-9]-*.txt
+
+# Local research workspace (reports, renders, vendored repos); not part of the tool
+/research/
+/docs/research/
+
+# Local-only scratch: provider smoke tests, aborted runs, recovery notes
+/eval/results-smoke/
+/eval/results-smoke-35lite/
+/eval/results-nav-groq-partial/
+/eval/results-nav-groq-typedi/
+/eval/tasks-smoke.json
+/eval/tasks-nav-groq-partial.json
+/eval/tasks-nav-groq-typedi.json
+/eval/README.recovered-partial.md

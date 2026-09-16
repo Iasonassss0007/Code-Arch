@@ -2,6 +2,9 @@
 name = "codearch"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "Local code-graph lookups for coding agents: importers and cross-language route callers"
+repository = "https://github.com/Iasonassss0007/Code-Arch"
 default-run = "codearch"
 
 [features]
