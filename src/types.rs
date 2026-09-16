@@ -140,6 +140,21 @@ pub struct Symbol {
     pub line: usize,
 }
 
+impl Symbol {
+    /// Case-insensitive stem key used by the semantic-contract join: a TS
+    /// `createUser` and a Python `create_user` are the same call shape.
+    /// Mirrors `stem` in src/label/validate.rs (plural fold only).
+    pub fn stem_key(&self) -> String {
+        let lower = self.name.to_ascii_lowercase().replace('_', "");
+        let key = if lower.len() > 3 && lower.ends_with('s') && !lower.ends_with("ss") {
+            &lower[..lower.len() - 1]
+        } else {
+            &lower[..]
+        };
+        key.to_string()
+    }
+}
+
 /// A module specifier as written in source, before resolution.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RawRef {

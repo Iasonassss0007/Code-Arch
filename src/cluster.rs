@@ -7,12 +7,19 @@
 //!        structure via `directory_partition`.
 //!
 //! What this implements, precisely: multilevel modularity optimization by
-//! local moving and aggregation (Louvain), plus the guarantee that made the
-//! architecture pick Leiden over Louvain in the first place — no community is
-//! ever internally disconnected, enforced at every level. Leiden's randomized
-//! refinement phase, which improves partition quality beyond the connectivity
-//! guarantee, is deferred; the connectivity property is the part that decides
-//! whether a "subsystem" is a real seam or an artifact.
+//! local moving, refinement, and aggregation (Leiden), plus the guarantee
+//! that made the architecture pick Leiden over Louvain in the first place —
+//! no community is ever internally disconnected, enforced at every level.
+//!
+//! The refinement phase follows Traag–Waltman–van Eck §3.2 in structure:
+//! after the local-moving pass settles communities, each community is
+//! re-partitioned from singletons with merges restricted to stay inside the
+//! parent community, and aggregation runs on the refined partition so a
+//! badly-connected group separates one level sooner. Two deliberate
+//! deviations: the merge choice is greedy-best rather than
+//! randomness-proportional (determinism first — a run on unchanged input
+//! reproduces byte for byte), and refined parts pass through the same
+//! connectivity split as coarse ones.
 //!
 //! Node visit order is shuffled with a seeded PRNG rather than a system one,
 //! so a run on unchanged input reproduces byte for byte.
@@ -25,6 +32,7 @@ use std::collections::VecDeque;
 pub const MIN_CLUSTER_SIZE: usize = 3;
 
 /// Bound on the adaptive resolution search, so the loop always terminates.
+#[allow(dead_code)]
 const MAX_RESOLUTION_ROUNDS: usize = 5;
 
 #[derive(Debug, Clone)]
@@ -129,10 +137,16 @@ pub fn partition(g: &CodeGraph, gamma: f64, seed: u64) -> Partition {
         let mut comm: Vec<usize> = (0..wg.n).collect();
         let improved = local_move(&wg, &mut comm, gamma, &mut rng);
         let mut comm = split_disconnected(&wg, &comm);
-        let k = compact(&mut comm);
+        compact(&mut comm);
+
+        // Refinement: sub-partition each community from singletons, merging
+        // only within the parent community. Aggregation runs on the refined
+        // partition, not the coarse one.
+        let mut refined = refine_partition(&wg, &comm, gamma, &mut rng);
+        let k = compact(&mut refined);
 
         for c in node_comm.iter_mut() {
-            *c = comm[*c];
+            *c = refined[*c];
         }
 
         if !improved || k == wg.n || k <= 1 {
@@ -142,7 +156,7 @@ pub fn partition(g: &CodeGraph, gamma: f64, seed: u64) -> Partition {
             };
         }
 
-        wg = aggregate(&wg, &comm, k);
+        wg = aggregate(&wg, &refined, k);
     }
 }
 
@@ -416,6 +430,72 @@ fn local_move(g: &WGraph, comm: &mut [usize], gamma: f64, rng: &mut Rng) -> bool
     improved
 }
 
+/// Leiden's refinement phase (greedy deterministic variant): re-partition
+/// each community of `comm` starting from singletons, admitting only merges
+/// whose target lies inside the same parent community. A move is taken only
+/// when it strictly improves the resolution-weighted modularity gain, so the
+/// refined partition never scores worse than the singleton start and can only
+/// separate groups the coarse pass lumped together — never join across
+/// communities. The result is compacted and connectivity-split by the caller.
+fn refine_partition(g: &WGraph, comm: &[usize], gamma: f64, rng: &mut Rng) -> Vec<usize> {
+    let mut refined: Vec<usize> = (0..g.n).collect();
+    let two_m = 2.0 * g.total();
+    if two_m <= 0.0 {
+        return refined;
+    }
+
+    let mut tot = vec![0.0f64; g.n];
+    for i in 0..g.n {
+        tot[refined[i]] += g.degree(i);
+    }
+
+    let mut order: Vec<usize> = (0..g.n).collect();
+    rng.shuffle(&mut order);
+
+    // Scratch buffer instead of a HashMap: iteration order must be stable.
+    let mut wbuf = vec![0.0f64; g.n];
+    let mut touched: Vec<usize> = Vec::new();
+
+    for &i in &order {
+        let parent = comm[i];
+        let ki = g.degree(i);
+        let cur = refined[i];
+        tot[cur] -= ki;
+
+        touched.clear();
+        touched.push(cur);
+        for &(j, w) in &g.adj[i] {
+            if j == i || comm[j] != parent {
+                continue;
+            }
+            let cj = refined[j];
+            if wbuf[cj] == 0.0 && cj != cur {
+                touched.push(cj);
+            }
+            wbuf[cj] += w;
+        }
+
+        let mut best = cur;
+        let mut best_gain = wbuf[cur] - gamma * ki * tot[cur] / two_m;
+        for &c in &touched {
+            let gain = wbuf[c] - gamma * ki * tot[c] / two_m;
+            if gain > best_gain + 1e-12 {
+                best_gain = gain;
+                best = c;
+            }
+        }
+
+        for &c in &touched {
+            wbuf[c] = 0.0;
+        }
+
+        tot[best] += ki;
+        refined[i] = best;
+    }
+
+    split_disconnected(g, &refined)
+}
+
 /// Leiden's guarantee: a community whose induced subgraph is disconnected is
 /// split into its connected components. Without this, a "subsystem" can be two
 /// unrelated groups that merely improved a global score.
@@ -644,6 +724,91 @@ mod tests {
         };
         let capped = merge_until_at_most(&g, p, 1);
         assert_eq!(capped.count, 3);
+    }
+
+    #[test]
+    fn refinement_stays_within_parent_communities() {
+        // Three dense blocks; the coarse pass is forced to lump the first
+        // two, refinement may split them but must never leak into the third.
+        let mut edges = Vec::new();
+        for block in 0..3 {
+            let base = block * 5;
+            for i in 0..5 {
+                for j in (i + 1)..5 {
+                    edges.push((base + i, base + j, 1.0));
+                }
+            }
+        }
+        edges.push((4, 5, 0.1));
+        let g = CodeGraph::from_edges(15, &edges);
+        let wg = WGraph::from_code_graph(&g);
+        let coarse = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1];
+        let mut rng = Rng::new(11);
+        let mut refined = refine_partition(&wg, &coarse, 1.0, &mut rng);
+        let k = compact(&mut refined);
+        assert!(k >= 2, "refinement split nothing");
+        // Every refined part is a subset of one coarse community.
+        for part in 0..k {
+            let parents: Vec<usize> = (0..15)
+                .filter(|&i| refined[i] == part)
+                .map(|i| coarse[i])
+                .collect();
+            assert!(
+                parents.iter().all(|&p| p == parents[0]),
+                "refined part {part} spans parent communities"
+            );
+        }
+    }
+
+    #[test]
+    fn refinement_is_deterministic() {
+        let g = two_cliques();
+        let wg = WGraph::from_code_graph(&g);
+        let coarse = vec![0, 0, 0, 0, 0, 0];
+        let mut a = refine_partition(&wg, &coarse, 1.0, &mut Rng::new(7));
+        let mut b = refine_partition(&wg, &coarse, 1.0, &mut Rng::new(7));
+        compact(&mut a);
+        compact(&mut b);
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn refined_parts_are_internally_connected() {
+        // A barbell: two triangles joined by one edge, lumped together.
+        let g = CodeGraph::from_edges(
+            6,
+            &[
+                (0, 1, 1.0),
+                (0, 2, 1.0),
+                (1, 2, 1.0),
+                (3, 4, 1.0),
+                (3, 5, 1.0),
+                (4, 5, 1.0),
+                (2, 3, 0.05),
+            ],
+        );
+        let wg = WGraph::from_code_graph(&g);
+        let coarse = vec![0, 0, 0, 0, 0, 0];
+        let refined = refine_partition(&wg, &coarse, 1.0, &mut Rng::new(3));
+        // Each refined part must be connected in the induced subgraph.
+        let mut parts: std::collections::HashMap<usize, Vec<usize>> =
+            std::collections::HashMap::new();
+        for (i, &c) in refined.iter().enumerate() {
+            parts.entry(c).or_default().push(i);
+        }
+        for members in parts.values() {
+            let mut seen = vec![members[0]];
+            let mut stack = vec![members[0]];
+            while let Some(n) = stack.pop() {
+                for &(j, _) in &wg.adj[n] {
+                    if members.contains(&j) && !seen.contains(&j) {
+                        seen.push(j);
+                        stack.push(j);
+                    }
+                }
+            }
+            assert_eq!(seen.len(), members.len(), "refined part is disconnected");
+        }
     }
 
     #[test]

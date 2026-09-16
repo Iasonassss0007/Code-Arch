@@ -47,15 +47,20 @@ pub struct MapInput<'a> {
     /// Co-change pairs stage 4 contributed. `None` means there was no usable
     /// git history, which the map states rather than hides.
     pub cochange_pairs: Option<usize>,
-    /// Cross-language contract pairs fused into the graph. Zero leaves every
-    /// historical sentence byte-identical; the render tests assert this.
+    /// Cross-language URL-contract pairs fused into the graph (exact
+    /// normalized-path matches). Zero leaves every historical sentence
+    /// byte-identical; the render tests assert this.
     pub contracts: usize,
+    /// Cross-language semantic-contract pairs (shared rare symbol shapes,
+    /// `createUser` ↔ `create_user`). Stated separately: the evidence is
+    /// weaker and the reader deserves to know which kind was fused.
+    pub semantic_contracts: usize,
     pub budget: usize,
 }
 
 /// Where the map's relationships came from, stated rather than smoothed over.
 /// Zero contracts reproduces the two historical sentences exactly.
-fn relations_text(cochange_pairs: Option<usize>, contracts: usize) -> String {
+fn relations_text(cochange_pairs: Option<usize>, contracts: usize, semantic: usize) -> String {
     let mut parts = vec!["resolved imports".to_string()];
     if let Some(pairs) = cochange_pairs {
         parts.push(format!("{pairs} git co-change pairs"));
@@ -67,6 +72,13 @@ fn relations_text(cochange_pairs: Option<usize>, contracts: usize) -> String {
             format!("{contracts} API contracts")
         });
     }
+    if semantic > 0 {
+        parts.push(if semantic == 1 {
+            "1 cross-language symbol contract".to_string()
+        } else {
+            format!("{semantic} cross-language symbol contracts")
+        });
+    }
     parts.push("directory structure".to_string());
     let mut s = String::new();
     for (i, part) in parts.iter().enumerate() {
@@ -75,7 +87,7 @@ fn relations_text(cochange_pairs: Option<usize>, contracts: usize) -> String {
         }
         s.push_str(part);
     }
-    if cochange_pairs.is_none() && contracts == 0 {
+    if cochange_pairs.is_none() && contracts == 0 && semantic == 0 {
         s.push_str(" only");
     }
     format!("relationships come from {s}")
@@ -302,7 +314,11 @@ Files are listed by directory, with no claimed relationships.\n\n",
     s.push_str("## Not Analyzed\n\n");
     s.push_str(&analyzed_boundary(input));
     let flows_shown = with_flows && input.flows.iter().any(|f| !f.is_empty());
-    let relations = relations_text(input.cochange_pairs, input.contracts);
+    let relations = relations_text(
+        input.cochange_pairs,
+        input.contracts,
+        input.semantic_contracts,
+    );
     if flows_shown {
         s.push_str(&format!(
             "- Execution flows below are import-chain traversals from entry points \
@@ -740,7 +756,11 @@ pub fn render_split_root(input: &MapInput, view: &SplitView) -> String {
 
     s.push_str("## Not Analyzed\n\n");
     s.push_str(&analyzed_boundary(input));
-    let relations = relations_text(input.cochange_pairs, input.contracts);
+    let relations = relations_text(
+        input.cochange_pairs,
+        input.contracts,
+        input.semantic_contracts,
+    );
     s.push_str(&format!(
         "- This root map routes to `.codearch/domains/*.md` for detail; execution flows live in domain files. {relations}\n"
     ));
@@ -1045,11 +1065,11 @@ mod tests {
         // Zero contracts must reproduce the two historical sentences exactly:
         // single-ecosystem maps stay byte-identical.
         assert_eq!(
-            relations_text(None, 0),
+            relations_text(None, 0, 0),
             "relationships come from resolved imports and directory structure only"
         );
         assert_eq!(
-            relations_text(Some(3), 0),
+            relations_text(Some(3), 0, 0),
             "relationships come from resolved imports, 3 git co-change pairs and directory structure"
         );
     }
@@ -1057,12 +1077,24 @@ mod tests {
     #[test]
     fn relations_text_names_contracts() {
         assert_eq!(
-            relations_text(None, 1),
+            relations_text(None, 1, 0),
             "relationships come from resolved imports, 1 API contract and directory structure"
         );
         assert_eq!(
-            relations_text(Some(2), 3),
+            relations_text(Some(2), 3, 0),
             "relationships come from resolved imports, 2 git co-change pairs, 3 API contracts and directory structure"
+        );
+    }
+
+    #[test]
+    fn relations_text_names_semantic_contracts() {
+        assert_eq!(
+            relations_text(None, 0, 1),
+            "relationships come from resolved imports, 1 cross-language symbol contract and directory structure"
+        );
+        assert_eq!(
+            relations_text(None, 2, 3),
+            "relationships come from resolved imports, 2 API contracts, 3 cross-language symbol contracts and directory structure"
         );
     }
 }

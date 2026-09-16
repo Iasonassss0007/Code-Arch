@@ -68,8 +68,31 @@ pub struct FileParse {
     /// normalized paths (`api/users`), sorted and deduplicated. Stage 3
     /// ignores these; `contract::join` matches them across languages.
     pub urls: Vec<String>,
+    /// Python route declarations (`path`/`re_path`/`url`/`router.register`)
+    /// with their `include()` prefixes, for `contract::route_join`.
+    #[serde(default)]
+    pub routes: Vec<Route>,
+    /// TS: route-shaped segments of short, space-free string and template
+    /// literals (`'tags'`, `` `${base}documents/bulk_edit/` ``), sorted.
+    #[serde(default)]
+    pub url_segments: Vec<String>,
+    /// TS: the file text names an HTTP client (`HttpClient`, `this.http.`,
+    /// `fetch(`, `axios`, `apiBaseUrl`).
+    #[serde(default)]
+    pub http: bool,
+    /// TS: base classes named in `extends` clauses, generics stripped.
+    #[serde(default)]
+    pub extends: Vec<String>,
     /// The grammar reported at least one ERROR node.
     pub partial: bool,
+}
+
+/// One backend route: static path segments (include prefixes first) bound
+/// to the view named in the same call (`TagViewSet`, `Upload.as_view()`).
+#[derive(Debug, Default, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct Route {
+    pub segments: Vec<String>,
+    pub view: String,
 }
 
 pub struct Parsers {
@@ -183,7 +206,134 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
     visit(root, src, false, lang.is_python(), &mut out, 0);
     out.urls.sort();
     out.urls.dedup();
+    if lang.is_python() {
+        python_routes(root, src, &[], &mut out.routes, 0);
+    } else {
+        out.http = HTTP_MARKERS.iter().any(|m| src.contains(m));
+        out.url_segments.sort();
+        out.url_segments.dedup();
+    }
     out
+}
+
+/// Text evidence that a TS file sends HTTP requests itself.
+const HTTP_MARKERS: &[&str] = &["HttpClient", "this.http.", "fetch(", "axios", "apiBaseUrl"];
+
+/// Longest literal read for route segments. Route strings are short; long
+/// literals are prose, markup or data.
+const MAX_ROUTE_LITERAL: usize = 120;
+
+/// Static segments of a route pattern or request URL. Parameters of every
+/// shape — `<int:pk>`, `(?P<pk>[^/]+)`, `${id}`, `[^/]+`, `\d+` — become
+/// separators, so `^documents/(?P<pk>\d+)/notes/$` and
+/// `` `${base}documents/${id}/notes/` `` both yield `documents`, `notes`.
+/// Segments start with a letter and are at least two characters.
+pub fn route_segments(raw: &str) -> Vec<String> {
+    fn flush(cur: &mut String, out: &mut Vec<String>) {
+        if cur.len() >= 2 && cur.starts_with(|c: char| c.is_ascii_alphabetic()) {
+            out.push(std::mem::take(cur));
+        }
+        cur.clear();
+    }
+    let chars: Vec<char> = raw.chars().collect();
+    let mut out = Vec::new();
+    let mut cur = String::new();
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        let close = match c {
+            '(' => Some(')'),
+            '<' => Some('>'),
+            '[' => Some(']'),
+            '{' => Some('}'),
+            _ => None,
+        };
+        if let Some(close) = close {
+            flush(&mut cur, &mut out);
+            let mut depth = 0;
+            while i < chars.len() {
+                if chars[i] == c {
+                    depth += 1;
+                } else if chars[i] == close {
+                    depth -= 1;
+                    if depth == 0 {
+                        break;
+                    }
+                }
+                i += 1;
+            }
+        } else if c == '\\' {
+            flush(&mut cur, &mut out);
+            i += 1; // the escaped character is regex syntax, not a segment
+        } else if c.is_ascii_alphanumeric() || c == '_' || c == '-' {
+            cur.push(c);
+        } else {
+            flush(&mut cur, &mut out);
+        }
+        i += 1;
+    }
+    flush(&mut cur, &mut out);
+    out
+}
+
+/// Django route declarations under `node`, with `include()` nesting as a
+/// segment prefix. A call named `path`/`re_path`/`url`/`register` whose first
+/// argument is a string is a route: its second argument names the view
+/// (`View`, `View.as_view()`, `module.view`) or holds an `include(...)`,
+/// whose routes inherit the pattern as prefix.
+fn python_routes(node: Node, src: &str, prefix: &[String], out: &mut Vec<Route>, depth: usize) {
+    if depth > MAX_DEPTH {
+        return;
+    }
+    if node.kind() == "call" {
+        if let Some((pattern, target)) = route_call(node, src) {
+            let mut segments = prefix.to_vec();
+            segments.extend(route_segments(&pattern));
+            if let Some(view) = view_name(target, src) {
+                out.push(Route { segments, view });
+            } else {
+                python_routes(target, src, &segments, out, depth + 1);
+            }
+            return;
+        }
+    }
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        python_routes(child, src, prefix, out, depth + 1);
+    }
+}
+
+/// `(pattern, second positional argument)` of a route-declaring call.
+fn route_call<'a>(node: Node<'a>, src: &str) -> Option<(String, Node<'a>)> {
+    let callee = node.child_by_field_name("function")?;
+    let name = callee.utf8_text(src.as_bytes()).ok()?.rsplit('.').next()?;
+    if !matches!(name, "path" | "re_path" | "url" | "register") {
+        return None;
+    }
+    let args = node.child_by_field_name("arguments")?;
+    let mut cursor = args.walk();
+    let mut positional = args
+        .named_children(&mut cursor)
+        .filter(|c| c.kind() != "keyword_argument" && c.kind() != "comment");
+    let pattern = string_value(positional.next()?, src)?;
+    Some((pattern, positional.next()?))
+}
+
+/// The view a route argument names: `View`, `View.as_view(...)` or
+/// `module.view`. `None` for anything else (an `include(...)`, a list).
+fn view_name(node: Node, src: &str) -> Option<String> {
+    let text = |n: Node| n.utf8_text(src.as_bytes()).ok().map(str::to_string);
+    match node.kind() {
+        "identifier" => text(node),
+        "attribute" => text(node)?.rsplit('.').next().map(str::to_string),
+        "call" => {
+            let callee = node.child_by_field_name("function")?;
+            let t = text(callee)?;
+            let base = t.strip_suffix(".as_view")?;
+            is_dotted_path(base).then(|| base.rsplit('.').next().unwrap_or(base).to_string())
+        }
+        _ => None,
+    }
 }
 
 fn visit(node: Node, src: &str, in_export: bool, py: bool, out: &mut FileParse, depth: usize) {
@@ -226,6 +376,29 @@ fn visit(node: Node, src: &str, in_export: bool, py: bool, out: &mut FileParse, 
                 if raw.starts_with('/') {
                     if let Some(u) = normalize_url(&raw) {
                         out.urls.push(u);
+                    }
+                }
+            }
+        }
+
+        // Route evidence: short, space-free literals only; UI text and
+        // markup have spaces or length, route strings do not.
+        let literal = match kind {
+            "string" => string_value(node, src),
+            "template_string" => node.utf8_text(src.as_bytes()).ok().map(str::to_string),
+            _ => None,
+        };
+        if let Some(lit) = literal {
+            if lit.len() <= MAX_ROUTE_LITERAL && !lit.contains(char::is_whitespace) {
+                out.url_segments.extend(route_segments(&lit));
+            }
+        }
+        if kind == "extends_clause" {
+            if let Some(value) = node.child_by_field_name("value") {
+                if let Ok(t) = value.utf8_text(src.as_bytes()) {
+                    let base = t.split('<').next().unwrap_or(t).trim();
+                    if is_identifier(base) {
+                        out.extends.push(base.to_string());
                     }
                 }
             }
@@ -695,5 +868,61 @@ mod tests {
         let out = parse_py("from .model import Model\ndef broken(:\n");
         assert!(out.partial);
         assert!(out.refs.iter().any(|r| r.specifier == ".model"));
+    }
+
+    #[test]
+    fn route_segments_drop_parameters_of_every_shape() {
+        assert_eq!(route_segments("^documents/(?P<pk>[^/.]+)/notes/$"), vec!["documents", "notes"]);
+        assert_eq!(route_segments("users/<int:pk>/profile/"), vec!["users", "profile"]);
+        assert_eq!(route_segments("`${this.baseUrl}${this.resourceName}/bulk_edit/`"), vec!["bulk_edit"]);
+        assert_eq!(route_segments("share_links"), vec!["share_links"]);
+        assert!(route_segments("/1/x/").is_empty());
+    }
+
+    #[test]
+    fn django_routes_carry_include_prefixes_and_view_names() {
+        let out = parse_py(
+            "router.register(r'tags', TagViewSet)
+urlpatterns = [
+    re_path(r'^api/', include([
+        re_path('^documents/', include([
+            re_path('^bulk_edit/', BulkEditView.as_view(), name='bulk_edit'),
+        ])),
+        path('profile/', views.ProfileView.as_view()),
+        path('login/', allauth_views.login),
+    ])),
+    path('admin/', admin.site.urls),
+]
+",
+        );
+        let got: Vec<(Vec<String>, String)> =
+            out.routes.iter().map(|r| (r.segments.clone(), r.view.clone())).collect();
+        let s = |v: &[&str]| v.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        assert!(got.contains(&(s(&["tags"]), "TagViewSet".into())));
+        assert!(got.contains(&(s(&["api", "documents", "bulk_edit"]), "BulkEditView".into())));
+        assert!(got.contains(&(s(&["api", "profile"]), "ProfileView".into())));
+        assert!(got.contains(&(s(&["api", "login"]), "login".into())));
+    }
+
+    #[test]
+    fn ts_route_evidence_reads_literals_http_and_extends() {
+        let out = parse(
+            "export class TagService extends AbstractNameFilterService<Tag> {
+  constructor() { super(); this.resourceName = 'tags' }
+  label = 'Save changes now'
+}
+",
+            Language::Ts,
+        );
+        assert_eq!(out.extends, vec!["AbstractNameFilterService"]);
+        assert!(!out.http);
+        assert!(out.url_segments.contains(&"tags".to_string()));
+        assert!(!out.url_segments.contains(&"Save".to_string()), "prose is not route evidence");
+        let base = parse(
+            "export abstract class AbstractPaperlessService { url = `${environment.apiBaseUrl}x/` }
+",
+            Language::Ts,
+        );
+        assert!(base.http);
     }
 }

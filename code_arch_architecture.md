@@ -544,11 +544,11 @@ Node-kind tables, not .scm     tree-sitter 0.27 returns a StreamingIterator from
 Own graph structures, no       Leiden and PageRank both wanted custom
 petgraph                       adjacency anyway; the dependency bought nothing.
 
-Louvain + connectivity         Full Leiden refinement is deferred. The
-guarantee, not full Leiden     connectivity property — no internally
-                               disconnected community, enforced at every level —
-                               is the part the architecture actually chose
-                               Leiden for, and it is implemented and tested.
+Louvain + connectivity         Full Leiden refinement is implemented (see the
+superseded note, not full Leiden 2026-09-14 below). The connectivity
+                               property — no internally disconnected
+                               community, enforced at every level — remains
+                               the part the architecture chose Leiden for.
 
 Stage 9 ships DerivedLabeler   The declared fallback path: derived name plus
 only                           templated summary, no model. llama.cpp slots in
@@ -670,8 +670,10 @@ user's act, the policy is the recommendation.
 Cross-language edges — an API contract between a TypeScript frontend and a
 Python backend is a real dependency that no single-language resolver sees.
 Co-change catches some of it; URL-contract harvesting (below) catches exact
-path matches. Semantic contracts (shared schemas, un-harvested call shapes)
-remain open.
+path matches. Semantic contracts are now implemented (2026-09-14, below:
+shared rare symbol shapes joined cross-ecosystem at 0.30, one edge per pair,
+rarity-floored, stated in the map sentence separately from URL contracts).
+Teacher-model summary distillation remains the open half of the LoRA path.
 Measured 2026-09-13 on `eval/fixtures/xlang` (deliberately manifest-free, to
 isolate the parse question): `fetch('/api/users')` and
 `@app.route('/api/users')` share an exact contract string and the map shows
@@ -1315,3 +1317,135 @@ Reproduce: `cargo build --features llm`, then `python eval/score_sweep.py`.
 192 Rust tests and 52 Python tests pass (M6 adds the 8 hermetic Python
 sweep/LoRA tests; the Rust count grew past the M6-lite 166 through the
 monorepo/xlang slices, none added by M6 itself).
+
+
+## 2026-09-14 — four deferred items closed: Leiden refinement, semantic contracts, LoRA path, offline M1v2 proxy
+
+Four items the record left open, each finished to the repo's standard —
+implemented, measured, tested, stated limits.
+
+### Full Leiden refinement — implemented, deterministic, maps byte-identical
+
+`src/cluster.rs` now runs the complete Leiden loop: local moving, then
+refinement (each community re-partitioned from singletons with merges
+restricted to stay inside the parent community, only strictly-improving
+moves admitted), then aggregation over the refined partition. This closes
+the deviation recorded since M0 ("refinement deferred").
+
+Two deliberate deviations from Traag–Waltman–van Eck, both for
+determinism-first: the merge choice is greedy-best rather than
+randomness-proportional, and refined parts pass through the same
+connectivity split as coarse ones. Same seeds reproduce byte for byte.
+
+Measured on the pinned checkouts (`--no-git`, byte-identical ×2 on every
+one): hono 16 domains / 3,365 tokens / confidence 0.94, typedi 6 / 1,657 /
+0.97, commerce 11 / confidence high throughout, realworld 12 domains with
+the textbook Django names (Articles, Authentication, Profiles,
+Conduit Articles, Migrations) — the refinement separates the app
+clusters from the migration clusters that the old single-level pass
+lumped. All 206 Rust tests pass, including three new ones: refinement
+never leaks across parent communities, is deterministic, and every refined
+part is internally connected.
+
+### Semantic contracts — implemented, cross-ecosystem symbol shapes at 0.30
+
+The URL-contract join (exact normalized path) is now one of two contract
+kinds. `contract::semantic_join` joins a TS file and a Python file that
+share a rare symbol shape — `createUser` ↔ `create_user`, the "un-harvested
+call shapes" the Still Open record named. Design rules, each tested:
+
+```text
+Callable surface only   functions/classes/methods; TS requires exported,
+                         Python (no export flag) all defs
+Rarity floor            stems in >3 files on either ecosystem side never
+                         join; a 46-stem common list (get, run, parse…)
+                         is refused outright
+Ecosystem divide        Python-vs-not only, same as URL contracts
+No double assertion    a pair already joined by URL is not re-added
+One edge per pair       two evidence kinds sum weights, one contract entry
+Fusion weight 0.30      below URL contracts (0.45): lexical evidence one
+                         step weaker than an exact path match
+```
+
+The map's relationships sentence states the two kinds separately ("2 API
+contracts, 3 cross-language symbol contracts"), and zero of either kind
+reproduces every historical sentence byte-identically. The import-index
+ceiling invariant holds for both: contracts never enter `imports.md`.
+
+Measured: a synthetic repo (`syncCartTotal`/`sync_cart_total`) joins with
+the caveat rendered. On real checkouts the join stays quiet — hono/typedi
+are single-ecosystem (correctly zero; the divide excludes them), the mono
+fixture shares no shapes across its TS/Python halves (true negative:
+`get_user` vs `formatName`). No multi-ecosystem checkout exists locally,
+so real-repository false-positive rate rests on the synthetic adversaries
+plus the rarity floor — stated, the same position URL contracts were in
+before the hono live-fire event.
+
+### M1v2 offline efficacy proxy — the gate runs, decisively, without a provider
+
+The paid M1v2 agent run stays gated on provider credit. The question
+underneath it — is the impact answer cheaper and more accurate through
+codearch's artifacts than through the best-effort strategy a repository
+grep agent executes? — is deterministic, so `eval/impact_proxy.py` measures
+it with zero calls. Two arms over the 37 gated impact tasks, both given the
+full inventory and the target: a best-effort iterative grep walk (search
+by stem, open, verify against real import lines, 15 searches / 40 opens,
+everything charged) versus the on-demand index (map + one
+`imports.md` open, pure graph walk). Both scored natural and
+cardinality-controlled, pre-stated verdict rule fixed in the script.
+
+```text
+                      natural F1    cardinality F1    mean tokens    opens
+Iterative grep          0.279          0.287           46,754        29.4
+Map + index             0.890          0.928           17,630         1.0
+
+Offline payoff: yes (rule: index natural F1 ≥ grep + 0.10 AND tokens ≤).
+Index F1 0.890 reproduces the recorded deterministic ceiling exactly.
+The grep arm exhausted its generous budget on 14/37 tasks and still lost.
+```
+
+What this does and does not establish: it is an information-access
+measurement, not an agent run. It shows the artifacts' economics are real
+(the answer genuinely costs ~2.6× more tokens to reconstruct without the
+index, and iterative grep does not even reach it), which justifies serving
+the index to an agent. Whether a paid agent actually uses it remains the
+M1v2 run's question — recorded as the open gate, not claimed as closed.
+Hermetic tests: `eval/test_impact_proxy.py` (9 tests, no build/network).
+
+### LoRA training path — harvested, wired, gated; training itself needs llama.cpp
+
+The M6 record deferred training on three needs: teacher model, GPU time,
+harvested multi-repo pairs. The data and tooling halves are now closed:
+
+- **Harvest** (`eval/harvest_lora.py`): 66 production clusters from the
+  four pinned checkouts (hono 43, commerce 13, typedi 5, realworld 5),
+  exported through the production pipeline (`eval-support clusters` op — no
+  model, no invented clusters). Emits `lora-corpus.jsonl` (evidence),
+  `lora-train.jsonl` (inference-shaped `{prompt, completion}` pairs) and
+  `lora-distill-worklist.json` (clusters where a teacher writes summaries
+  when credit exists, derived-template fallback attached).
+- **Runtime** (`src/label/llm.rs`): `LlmLabeler::load_with_lora` applies a
+  trained adapter at `--lora-scale` on every context — llama-cpp-2's
+  adapter API wired through `Options`, `--lora`/`--lora-scale` CLI flags,
+  and eval-support's `labels` op, so the frozen-set scorer can gate any
+  adapter through the exact production path.
+- **Trainer + gate** (`eval/train_lora.py`): one command wrapping
+  llama.cpp's `convert_lora_to_gguf.py --jsonl` and `finetune` (CPU-only
+  defaults, rank 16, seed fixed; GPU flags pass through). The gate is
+  pre-stated from the M6 sweep numbers: the adapter must beat its own
+  untrained base (20% specificity — verified live, the re-plumbed path
+  reproduces the recorded 0.5B number exactly), and adoption requires
+  derived parity (75%). Below 75% the adapter is recorded, not adopted.
+
+Not done, honestly: no llama.cpp checkout exists on this machine, so no
+adapter has been trained — `--dry-run` prints the exact command sequence.
+The 0.5B-must-recover-~-55-pp bar from the M6 record still stands. Hermetic
+tests: `eval/test_lora_pipeline.py` (6 tests: prompt shape mirrors
+`build_prompt`, pair format parses as the labeler reply, gate numbers match
+the sweep record, harvest respects the size floor).
+
+206 Rust tests (192 before) and 39 Python tests (24 before) pass, both
+feature sets. The new Python files are impact_proxy.py, test_impact_proxy.py
+(9 tests), harvest_lora.py, train_lora.py, test_lora_pipeline.py (6 tests).
+The M1 lexical harness reproduces its recorded baseline (40/40 with-map,
+32/40 without) on the current binary.

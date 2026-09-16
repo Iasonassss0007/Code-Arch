@@ -25,6 +25,11 @@ pub const W_COCHANGE: f64 = 0.55;
 /// An exact cross-language contract match: precise but lexical, hence below
 /// co-change (behavioral) and above directory (prior).
 pub const W_CONTRACT: f64 = 0.45;
+/// A shared rare symbol shape across languages (`createUser` ↔
+/// `create_user`): lexical evidence one step weaker than an exact path
+/// match, so it couples at just above directory co-location. It never
+/// enters the import index — the index's contract is imports.
+pub const W_CONTRACT_SEMANTIC: f64 = 0.30;
 /// Weak prior that keeps sibling files from fragmenting when imports are sparse.
 pub const W_DIRECTORY: f64 = 0.25;
 
@@ -101,6 +106,19 @@ pub fn build(
     cc: &CoChange,
     contracts: &[(usize, usize)],
 ) -> CodeGraph {
+    build_with_semantic(inv, res, cc, contracts, &[])
+}
+
+/// `contracts` are URL pairs (exact path match); `semantic` are shared
+/// rare-symbol-shape pairs. Both fuse cross-language coupling the import
+/// graph cannot see, at different weights because the evidence differs.
+pub fn build_with_semantic(
+    inv: &Inventory,
+    res: &Resolution,
+    cc: &CoChange,
+    contracts: &[(usize, usize)],
+    semantic: &[(usize, usize)],
+) -> CodeGraph {
     let n = inv.len();
     let mut weights: HashMap<(usize, usize), f64> = HashMap::new();
     let mut out_edges = vec![Vec::new(); n];
@@ -129,6 +147,25 @@ pub fn build(
         in_edges[b].push(a);
         *weights.entry(key(a, b)).or_insert(0.0) += W_CONTRACT;
         fused_contracts.push(key(a, b));
+    }
+
+    // Semantic contracts: same coupling, weaker claim. Same ceiling
+    // invariant — never into the import index, and here sub-import weight.
+    for &(a, b) in semantic {
+        if a >= n || b >= n || a == b {
+            continue;
+        }
+        out_edges[a].push(b);
+        out_edges[b].push(a);
+        in_edges[a].push(b);
+        in_edges[b].push(a);
+        *weights.entry(key(a, b)).or_insert(0.0) += W_CONTRACT_SEMANTIC;
+        let k = key(a, b);
+        // One edge per pair regardless of evidence kind: the pair is the
+        // claim, not its multiplicity.
+        if !fused_contracts.contains(&k) {
+            fused_contracts.push(k);
+        }
     }
 
     // Co-change: files that keep changing together are coupled whether or not
@@ -293,6 +330,39 @@ mod tests {
         res.edges.push((0, 1));
         let g = build(&inv, &res, &CoChange::default(), &[(0, 1)]);
         assert!((weight(&g, 0, 1) - (W_IMPORT + W_CONTRACT)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn semantic_contract_fuses_below_url_weight() {
+        let inv = inventory(&["a/one.ts", "b/two.py"]);
+        let g = build_with_semantic(
+            &inv,
+            &Resolution::default(),
+            &CoChange::default(),
+            &[],
+            &[(0, 1)],
+        );
+        assert!((weight(&g, 0, 1) - W_CONTRACT_SEMANTIC).abs() < 1e-9);
+        // Traversable like URL contracts — the coupling is the point.
+        assert!(g.out_edges[0].contains(&1));
+        assert_eq!(g.fan_in(1), 1);
+        assert_eq!(g.contracts, vec![(0, 1)]);
+    }
+
+    #[test]
+    fn url_and_semantic_on_the_same_pair_sum() {
+        let inv = inventory(&["a/one.ts", "b/two.py"]);
+        let g = build_with_semantic(
+            &inv,
+            &Resolution::default(),
+            &CoChange::default(),
+            &[(0, 1)],
+            &[(0, 1)],
+        );
+        // The pair is deduplicated in `contracts` (one edge per pair), but
+        // the weights sum: two independent pieces of evidence.
+        assert!((weight(&g, 0, 1) - (W_CONTRACT + W_CONTRACT_SEMANTIC)).abs() < 1e-9);
+        assert_eq!(g.contracts.len(), 1);
     }
 
     #[test]

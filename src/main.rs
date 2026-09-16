@@ -61,6 +61,14 @@ struct Cli {
     /// Threads for local inference (default: all available cores).
     #[arg(long)]
     llm_threads: Option<i32>,
+
+    /// Trained LoRA adapter applied on top of --model (M6 fine-tune path).
+    #[arg(long, requires = "model")]
+    lora: Option<PathBuf>,
+
+    /// Strength of the LoRA adapter (llama.cpp --lora-scale; default 1.0).
+    #[arg(long, default_value_t = 1.0)]
+    lora_scale: f32,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, clap::ValueEnum)]
@@ -95,6 +103,8 @@ fn main() -> Result<()> {
         labeler: cli.labeler.into(),
         model_path: cli.model,
         llm_threads: cli.llm_threads,
+        lora_path: cli.lora,
+        lora_scale: cli.lora_scale,
     };
 
     println!("Analyzing repository...");
@@ -132,7 +142,10 @@ fn main() -> Result<()> {
         println!("Split:               root routes to domain files");
     }
     if report.contracts > 0 {
-        println!("API contracts:       {}", report.contracts);
+        println!(
+            "API contracts:       {} URL, {} symbol shapes",
+            report.url_contracts, report.semantic_contracts
+        );
     }
     println!(
         "Flows:               {}",
@@ -170,6 +183,9 @@ fn main() -> Result<()> {
         println!("  {}", p.display());
     }
     println!("  {}", report.imports_path.display());
+    if let Some(p) = &report.routes_path {
+        println!("  {} ({} views with frontend callers)", p.display(), report.route_views);
+    }
     println!();
     println!("Generated context:   {} tokens", report.map_tokens);
     println!(
