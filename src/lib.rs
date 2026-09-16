@@ -27,6 +27,7 @@ pub mod git;
 pub mod graph;
 pub mod inventory;
 pub mod label;
+pub mod mcp;
 pub mod parse;
 pub mod profile;
 pub mod query;

@@ -112,6 +112,15 @@ enum Commands {
         #[arg(long)]
         codearch_dir: Option<PathBuf>,
     },
+    /// Serve the two lookups as MCP tools over stdio.
+    Mcp {
+        /// Repository root (default: `.`).
+        #[arg(long)]
+        repo: Option<PathBuf>,
+        /// Where the index files are read from (default: <repo>/.codearch).
+        #[arg(long)]
+        codearch_dir: Option<PathBuf>,
+    },
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, clap::ValueEnum)]
@@ -348,6 +357,16 @@ fn run_query(command: &Commands) -> i32 {
             if let Some(mins) = query::index_age_minutes(&dir, "routes.md") {
                 eprintln!("index written {mins} minutes ago");
             }
+            0
+        }
+        Commands::Mcp { repo, codearch_dir } => {
+            let repo = repo.clone().unwrap_or_else(|| PathBuf::from("."));
+            let server = codearch::mcp::Server::new(repo, codearch_dir.clone());
+            let stdin = std::io::stdin();
+            server.serve(
+                std::io::BufReader::new(stdin.lock()),
+                std::io::stdout(),
+            );
             0
         }
     }
