@@ -211,4 +211,5 @@ requests).
 | 2-ablate | step 2 without subscript-index rule | 45 | 7 | 0 | 0.87 | 1.00 | 8/8 | — (subscript rule = −1: trash.service `data['documents']`; `SystemStatusView` FP already gone there via the `literal_type` half, so indexed-access `T['status']` = −1) |
 | 2-ablate | step 2 without `path:`-pair rule | 45 | 6 | 0 | 0.88 | 1.00 | 8/8 | — (`path:`-keys −0 on paperless; kept as generic router rule with unit test) |
 | 2-ablate | step 2 without call-arg rules (navigate + accessors) | 45 | 8 | 0 | 0.85 | 1.00 | 8/8 | — (navigate = −1 doc-detail `['documents']`, accessors = −1 doc-detail `.get('custom_fields')`) |
+| 3 | most-specific route wins (`url_segment_seqs`, FORMAT 5) | 45 | 5 | 0 | 0.90 | 1.00 | 8/8 | kept (−1: chat.service `` `…documents/chat/` ``; still caller of `ChatStreamingView`, doc.service still caller of `UnifiedSearchViewSet`) |
 | | | | | | | | | |

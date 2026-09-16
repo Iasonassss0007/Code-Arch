@@ -35,7 +35,9 @@ use std::path::Path;
 /// must re-parse, never serve stale.
 /// v4: `FileParse` gains route evidence (`routes`, `url_segments`, `http`,
 /// `extends`) for `contract::route_join`.
-pub const FORMAT: u32 = 4;
+/// v5: `FileParse` gains `url_segment_seqs` (per-literal segment sequences
+/// for most-specific-wins in `route_join`).
+pub const FORMAT: u32 = 5;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StoredFile {

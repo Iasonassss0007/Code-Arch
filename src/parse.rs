@@ -76,6 +76,12 @@ pub struct FileParse {
     /// literals (`'tags'`, `` `${base}documents/bulk_edit/` ``), sorted.
     #[serde(default)]
     pub url_segments: Vec<String>,
+    /// TS: the segment sequence of each literal (`[["documents","chat"]]`),
+    /// alongside the flat `url_segments` set. Lets `contract::route_join`
+    /// tell a bare `'tags'` (a real request word) from `documents` inside
+    /// `` `…documents/chat/` `` (a prefix of a longer route).
+    #[serde(default)]
+    pub url_segment_seqs: Vec<Vec<String>>,
     /// TS: the file text names an HTTP client (`HttpClient`, `this.http.`,
     /// `fetch(`, `axios`, `apiBaseUrl`).
     #[serde(default)]
@@ -211,6 +217,8 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
         out.http = HTTP_MARKERS.iter().any(|m| src.contains(m));
         out.url_segments.sort();
         out.url_segments.dedup();
+        out.url_segment_seqs.sort();
+        out.url_segment_seqs.dedup();
     }
     out
 }
@@ -443,7 +451,11 @@ fn visit(
         };
         if let Some(lit) = literal {
             if lit.len() <= MAX_ROUTE_LITERAL && !lit.contains(char::is_whitespace) {
-                out.url_segments.extend(route_segments(&lit));
+                let segs = route_segments(&lit);
+                if !segs.is_empty() {
+                    out.url_segment_seqs.push(segs.clone());
+                    out.url_segments.extend(segs);
+                }
             }
         }
         if kind == "extends_clause" {
