@@ -9,8 +9,7 @@ guessing:
   boundary, from a Django view to the TypeScript files that request it.
 
 Lookups are what measurably help agents (see [What helps agents](#what-helps-agents)),
-so that is all `codearch` builds by default. A human-readable overview of the
-repository (`CODEBASE.md`) is available with `--map`.
+so that is all `codearch` builds.
 
 Everything runs locally. The tool makes no network connection, needs no account and
 collects nothing.
@@ -63,8 +62,7 @@ restarting the server.
 ## Commands
 
 ```
-codearch [PATH] [--codearch-dir DIR]             # lookup indexes only
-codearch [PATH] --map [MAP OPTIONS]              # indexes plus the CODEBASE.md overview
+codearch [PATH] [--codearch-dir DIR]
 codearch importers <file> [--depth N] [--json] [--repo PATH] [--codearch-dir DIR]
 codearch callers <View> [--json] [--repo PATH] [--codearch-dir DIR]
 codearch agents [--write FILE] [--repo PATH] [--codearch-dir DIR]
@@ -73,17 +71,6 @@ codearch mcp [--repo PATH] [--codearch-dir DIR]
 
 ```
 --codearch-dir <path> where the indexes are written (default: <repo>/.codearch)
-```
-
-Map options (each requires `--map`):
-
-```
---out <path>          where to write the map (default: <repo>/CODEBASE.md)
---budget <n>          hard token budget for the map (default: 4000)
---max-domains <n>     maximum top-level domains (default: 12)
---seed <n>            clustering seed; changes tie-breaks only
---no-index            skip .codearch/index.json
---no-git              ignore git history (no co-change signal)
 ```
 
 A directory literally named `importers` or `callers` is analyzed with
@@ -109,22 +96,9 @@ A directory literally named `importers` or `callers` is analyzed with
 | `.codearch/imports.md` | always | Reverse import index: for every imported file, each file that imports it |
 | `.codearch/routes.md` | when route links exist | Backend views and their frontend callers |
 | `.codearch/cache/` | always | Parse and git caches for fast re-runs; ignored by the tool's own `.gitignore` |
-| `CODEBASE.md` | `--map` | The overview: domains, stack, flows, most-imported files |
-| `.codearch/index.json` | `--map` | Machine-readable map data (skip with `--no-index`) |
 
-**What to commit:** `.codearch/*.md` (and `CODEBASE.md` if you generate it), not the
+**What to commit:** `.codearch/*.md`, not the
 cache. A fresh clone can then answer lookups immediately.
-
-Upgrading from 0.1: `codearch` no longer rewrites `CODEBASE.md`. An existing one is
-left in place and the run prints a note; use `--map` to keep refreshing it.
-
-### Map (optional)
-
-`codearch --map` also writes `CODEBASE.md`, a compact overview of the repository for
-people: domains, stack, entry points, flows and the most-imported files. It is not
-meant for agent prompts. Pasted into an agent's instructions it measured slightly
-worse answers at almost twice the tokens (see below); point agents at the lookups
-instead.
 
 ## Supported code
 
@@ -150,7 +124,7 @@ files are affected?"* The model explores the repository with search and file-ope
 tools, then answers with a list of files. It tries each task in one of three setups:
 
 - **No help:** only search and open.
-- **Map in the prompt:** the same, plus the whole `CODEBASE.md` pasted into its
+- **Map in the prompt:** the same, plus a generated codebase overview pasted into its
   instructions.
 - **Lookup tool:** the same, plus `importers` (and, for cross-language tasks,
   `route_callers`) to call whenever it wants.
