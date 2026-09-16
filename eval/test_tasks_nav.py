@@ -182,6 +182,36 @@ def test_importers_tool_is_refused_without_the_arm_and_prompt_only_extends(tmp_p
     assert '"importers"' in system_for(impact, "importers_tool")
 
 
+def test_session_route_callers_tool_serves_the_route_index(tmp_path):
+    from run import Session
+    from run_agent import parse_routes
+    (tmp_path / "a.ts").write_text("x", encoding="utf-8")
+    index = parse_routes(
+        "# Route callers\n\n## `TagViewSet` — `src/views.py`\n\nRoutes: `tags`\n\n"
+        "- `ui/tag.service.ts`\n- `ui/a.ts`\n")
+    assert index == {"TagViewSet": ["ui/tag.service.ts", "ui/a.ts"]}
+    s = Session(tmp_path, "q", "", importers=lambda rel: {}, route_callers=index)
+    assert json.loads(s.trace[0]["content"])["tools"] == ["importers", "route_callers"]
+    s.action({"tool": "route_callers", "view": "TagViewSet"})
+    assert json.loads(s.trace[-1]["content"]) == {"view": "TagViewSet", "callers": ["ui/a.ts", "ui/tag.service.ts"]}
+    s.action({"tool": "route_callers", "view": "Unknown"})
+    assert json.loads(s.trace[-1]["content"])["callers"] == []
+    assert s.route_lookups == 2
+    with pytest.raises(ValueError):
+        Session(tmp_path, "q", "").action({"tool": "route_callers", "view": "TagViewSet"})
+
+
+def test_routes_tool_prompt_and_schema_offer_both_indexes_only_to_that_arm():
+    from openrouter_agent import SYSTEM_IMPACT, IMPORTERS_TOOL, ROUTES_TOOL, system_for
+    import gemini_agent as G
+    impact = {"kind": "impact"}
+    assert system_for(impact, "routes_tool") == SYSTEM_IMPACT + IMPORTERS_TOOL + ROUTES_TOOL
+    enum = lambda arm: G.schema_for(system_for(impact, arm))["properties"]["tool"]["enum"]
+    assert enum("routes_tool") == ["search", "open", "answer", "importers", "route_callers"]
+    assert enum("importers_tool") == ["search", "open", "answer", "importers"]
+    assert "view" not in G.schema_for(system_for(impact, "without_map"))["properties"]
+
+
 def test_rescore_regrades_recorded_answers_and_drops_removed_tasks():
     from rescore_nav import rescore, paired
     tasks = [{"id": "t1", "expected_files": ["a.ts", "b.ts"]}]
