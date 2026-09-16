@@ -23,51 +23,56 @@ struct Cli {
     #[arg(default_value = ".")]
     path: PathBuf,
 
+    /// Also build the CODEBASE.md overview and index.json. Without it, only
+    /// the lookup indexes are written.
+    #[arg(long)]
+    map: bool,
+
     /// Where to write the map (default: <repo>/CODEBASE.md).
-    #[arg(short, long)]
+    #[arg(short, long, requires = "map")]
     out: Option<PathBuf>,
 
     /// Hard token budget for the generated map.
-    #[arg(short, long, default_value_t = DEFAULT_BUDGET)]
+    #[arg(short, long, default_value_t = DEFAULT_BUDGET, requires = "map")]
     budget: usize,
 
     /// Maximum number of top-level domains.
-    #[arg(long, default_value_t = DEFAULT_MAX_DOMAINS)]
+    #[arg(long, default_value_t = DEFAULT_MAX_DOMAINS, requires = "map")]
     max_domains: usize,
 
     /// Clustering seed. Changing it reshuffles tie-breaks, nothing else.
-    #[arg(long, default_value_t = 0x5EED)]
+    #[arg(long, default_value_t = 0x5EED, requires = "map")]
     seed: u64,
 
     /// Skip writing .codearch/index.json.
-    #[arg(long)]
+    #[arg(long, requires = "map")]
     no_index: bool,
 
     /// Ignore git history: no co-change edges, no churn term.
-    #[arg(long)]
+    #[arg(long, requires = "map")]
     no_git: bool,
 
-    /// Where index.json and imports.md are written (default: <repo>/.codearch).
+    /// Where the indexes (and index.json) are written (default: <repo>/.codearch).
     #[arg(long)]
     codearch_dir: Option<PathBuf>,
 
     /// How domains are named. `llm` needs a binary built with --features llm.
-    #[arg(long, value_enum, default_value_t = LabelerArg::Derived)]
+    #[arg(long, value_enum, default_value_t = LabelerArg::Derived, requires = "map")]
     labeler: LabelerArg,
 
     /// GGUF model file. Required with --labeler llm.
-    #[arg(long)]
+    #[arg(long, requires = "map")]
     model: Option<PathBuf>,
 
     /// Threads for local inference (default: all available cores).
-    #[arg(long)]
+    #[arg(long, requires = "map")]
     llm_threads: Option<i32>,
     /// Trained LoRA adapter applied on top of --model (M6 fine-tune path).
-    #[arg(long, requires = "model")]
+    #[arg(long, requires = "model", requires = "map")]
     lora: Option<PathBuf>,
 
     /// Strength of the LoRA adapter (llama.cpp --lora-scale; default 1.0).
-    #[arg(long, default_value_t = 1.0)]
+    #[arg(long, default_value_t = 1.0, requires = "map")]
     lora_scale: f32,
 
     /// Look up the index instead of analyzing: `importers` serves the
@@ -121,6 +126,20 @@ enum Commands {
         #[arg(long)]
         codearch_dir: Option<PathBuf>,
     },
+    /// Print the block that tells agents these lookups exist, or merge it
+    /// into a file they read (e.g. AGENTS.md) with --write.
+    Agents {
+        /// File to create or update, relative to --repo. Only the
+        /// codearch-marked block is replaced; other content is kept.
+        #[arg(long)]
+        write: Option<PathBuf>,
+        /// Repository root (default: `.`).
+        #[arg(long)]
+        repo: Option<PathBuf>,
+        /// Where the index files are read from (default: <repo>/.codearch).
+        #[arg(long)]
+        codearch_dir: Option<PathBuf>,
+    },
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, clap::ValueEnum)]
@@ -161,10 +180,16 @@ fn main() -> Result<()> {
         llm_threads: cli.llm_threads,
         lora_path: cli.lora,
         lora_scale: cli.lora_scale,
+        map: cli.map,
     };
 
     println!("Analyzing repository...");
     let report = codearch::run(&opts)?;
+
+    if !report.map {
+        print_index_report(&report, &opts);
+        return Ok(());
+    }
 
     println!();
     println!("Source files:        {}", report.files);
@@ -234,7 +259,9 @@ fn main() -> Result<()> {
     }
     println!();
     println!("Generated:");
-    println!("  {}", report.out_path.display());
+    if let Some(p) = &report.out_path {
+        println!("  {}", p.display());
+    }
     if let Some(p) = &report.index_path {
         println!("  {}", p.display());
     }
@@ -270,6 +297,58 @@ imports, so merging them further would assert a relationship the code does not h
     }
 
     Ok(())
+}
+
+/// The default run's summary: what the lookups can see, and what to do next.
+fn print_index_report(report: &codearch::RunReport, opts: &Options) {
+    println!();
+    println!("Source files:        {}", report.files);
+    println!(
+        "Import resolution:   {:.0}%{}",
+        report.resolution_rate * 100.0,
+        if report.unresolved > 0 {
+            format!(" ({} unresolved)", report.unresolved)
+        } else {
+            String::new()
+        }
+    );
+    println!("Import index:        {} imports", report.import_edges);
+    println!(
+        "Route callers:       {}",
+        if report.route_views > 0 {
+            format!("{} backend views with frontend callers", report.route_views)
+        } else {
+            "none found".to_string()
+        }
+    );
+    println!();
+    println!("Wrote:");
+    println!("  {}", report.imports_path.display());
+    if let Some(p) = &report.routes_path {
+        println!("  {}", p.display());
+    }
+    println!();
+    println!("Next:");
+    println!("  codearch importers <file>             who depends on a file");
+    if report.routes_path.is_some() {
+        println!("  codearch callers <View>               which frontend files call a backend view");
+    }
+    println!("  codearch agents --write AGENTS.md     tell your agents about these lookups");
+    println!("  codearch --map                        also write the CODEBASE.md overview");
+
+    // An older run's map is left alone, but it no longer tracks the code.
+    let root = opts.root.canonicalize().unwrap_or_else(|_| opts.root.clone());
+    let old_map = root.join("CODEBASE.md");
+    let generated = std::fs::read_to_string(&old_map)
+        .map(|t| t.starts_with("# Codebase Map") && t.contains("Generated by Code Arch"))
+        .unwrap_or(false);
+    if generated {
+        println!();
+        println!(
+            "Note: CODEBASE.md is from an earlier run and is no longer updated; re-run with \
+--map to refresh it, or delete it."
+        );
+    }
 }
 
 /// Answer one index lookup. Returns the process exit code: 0 for answers
@@ -369,6 +448,60 @@ fn run_query(command: &Commands) -> i32 {
             );
             0
         }
+        Commands::Agents {
+            write,
+            repo,
+            codearch_dir,
+        } => {
+            let repo = repo.clone().unwrap_or_else(|| PathBuf::from("."));
+            let dir = codearch_dir.clone().unwrap_or_else(|| repo.join(".codearch"));
+            // The block advertises lookups; without an index they cannot answer.
+            if let Err(e) = query::index_text(&dir, "imports.md", &repo.display().to_string()) {
+                eprintln!("{e}");
+                return 2;
+            }
+            let block = codearch::agents::block(dir.join("routes.md").is_file());
+            let Some(target) = write else {
+                println!("{block}");
+                return 0;
+            };
+            let path = repo.join(target);
+            let existing = match std::fs::read_to_string(&path) {
+                Ok(text) => Some(text),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+                Err(e) => {
+                    eprintln!("cannot read {}: {e}", path.display());
+                    return 2;
+                }
+            };
+            let merged = match codearch::agents::merge(existing.as_deref(), &block) {
+                Ok(text) => text,
+                Err(e) => {
+                    eprintln!("{}: {e}", path.display());
+                    return 2;
+                }
+            };
+            if existing.as_deref() == Some(merged.as_str()) {
+                println!("{} already up to date", path.display());
+                return 0;
+            }
+            if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
+                if let Err(e) = std::fs::create_dir_all(parent) {
+                    eprintln!("cannot create {}: {e}", parent.display());
+                    return 2;
+                }
+            }
+            if let Err(e) = std::fs::write(&path, merged) {
+                eprintln!("cannot write {}: {e}", path.display());
+                return 2;
+            }
+            println!(
+                "{} {}",
+                if existing.is_some() { "Updated" } else { "Created" },
+                path.display()
+            );
+            0
+        }
     }
 }
 
@@ -385,9 +518,35 @@ mod tests {
     #[test]
     fn analysis_invocations_still_parse_as_analysis() {
         assert!(cli(&["."]).command.is_none());
+        assert!(!cli(&["."]).map, "indexes only by default");
         assert_eq!(cli(&["src"]).path, PathBuf::from("src"));
-        assert!(cli(&["--no-git", "eval/fixtures/xlang"]).command.is_none());
-        assert!(cli(&["--budget", "100", "."]).command.is_none());
+        assert!(cli(&["--map", "--no-git", "eval/fixtures/xlang"]).command.is_none());
+        assert!(cli(&["--map", "--budget", "100", "."]).map);
+        assert!(cli(&["--codearch-dir", "state", "."]).command.is_none());
+    }
+
+    #[test]
+    fn map_only_options_require_map() {
+        for args in [
+            vec!["codearch", "--budget", "100", "."],
+            vec!["codearch", "--no-git", "."],
+            vec!["codearch", "--out", "m.md", "."],
+            vec!["codearch", "--labeler", "llm", "."],
+        ] {
+            let err = Cli::try_parse_from(&args).err().expect("rejected without --map");
+            assert!(err.to_string().contains("--map"), "{args:?}: {err}");
+        }
+    }
+
+    #[test]
+    fn agents_subcommand_parses() {
+        match cli(&["agents", "--write", "AGENTS.md"]).command {
+            Some(Commands::Agents { write, .. }) => {
+                assert_eq!(write, Some(PathBuf::from("AGENTS.md")));
+            }
+            other => panic!("unexpected parse: {other:?}"),
+        }
+        assert!(matches!(cli(&["agents"]).command, Some(Commands::Agents { write: None, .. })));
     }
 
     #[test]

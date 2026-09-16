@@ -18,6 +18,7 @@
 //! Every stage but 9 is deterministic: a run on unchanged input reproduces
 //! byte for byte.
 
+pub mod agents;
 pub mod cluster;
 pub mod cache;
 pub mod confidence;
@@ -80,6 +81,10 @@ pub struct Options {
     pub lora_path: Option<PathBuf>,
     /// llama.cpp `--lora-scale`; 1.0 is the trained strength.
     pub lora_scale: f32,
+    /// Build the full map (`CODEBASE.md`, `index.json`). When false, the run
+    /// stops after contracts and writes only the lookup indexes. The library
+    /// default stays `true`; the CLI defaults to indexes only (`--map` opts in).
+    pub map: bool,
 }
 
 impl Default for Options {
@@ -98,6 +103,7 @@ impl Default for Options {
             llm_threads: None,
             lora_path: None,
             lora_scale: 1.0,
+            map: true,
         }
     }
 }
@@ -237,7 +243,11 @@ pub struct RunReport {
     pub source_tokens_estimate: usize,
     pub resolution_rate: f64,
     pub unresolved: usize,
-    pub out_path: PathBuf,
+    /// Whether this run built the map. Index-only runs leave every map field
+    /// (domains, flows, confidence, git, labels) at zero.
+    pub map: bool,
+    /// `None` on index-only runs.
+    pub out_path: Option<PathBuf>,
     pub index_path: Option<PathBuf>,
     pub imports_path: PathBuf,
     pub import_edges: usize,
@@ -278,6 +288,61 @@ pub struct RunReport {
     pub route_views: usize,
     /// Written only when `route_views > 0`.
     pub routes_path: Option<PathBuf>,
+}
+
+/// The reverse import index and its hubs. Import-only directed edges: the
+/// graph's `in_edges` also carries contract pairs (flows and coupling
+/// traverse them), but the index's contract is imports — "every analyzed file
+/// that imports it" — and the navigation ceiling measurement assumes it.
+fn import_index_and_hubs(
+    inv: &inventory::Inventory,
+    profile: &profile::Profile,
+    res: &resolve::Resolution,
+) -> (render::ImportsIndex, Vec<(String, usize)>) {
+    let paths: Vec<&str> = inv.files.iter().map(|f| f.rel.as_str()).collect();
+    let mut import_in: Vec<Vec<usize>> = vec![Vec::new(); inv.len()];
+    for &(from, to) in &res.edges {
+        if from < inv.len() && to < inv.len() && from != to {
+            import_in[to].push(from);
+        }
+    }
+    for row in &mut import_in {
+        row.sort_unstable();
+        row.dedup();
+    }
+    let imports = render::import_index(
+        &render::map_title(profile, inv),
+        &paths,
+        &import_in,
+        res.resolution_rate,
+        res.unresolved.len(),
+    );
+    let hubs = render::import_hubs(&paths, &import_in, render::IMPORT_HUBS);
+    (imports, hubs)
+}
+
+/// Write the lookup indexes. `imports.md` always; `routes.md` only when there
+/// is something to say. A stale `routes.md` from an earlier run would claim
+/// callers the code no longer has, so it is removed.
+fn write_indexes(
+    dir: &std::path::Path,
+    inv: &inventory::Inventory,
+    imports: &render::ImportsIndex,
+    route_links: &[contract::RouteLink],
+) -> Result<(PathBuf, Option<PathBuf>)> {
+    let imports_path = dir.join("imports.md");
+    std::fs::write(&imports_path, &imports.markdown)
+        .with_context(|| format!("cannot write {}", imports_path.display()))?;
+    let routes_file = dir.join("routes.md");
+    let routes_path = if route_links.is_empty() {
+        let _ = std::fs::remove_file(&routes_file);
+        None
+    } else {
+        std::fs::write(&routes_file, contract::routes_markdown(inv, route_links))
+            .with_context(|| format!("cannot write {}", routes_file.display()))?;
+        Some(routes_file)
+    };
+    Ok((imports_path, routes_path))
 }
 
 pub fn run(opts: &Options) -> Result<RunReport> {
@@ -326,6 +391,53 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     let contracts = contract::join(&inv, &parsed);
     let semantic_contracts = contract::semantic_join(&inv, &parsed);
     let route_links = contract::route_join(&inv, &parsed);
+
+    // Index-only run: the lookups need nothing past this point. The cache is
+    // saved as loaded plus refreshed parses, so git, label and split entries
+    // from earlier --map runs survive untouched.
+    if !opts.map {
+        let (imports, _) = import_index_and_hubs(&inv, &profile, &res);
+        std::fs::create_dir_all(&dir)
+            .with_context(|| format!("cannot create {}", dir.display()))?;
+        if let Err(e) = store.save(&dir) {
+            eprintln!("warning: cannot write cache: {e:#}");
+        }
+        let (imports_path, routes_path) = write_indexes(&dir, &inv, &imports, &route_links)?;
+        timer.done("indexes+write");
+        let source_bytes: u64 = inv.files.iter().map(|f| f.bytes).sum();
+        return Ok(RunReport {
+            files: inv.len(),
+            loc: inv.total_loc(),
+            domains: 0,
+            map_tokens: 0,
+            source_tokens_estimate: (source_bytes / 4) as usize,
+            resolution_rate: res.resolution_rate,
+            unresolved: res.unresolved.len(),
+            map: false,
+            out_path: None,
+            index_path: None,
+            imports_path,
+            import_edges: imports.imports,
+            imports_tokens: imports.tokens,
+            cochange_pairs: 0,
+            commits_read: 0,
+            confidence: 0.0,
+            low_confidence_domains: 0,
+            split: false,
+            flows: 0,
+            flows_dropped: false,
+            used_directory_fallback: false,
+            truncated: false,
+            over_domain_cap: false,
+            labels_fell_back: 0,
+            labels_summary_fell_back: 0,
+            contracts: contracts.len() + semantic_contracts.len(),
+            url_contracts: contracts.len(),
+            semantic_contracts: semantic_contracts.len(),
+            route_views: route_links.len(),
+            routes_path,
+        });
+    }
 
     // 4 — Git signals. Absent history is a degraded run, not a failed one.
     // HEAD-keyed: an unchanged history reuses the stored signal.
@@ -482,29 +594,7 @@ Rebuild with: cargo build --release --features llm"
 
     // 10 — Render. The import index is built once, outside the budget ladder:
     // the root map only advertises it.
-    let paths: Vec<&str> = inv.files.iter().map(|f| f.rel.as_str()).collect();
-    // Import-only directed edges for the index and hubs. The graph's
-    // `in_edges` also carries contract pairs (flows and coupling traverse
-    // them), but the index's contract is imports — "every analyzed file that
-    // imports it" — and the navigation ceiling measurement assumes it.
-    let mut import_in: Vec<Vec<usize>> = vec![Vec::new(); inv.len()];
-    for &(from, to) in &res.edges {
-        if from < inv.len() && to < inv.len() && from != to {
-            import_in[to].push(from);
-        }
-    }
-    for row in &mut import_in {
-        row.sort_unstable();
-        row.dedup();
-    }
-    let imports = render::import_index(
-        &render::map_title(&profile, &inv),
-        &paths,
-        &import_in,
-        res.resolution_rate,
-        res.unresolved.len(),
-    );
-    let hubs = render::import_hubs(&paths, &import_in, render::IMPORT_HUBS);
+    let (imports, hubs) = import_index_and_hubs(&inv, &profile, &res);
     let map_input = render::MapInput {
         inv: &inv,
         profile: &profile,
@@ -577,21 +667,7 @@ Rebuild with: cargo build --release --features llm"
     if let Err(e) = store.save(&dir) {
         eprintln!("warning: cannot write cache: {e:#}");
     }
-    // Always written: the root map points at it.
-    let imports_path = dir.join("imports.md");
-    std::fs::write(&imports_path, &imports.markdown)
-        .with_context(|| format!("cannot write {}", imports_path.display()))?;
-    // Only when there is something to say; a stale file from an earlier run
-    // would claim callers the code no longer has.
-    let routes_file = dir.join("routes.md");
-    let routes_path = if route_links.is_empty() {
-        let _ = std::fs::remove_file(&routes_file);
-        None
-    } else {
-        std::fs::write(&routes_file, contract::routes_markdown(&inv, &route_links))
-            .with_context(|| format!("cannot write {}", routes_file.display()))?;
-        Some(routes_file)
-    };
+    let (imports_path, routes_path) = write_indexes(&dir, &inv, &imports, &route_links)?;
 
     let mut index_path = None;
     if opts.write_index {
@@ -621,7 +697,8 @@ Rebuild with: cargo build --release --features llm"
         source_tokens_estimate: (source_bytes / 4) as usize,
         resolution_rate: res.resolution_rate,
         unresolved: res.unresolved.len(),
-        out_path,
+        map: true,
+        out_path: Some(out_path),
         index_path,
         imports_path,
         import_edges: imports.imports,
@@ -871,6 +948,47 @@ mod tests {
     use super::*;
 
     #[test]
+    fn index_only_run_writes_the_same_index_and_keeps_the_map_cache() {
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("eval/fixtures/tier1");
+        let tmp = std::env::temp_dir().join(format!("codearch-index-only-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(&tmp).unwrap();
+        let state = tmp.join("state");
+        let map_opts = Options {
+            root: fixture.clone(),
+            out: Some(tmp.join("CODEBASE.md")),
+            codearch_dir: Some(state.clone()),
+            ..Options::default()
+        };
+        let full = run(&map_opts).unwrap();
+        let full_index = std::fs::read_to_string(&full.imports_path).unwrap();
+        std::fs::remove_file(tmp.join("CODEBASE.md")).unwrap();
+        std::fs::remove_file(state.join("index.json")).unwrap();
+        // Entries only a map run fills; the index-only run must carry them over.
+        let mut seeded = cache::Store::load(&state);
+        seeded.labels_llm.insert(
+            "k".into(),
+            cache::StoredLabel { name: "Kept".into(), summary: "kept".into() },
+        );
+        let split_before = seeded.split_decision.clone().map(|d| d.fingerprint);
+        seeded.save(&state).unwrap();
+
+        let idx = run(&Options { map: false, ..map_opts }).unwrap();
+        let idx_index = std::fs::read_to_string(&idx.imports_path).unwrap();
+        let after = cache::Store::load(&state);
+        let wrote_map = tmp.join("CODEBASE.md").exists() || state.join("index.json").exists();
+        let _ = std::fs::remove_dir_all(&tmp);
+
+        assert!(!idx.map && idx.out_path.is_none() && idx.index_path.is_none());
+        assert!(!wrote_map, "index-only runs write no map and no index.json");
+        assert_eq!(idx_index, full_index);
+        assert_eq!(idx.import_edges, full.import_edges);
+        assert_eq!(idx.domains, 0);
+        assert!(after.labels_llm.contains_key("k"));
+        assert_eq!(after.split_decision.map(|d| d.fingerprint), split_before);
+    }
+
+    #[test]
     fn run_writes_the_import_index_and_links_it_from_the_map() {
         let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("eval/fixtures/tier1");
         let tmp = std::env::temp_dir().join(format!("codearch-imports-test-{}", std::process::id()));
@@ -885,7 +1003,7 @@ mod tests {
         };
 
         let report = run(&opts).unwrap();
-        let map = std::fs::read_to_string(&report.out_path).unwrap();
+        let map = std::fs::read_to_string(report.out_path.as_ref().unwrap()).unwrap();
         let index = std::fs::read_to_string(&report.imports_path).unwrap();
         let _ = std::fs::remove_dir_all(&tmp);
 
@@ -937,7 +1055,7 @@ mod tests {
         };
 
         let report = run(&opts).unwrap();
-        let map = std::fs::read_to_string(&report.out_path).unwrap();
+        let map = std::fs::read_to_string(report.out_path.as_ref().unwrap()).unwrap();
         let index = std::fs::read_to_string(report.index_path.as_ref().unwrap()).unwrap();
         let _ = std::fs::remove_dir_all(&tmp);
 
@@ -984,7 +1102,7 @@ mod tests {
         };
 
         let report = run(&opts).unwrap();
-        let map = std::fs::read_to_string(&report.out_path).unwrap();
+        let map = std::fs::read_to_string(report.out_path.as_ref().unwrap()).unwrap();
         let index = std::fs::read_to_string(&report.imports_path).unwrap();
         let _ = std::fs::remove_dir_all(&tmp);
 
@@ -1023,7 +1141,7 @@ mod tests {
             ..Options::default()
         };
         let tight_report = run(&tight).unwrap();
-        let tight_map = std::fs::read_to_string(&tight_report.out_path).unwrap();
+        let tight_map = std::fs::read_to_string(tight_report.out_path.as_ref().unwrap()).unwrap();
         let _ = std::fs::remove_dir_all(&tmp);
 
         assert!(tight_report.flows_dropped, "flows survived budget pressure");
@@ -1083,7 +1201,7 @@ mod tests {
 
         let report = run(&opts).unwrap();
         assert!(report.split, "expected the 700-token budget to force a split");
-        let root_md = std::fs::read_to_string(&report.out_path).unwrap();
+        let root_md = std::fs::read_to_string(report.out_path.as_ref().unwrap()).unwrap();
         assert!(root_md.contains("## Routing"), "root has no routing table");
         assert!(root_md.contains(".codearch/domains/"), "root points nowhere");
         let domains: Vec<_> = std::fs::read_dir(tmp.join("state").join("domains"))
@@ -1120,7 +1238,7 @@ mod tests {
         std::fs::write(root.join("misc/a.ts"), "export const a = 1; // touched\n").unwrap();
         let report3 = run(&opts).unwrap();
         assert!(report3.split, "changed run should still split");
-        let root3 = std::fs::read_to_string(&report3.out_path).unwrap();
+        let root3 = std::fs::read_to_string(report3.out_path.as_ref().unwrap()).unwrap();
         assert!(root3.contains("## Routing"), "changed run lost routing");
         let _ = std::fs::remove_dir_all(&tmp);
     }
