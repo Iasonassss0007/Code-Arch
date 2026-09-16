@@ -166,12 +166,21 @@ extras.
   help), and 100% on the cross-language tasks.
 - With the **map in the prompt**, it did slightly *worse* than with no help at all.
 
-![Tokens relative to no help: lookup tool 82% and map 183% on navigation; lookup tool 28% on cross-language](docs/images/agent-tokens.svg)
+![Context read per task: lookup tool 3.5k tokens (34% less) vs map 9.4k (81% more) vs no help 5.2k on navigation; lookup tool 12.2k (54% less) vs no help 26.6k on cross-language](docs/images/agent-context.svg)
 
-- The lookup tool also made tasks **cheaper**: one call replaces a long chain of
-  searches and file reads.
-- The map made every task **almost twice as expensive**, because the model re-reads
-  it on every step.
+- With the **lookup tool**, the agent's context holds **34% less** on navigation and
+  **54% less** on cross-language tasks. One lookup answer replaces the search results
+  and opened files the agent would otherwise read to work out the same thing, which
+  leaves more room in the context window for the actual work.
+- With the **map in the prompt**, the context holds **81% more**: the map is added,
+  and the agent still searches and opens files.
+
+![Model tokens billed relative to no help: lookup tool 82% and map 183% on navigation; lookup tool 28% on cross-language](docs/images/agent-tokens.svg)
+
+- The smaller context also makes tasks **cheaper**. Models are billed for the whole
+  conversation on every step, so the saving compounds: the lookup tool cost 82% of
+  no help on navigation and **28%** on cross-language tasks.
+- The map made every navigation task **almost twice as expensive** (183%).
 
 <details>
 <summary>Exact numbers, confidence intervals and caveats</summary>
