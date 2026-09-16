@@ -129,6 +129,12 @@ Keywords are extracted deterministically — identifier frequency within the clu
 
 **Budget allocation across children.** Each domain file gets a share proportional to `cluster_size × log(1 + churn)`, floored at 300 tokens and capped at 1,200. Hot subsystems earn more space; a large dormant vendored region does not.
 
+### Decision 3 — Indexes are served as lookups, not just files
+
+**The question as posed:** `codearch` writes `.codearch/imports.md` and `.codearch/routes.md`, but a real agent reading those files is the setup that never helped — map-in-context arms score null or negative, while lookup arms win big (`importers(path)`: F1 +0.37 on navigation in `eval/results-nav-importers/`; `route_callers(view)` + `importers(path)`: F1 1.00 vs 0.874 with 8/8 exact on cross-language impact in `eval/results-xlang-routes-fixed/`, vs no benefit from the map as text in `eval/results-nav-3arm/` and `eval/results-xlang-36flash-paid/`).
+
+**Resolution:** serve the indexes as queries. `codearch importers <file>` and `codearch callers <View>` (plus `codearch mcp` for MCP clients) answer from the written index files with hop counts and miss reasons, never re-analyzing; the map spends a sentence per index pointing at them. The files stay as the stable on-disk format and the parity script (`eval/check_query_parity.py`) keeps the served answers byte-comparable to the measured eval lookups.
+
 ---
 
 ## Pipeline

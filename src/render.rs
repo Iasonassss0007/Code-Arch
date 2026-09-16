@@ -55,6 +55,9 @@ pub struct MapInput<'a> {
     /// `createUser` ↔ `create_user`). Stated separately: the evidence is
     /// weaker and the reader deserves to know which kind was fused.
     pub semantic_contracts: usize,
+    /// Whether `.codearch/routes.md` was written (route links exist). The
+    /// Imports section names the `callers` query only then.
+    pub has_routes: bool,
     pub budget: usize,
 }
 
@@ -290,7 +293,7 @@ Files are listed by directory, with no claimed relationships.\n\n",
         }
     }
 
-    s.push_str(&imports_section(input.hubs, input.imports));
+    s.push_str(&imports_section(input.hubs, input.imports, input.has_routes));
 
     s.push_str("## Task Navigation\n\n");
     for (i, sum) in input.summaries.iter().enumerate() {
@@ -498,7 +501,7 @@ pub fn import_index(
 }
 
 /// The root map's pointer to the index, with the hubs as orientation.
-pub fn imports_section(hubs: &[(String, usize)], index: &ImportsIndex) -> String {
+pub fn imports_section(hubs: &[(String, usize)], index: &ImportsIndex, has_routes: bool) -> String {
     let mut s = String::from("## Imports\n\n");
     if index.imports == 0 {
         s.push_str("No internal imports were resolved, so there is no import index.\n\n");
@@ -510,9 +513,14 @@ pub fn imports_section(hubs: &[(String, usize)], index: &ImportsIndex) -> String
     }
     s.push_str(&format!(
         "\nReverse import index: `{IMPORTS_REL}` lists, for every imported file, each analyzed \
-file that imports it ({} imports into {} files, ~{} tokens).\n\n",
+file that imports it ({} imports into {} files, ~{} tokens). Query it with \
+`codearch importers <file>`.",
         index.imports, index.imported_files, index.tokens
     ));
+    if has_routes {
+        s.push_str(" Query route callers with `codearch callers <View>`.");
+    }
+    s.push_str("\n\n");
     s
 }
 
@@ -740,7 +748,7 @@ pub fn render_split_root(input: &MapInput, view: &SplitView) -> String {
     }
     s.push('\n');
 
-    s.push_str(&imports_section(input.hubs, input.imports));
+    s.push_str(&imports_section(input.hubs, input.imports, input.has_routes));
 
     s.push_str("## Task Navigation\n\n");
     for (i, unit) in view.units.iter().enumerate() {
@@ -1042,12 +1050,16 @@ mod tests {
         let paths = ["src/z.ts", "src/a.ts", "src/m.ts"];
         let edges = in_edges(3, &[(0, 1), (2, 1), (1, 0)]);
         let idx = import_index("t", &paths, &edges, 1.0, 0);
-        let s = imports_section(&import_hubs(&paths, &edges, 8), &idx);
+        let s = imports_section(&import_hubs(&paths, &edges, 8), &idx, false);
         assert!(s.starts_with("## Imports\n"));
         assert!(s.contains("- `src/a.ts` — 2\n"));
         assert!(s.contains("- `src/z.ts` — 1\n"));
         assert!(s.contains("`.codearch/imports.md`"));
         assert!(s.contains(&format!("(3 imports into 2 files, ~{} tokens)", idx.tokens)));
+        assert!(s.contains("Query it with `codearch importers <file>`."));
+        assert!(!s.contains("callers"));
+        let routed = imports_section(&import_hubs(&paths, &edges, 8), &idx, true);
+        assert!(routed.contains("Query route callers with `codearch callers <View>`."));
     }
 
     #[test]
@@ -1055,7 +1067,7 @@ mod tests {
         let paths = ["a.ts", "b.ts"];
         let edges = in_edges(2, &[]);
         let idx = import_index("t", &paths, &edges, 0.0, 0);
-        let s = imports_section(&import_hubs(&paths, &edges, 8), &idx);
+        let s = imports_section(&import_hubs(&paths, &edges, 8), &idx, false);
         assert!(s.contains("No internal imports were resolved, so there is no import index."));
         assert!(!s.contains("imports.md"));
     }
