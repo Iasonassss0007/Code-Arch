@@ -1,0 +1,64 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.12s
+1/48 paperless-xlang-applicationconfigurationviewset-0 without_map: correct=False opens=0 searches=1 error=Answer must contain inventoried paths
+2/48 paperless-xlang-applicationconfigurationviewset-0 with_map: correct=False opens=0 searches=1 error=Answer must contain inventoried paths
+3/48 paperless-xlang-applicationconfigurationviewset-0 importers_tool: correct=False opens=0 searches=1 error=None
+4/48 paperless-xlang-bulkeditobjectsview-1 with_map: correct=False opens=0 searches=1 error=None
+5/48 paperless-xlang-bulkeditobjectsview-1 importers_tool: correct=False opens=0 searches=1 error=None
+6/48 paperless-xlang-bulkeditobjectsview-1 without_map: correct=False opens=0 searches=1 error=None
+7/48 paperless-xlang-correspondentviewset-2 importers_tool: correct=False opens=0 searches=1 error=None
+8/48 paperless-xlang-correspondentviewset-2 without_map: correct=False opens=0 searches=1 error=None
+9/48 paperless-xlang-correspondentviewset-2 with_map: correct=False opens=0 searches=1 error=None
+10/48 paperless-xlang-documenttypeviewset-3 without_map: correct=False opens=0 searches=1 error=None
+11/48 paperless-xlang-documenttypeviewset-3 with_map: correct=False opens=0 searches=1 error=None
+12/48 paperless-xlang-documenttypeviewset-3 importers_tool: correct=False opens=0 searches=1 error=None
+13/48 paperless-xlang-groupviewset-4 with_map: correct=False opens=0 searches=1 error=None
+14/48 paperless-xlang-groupviewset-4 importers_tool: correct=False opens=0 searches=1 error=None
+15/48 paperless-xlang-groupviewset-4 without_map: correct=False opens=0 searches=1 error=None
+16/48 paperless-xlang-processedmailviewset-5 importers_tool: correct=False opens=0 searches=1 error=None
+17/48 paperless-xlang-processedmailviewset-5 without_map: correct=False opens=0 searches=1 error=None
+18/48 paperless-xlang-processedmailviewset-5 with_map: correct=False opens=0 searches=1 error=None
+19/48 paperless-xlang-sharelinkviewset-6 without_map: correct=True opens=0 searches=1 error=None
+20/48 paperless-xlang-sharelinkviewset-6 with_map: correct=True opens=0 searches=1 error=None
+21/48 paperless-xlang-sharelinkviewset-6 importers_tool: correct=True opens=0 searches=1 error=None
+22/48 paperless-xlang-workflowviewset-7 with_map: correct=False opens=0 searches=1 error=None
+23/48 paperless-xlang-workflowviewset-7 importers_tool: correct=False opens=0 searches=1 error=None
+24/48 paperless-xlang-workflowviewset-7 without_map: correct=False opens=0 searches=1 error=None
+25/48 paperless-xlang-applicationconfigurationviewset-0 with_map: correct=False opens=0 searches=1 error=Answer must contain inventoried paths
+26/48 paperless-xlang-applicationconfigurationviewset-0 importers_tool: correct=False opens=0 searches=1 error=None
+27/48 paperless-xlang-applicationconfigurationviewset-0 without_map: correct=False opens=0 searches=1 error=Answer must contain inventoried paths
+28/48 paperless-xlang-bulkeditobjectsview-1 importers_tool: correct=False opens=0 searches=1 error=None
+29/48 paperless-xlang-bulkeditobjectsview-1 without_map: correct=False opens=0 searches=1 error=None
+30/48 paperless-xlang-bulkeditobjectsview-1 with_map: correct=False opens=0 searches=1 error=None
+31/48 paperless-xlang-correspondentviewset-2 without_map: correct=False opens=0 searches=1 error=None
+32/48 paperless-xlang-correspondentviewset-2 with_map: correct=False opens=0 searches=1 error=None
+33/48 paperless-xlang-correspondentviewset-2 importers_tool: correct=False opens=0 searches=1 error=None
+34/48 paperless-xlang-documenttypeviewset-3 with_map: correct=False opens=0 searches=1 error=None
+35/48 paperless-xlang-documenttypeviewset-3 importers_tool: correct=False opens=0 searches=1 error=None
+36/48 paperless-xlang-documenttypeviewset-3 without_map: correct=False opens=0 searches=1 error=None
+37/48 paperless-xlang-groupviewset-4 importers_tool: correct=False opens=0 searches=1 error=None
+38/48 paperless-xlang-groupviewset-4 without_map: correct=False opens=0 searches=1 error=None
+39/48 paperless-xlang-groupviewset-4 with_map: correct=False opens=0 searches=1 error=None
+40/48 paperless-xlang-processedmailviewset-5 without_map: correct=False opens=0 searches=1 error=None
+41/48 paperless-xlang-processedmailviewset-5 with_map: correct=False opens=0 searches=1 error=None
+42/48 paperless-xlang-processedmailviewset-5 importers_tool: correct=False opens=0 searches=1 error=None
+43/48 paperless-xlang-sharelinkviewset-6 with_map: correct=True opens=0 searches=1 error=None
+44/48 paperless-xlang-sharelinkviewset-6 importers_tool: correct=True opens=0 searches=1 error=None
+45/48 paperless-xlang-sharelinkviewset-6 without_map: correct=False opens=0 searches=1 error=None
+46/48 paperless-xlang-workflowviewset-7 importers_tool: correct=False opens=0 searches=1 error=None
+47/48 paperless-xlang-workflowviewset-7 without_map: correct=False opens=0 searches=2 error=None
+48/48 paperless-xlang-workflowviewset-7 with_map: correct=False opens=0 searches=1 error=None
+# M1v2 real-agent evaluation (impact)
+
+Model: `gemini-3.5-flash-lite`. 8 tasks, 2 fresh trials per arm.
+
+| Arm | Mean F1 | Exact | Context tokens | Provider tokens | Files opened | Searches | USD |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| without_map | 0.475 | 1/16 | 208181 | 600936 | 0 | 17 | 0.000000 |
+| with_map | 0.491 | 2/16 | 272945 | 749512 | 0 | 16 | 0.000000 |
+| importers_tool | 0.570 | 2/16 | 207314 | 582376 | 0 | 16 | 0.000000 |
+
+Context-token savings: -31.11%; provider-token savings: -24.72%; mean-F1 delta: +0.016; accuracy delta: 6.25 pp.
+
+Context counts each observation/action once; provider usage includes repeated conversation input and system prompt. Both include map cost. Provider-reported USD includes any caching effects.
+
+Impact tasks: transitive importers from madge over the whole checkout, scored by set F1. The with_map and index_only arms may open `.codearch/imports.md`; importers_tool queries the same index. Repeated trials on the same task are correlated. Not a code-change evaluation.

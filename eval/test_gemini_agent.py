@@ -52,8 +52,14 @@ def test_payload_constrains_output_to_the_action_shape():
     # Live probe: gemini-3.6-flash answered {"action": "search", ...} instead of {"tool": ...}.
     schema = G.payload({}, "gemini-3.1-flash-lite", "SYS")["generationConfig"]["responseSchema"]
     assert schema["required"] == ["tool"]
-    assert schema["properties"]["tool"]["enum"] == ["search", "open", "answer", "importers"]
+    assert schema["properties"]["tool"]["enum"] == ["search", "open", "answer"]
     assert set(schema["properties"]) == {"tool", "query", "path", "files"}
+
+
+def test_importers_is_offered_only_to_the_arm_whose_prompt_has_the_tool():
+    tool_system = G.SYSTEM + G.IMPORTERS_TOOL
+    schema = G.payload({}, "gemini-3.1-flash-lite", tool_system)["generationConfig"]["responseSchema"]
+    assert schema["properties"]["tool"]["enum"] == ["search", "open", "answer", "importers"]
 
 
 def test_unparseable_reply_records_why_it_failed():
@@ -86,6 +92,15 @@ def test_parse_reads_the_action_and_counts_thinking_at_zero_cost():
     out = G.parse(result, "gemini-3.1-flash-lite", "SYS")
     assert out["action"] == {"tool": "answer", "files": ["a.ts"]}
     assert out["metadata"]["usage"] == {"prompt_tokens": 100, "completion_tokens": 15, "cost": 0.0}
+
+
+def test_paid_tier_prices_usage_so_the_cost_cap_can_fire():
+    result = json.load(response('{"tool":"answer","files":["a.ts"]}', thoughtsTokenCount=5))
+    out = G.parse(result, "gemini-3.6-flash", "SYS", paid=True)
+    assert out["metadata"]["provider"] == "google-ai-studio-paid"
+    assert out["metadata"]["usage"]["cost"] == pytest.approx((100 * 0.75 + 15 * 3.75) / 1e6)
+    with pytest.raises(ValueError):
+        G.parse(result, "gemini-unpriced", "SYS", paid=True)
 
 
 def test_non_json_output_is_an_agent_error_not_a_transport_error():
