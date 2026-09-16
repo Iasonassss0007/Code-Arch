@@ -74,6 +74,10 @@ pub struct Options {
     pub labeler: LabelerKind,
     pub model_path: Option<PathBuf>,
     pub llm_threads: Option<i32>,
+    /// Trained LoRA adapter applied on top of `model_path` (M6 path).
+    pub lora_path: Option<PathBuf>,
+    /// llama.cpp `--lora-scale`; 1.0 is the trained strength.
+    pub lora_scale: f32,
 }
 
 impl Default for Options {
@@ -90,6 +94,8 @@ impl Default for Options {
             labeler: LabelerKind::Derived,
             model_path: None,
             llm_threads: None,
+            lora_path: None,
+            lora_scale: 1.0,
         }
     }
 }
@@ -259,8 +265,17 @@ pub struct RunReport {
     pub labels_fell_back: usize,
     /// Generated names kept with a derived summary (summary guard only).
     pub labels_summary_fell_back: usize,
-    /// Cross-language contract pairs fused into the graph.
+    /// Cross-language contract pairs fused into the graph: exact URL matches
+    /// plus shared rare symbol shapes.
     pub contracts: usize,
+    /// The URL-contract subset (exact normalized-path matches).
+    pub url_contracts: usize,
+    /// The semantic subset (shared rare symbol shapes across languages).
+    pub semantic_contracts: usize,
+    /// Backend views with at least one frontend caller (`contract::route_join`).
+    pub route_views: usize,
+    /// Written only when `route_views > 0`.
+    pub routes_path: Option<PathBuf>,
 }
 
 pub fn run(opts: &Options) -> Result<RunReport> {
@@ -302,8 +317,13 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     timer.done("resolve");
 
     // 3.5 — Cross-language contracts. Stage-2 URL evidence joined across
-    // languages; feeds stage-5 fusion and the render caveat.
+    // languages; feeds stage-5 fusion and the render caveat. Semantic
+    // contracts (shared rare symbol shapes, `createUser` ↔ `create_user`)
+    // are a second, weaker join — reported separately because the evidence
+    // differs and the map says which kind it fused.
     let contracts = contract::join(&inv, &parsed);
+    let semantic_contracts = contract::semantic_join(&inv, &parsed);
+    let route_links = contract::route_join(&inv, &parsed);
 
     // 4 — Git signals. Absent history is a degraded run, not a failed one.
     // HEAD-keyed: an unchanged history reuses the stored signal.
@@ -339,7 +359,7 @@ pub fn run(opts: &Options) -> Result<RunReport> {
             memo_split.is_some()
         );
     }    // 5 — Graph
-    let g = graph::build(&inv, &res, &cc, &contracts);
+    let g = graph::build_with_semantic(&inv, &res, &cc, &contracts, &semantic_contracts);
     timer.done("graph");
 
     // 6 — Cluster. With no edges at all there is nothing to cluster, which is
@@ -375,7 +395,17 @@ pub fn run(opts: &Options) -> Result<RunReport> {
             let threads = opts.llm_threads.unwrap_or_else(|| {
                 std::thread::available_parallelism().map_or(4, |n| n.get() as i32)
             });
-            Box::new(label::llm::LlmLabeler::load(path, threads)?)
+            let lora = opts
+                .lora_path
+                .as_deref()
+                .and_then(|p| p.to_str())
+                .map(std::path::Path::new);
+            Box::new(label::llm::LlmLabeler::load_with_lora(
+                path,
+                lora,
+                opts.lora_scale,
+                threads,
+            )?)
         }
         #[cfg(not(feature = "llm"))]
         LabelerKind::Llm => anyhow::bail!(
@@ -486,10 +516,9 @@ Rebuild with: cargo build --release --features llm"
         flows: &domain_flows,
         cochange_pairs: cc.has_history().then(|| cc.pairs.len()),
         contracts: contracts.len(),
+        semantic_contracts: semantic_contracts.len(),
         budget: opts.budget,
     };
-    let rendered = render::render_map(&map_input);
-
     let out_path = opts
         .out
         .clone()
@@ -504,8 +533,7 @@ Rebuild with: cargo build --release --features llm"
         None
     } else {
         Some(render::render_map(&map_input))
-    };
-    let split = memo_split
+    };    let split = memo_split
         .unwrap_or_else(|| rendered.as_ref().is_some_and(|r| r.tokens > opts.budget));
     if memo_split.is_none() {
         store.split_decision = Some(cache::SplitDecision { fingerprint, split });
@@ -550,6 +578,17 @@ Rebuild with: cargo build --release --features llm"
     let imports_path = dir.join("imports.md");
     std::fs::write(&imports_path, &imports.markdown)
         .with_context(|| format!("cannot write {}", imports_path.display()))?;
+    // Only when there is something to say; a stale file from an earlier run
+    // would claim callers the code no longer has.
+    let routes_file = dir.join("routes.md");
+    let routes_path = if route_links.is_empty() {
+        let _ = std::fs::remove_file(&routes_file);
+        None
+    } else {
+        std::fs::write(&routes_file, contract::routes_markdown(&inv, &route_links))
+            .with_context(|| format!("cannot write {}", routes_file.display()))?;
+        Some(routes_file)
+    };
 
     let mut index_path = None;
     if opts.write_index {
@@ -605,7 +644,11 @@ Rebuild with: cargo build --release --features llm"
         over_domain_cap: summaries.len() > opts.max_domains,
         labels_fell_back: labeler.fell_back(),
         labels_summary_fell_back: labeler.summary_fell_back(),
-        contracts: contracts.len(),
+        contracts: contracts.len() + semantic_contracts.len(),
+        url_contracts: contracts.len(),
+        semantic_contracts: semantic_contracts.len(),
+        route_views: route_links.len(),
+        routes_path,
     })
 }
 

@@ -69,8 +69,12 @@ fn main() -> anyhow::Result<()> {
                 Some(path) => {
                     let threads = std::thread::available_parallelism()
                         .map_or(4, |n| n.get() as i32);
-                    Box::new(codearch::label::llm::LlmLabeler::load(
+                    let lora = v["lora"].as_str().map(std::path::Path::new);
+                    let scale = v["lora_scale"].as_f64().unwrap_or(1.0) as f32;
+                    Box::new(codearch::label::llm::LlmLabeler::load_with_lora(
                         std::path::Path::new(path),
+                        lora,
+                        scale,
                         threads,
                     )?)
                 }

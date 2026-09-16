@@ -129,13 +129,26 @@ because it currently wins.
 
 ## Status
 
-M0–M6 are built and tested: 192 Rust tests + 52 Python tests pass.
+M0–M6 are built and tested: 206 Rust tests + 39 Python tests pass.
 M5 splits a 4,367-file React checkout from a 236,702-token flat map to a
-2,957-token root plus domain files, with warm re-runs in ~10s.
+2,957-token root plus domain files, with warm re-runs in ~10s. Clustering
+runs full Leiden (local move + refinement + aggregation, connectivity
+enforced at every level). Cross-language coupling joins on two contract
+kinds: exact URL paths and shared rare symbol shapes (`createUser` ↔
+`create_user`). The LoRA fine-tune path is harvested and wired end to end
+(66 production clusters; `python eval/train_lora.py` trains against
+llama.cpp and gates the adapter on the frozen 20-cluster set; adoption
+requires derived-parity 75%).
 What the maps are worth is reported in `code_arch_architecture.md` rather
-than summarized favourably here — including a negative one: on a 24-task
+than summarized favourably here — including negative ones: on a 24-task
 file-location benchmark, supplying the full map did not improve a coding
-agent's accuracy and roughly doubled token use. The M1v2 agent run and the
-transitive-impact replacement are built but still gated on provider credit.
+agent's accuracy and roughly doubled token use. The M1v2 impact benchmark
+has a decisive offline proxy (iterative grep 0.28 F1 / 46.8k tokens vs
+map+index 0.89 F1 / 17.6k tokens — `python eval/impact_proxy.py`); the free
+real-agent gate now also runs end to end (148 episodes, `gemini-3.5-flash-lite`,
+USD 0.00 — `python eval/run_agent.py --provider gemini --model gemini-3.5-flash-lite`):
+mean F1 0.577 → 0.541, exact 12/74 → 4/74, context +82%. The agent answers
+after ~1 tool call and opens the index in only 12/74 map episodes, so the run
+measures map-text-in-context for a fast guesser, not index use.
 
 Treat this as a working tool whose central benefit is still unproven.

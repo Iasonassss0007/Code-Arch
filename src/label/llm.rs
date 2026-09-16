@@ -48,6 +48,12 @@ const N_CTX: u32 = 2048;
 pub struct LlmLabeler {
     backend: LlamaBackend,
     model: LlamaModel,
+    /// Trained LoRA adapter (the M6 fine-tune path), applied to every context
+    /// at `lora_scale`. `None` is the plain model. `RefCell` because the
+    /// adapter registers itself with each fresh context (llama.cpp takes it
+    /// by `&mut`), and `label(&self)` is shared — interior mutability with
+    /// no actual contention, generation is sequential.
+    lora: Option<std::cell::RefCell<(llama_cpp_2::model::LlamaLoraAdapter, f32)>>,
     threads: i32,
     fallback: DerivedLabeler,
     generated: Cell<usize>,
@@ -60,13 +66,35 @@ impl LlmLabeler {
     /// user asked for `--labeler llm` explicitly, so a missing or broken model
     /// file is an error, not a silent downgrade to derived output.
     pub fn load(model_path: &Path, threads: i32) -> Result<Self> {
+        Self::load_with_lora(model_path, None, 1.0, threads)
+    }
+
+    /// Load with an optional trained LoRA adapter (the M6 fine-tune path).
+    /// `scale` is llama.cpp's `--lora-scale`; 1.0 is the trained strength.
+    pub fn load_with_lora(
+        model_path: &Path,
+        lora_path: Option<&Path>,
+        lora_scale: f32,
+        threads: i32,
+    ) -> Result<Self> {
         let backend = LlamaBackend::init().context("initializing the llama.cpp backend")?;
         let model = LlamaModel::load_from_file(&backend, model_path, &LlamaModelParams::default())
             .with_context(|| format!("loading GGUF model from {}", model_path.display()))?;
 
+        let lora = match lora_path {
+            Some(p) => Some(std::cell::RefCell::new((
+                model
+                    .lora_adapter_init(p)
+                    .with_context(|| format!("loading LoRA adapter from {}", p.display()))?,
+                lora_scale,
+            ))),
+            None => None,
+        };
+
         Ok(Self {
             backend,
             model,
+            lora,
             threads,
             fallback: DerivedLabeler,
             generated: Cell::new(0),
@@ -107,6 +135,12 @@ impl LlmLabeler {
             .with_n_threads(self.threads)
             .with_n_threads_batch(self.threads);
         let mut ctx = self.model.new_context(&self.backend, params)?;
+        if let Some(holder) = &self.lora {
+            let mut lora = holder.borrow_mut();
+            let scale = lora.1;
+            ctx.lora_adapter_set(&mut lora.0, scale)
+                .context("applying the LoRA adapter to the label context")?;
+        }
 
         // Only the final prompt token needs logits; the rest is prefill.
         let mut batch = LlamaBatch::new(N_CTX as usize, 1);
