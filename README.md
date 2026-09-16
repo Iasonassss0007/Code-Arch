@@ -119,26 +119,70 @@ route named by a common word can match a file that uses the word for something e
 
 ## What helps agents
 
-These results come from the benchmark in [`eval/`](eval/), run against pinned public
-repositories with real models. Full write-ups are in the linked folders and in
-[`code_arch_architecture.md`](code_arch_architecture.md), including the runs that
-went against the tool.
+**In short: giving an agent a summary of the codebase does not help. Giving it a
+precise lookup does.**
 
-| Benchmark | Setup | Result |
-|---|---|---|
-| Impact navigation: which files are affected if this file changes? Hono, Next.js Commerce, TypeDI; 34 tasks × 2 trials, `gemini-3.5-flash-lite` | `importers` lookup vs no help | **F1 0.979 vs 0.608**, 64/68 exact vs 12/68, fewer tokens ([`results-nav-rescored`](eval/results-nav-rescored/)) |
-| Same tasks | Full map in the prompt vs no help | F1 0.583 vs 0.608, about 2× the tokens: **no benefit** ([`results-nav-3arm`](eval/results-nav-3arm/)) |
-| Cross-language impact: a Django view changes, which Angular files are affected? paperless-ngx, 8 tasks, `gemini-3.6-flash` | `route_callers` + `importers` vs no help | **F1 1.00 vs 0.874**, 8/8 exact, paired +0.126 [+0.05, +0.21], −54% tokens ([`results-xlang-routes-fixed`](eval/results-xlang-routes-fixed/)) |
-| Same tasks | Map in the prompt vs no help | −0.096 [−0.46, +0.27]: **no benefit** ([`results-xlang-36flash-paid`](eval/results-xlang-36flash-paid/)) |
+We tested this with real AI models on public repositories. Each task asks a
+question a developer asks before changing code: *"if I change this file, which other
+files are affected?"* The model explores the repository with search and file-open
+tools, then answers with a list of files. It tries each task in one of three setups:
 
-**Read with the caveats.** The cross-language answer key is built from the same idea
-the tool implements (URL callers plus their direct importers), so that result shows
-the lookup works as served, not that the link definition is right beyond the oracle.
-It rests on one repository. The navigation benchmark's first version was solvable by
-grep and was rebuilt with adversary gates; see `eval/README.md`.
+- **No help:** only search and open.
+- **Map in the prompt:** the same, plus the whole `CODEBASE.md` pasted into its
+  instructions.
+- **Lookup tool:** the same, plus `importers` (and, for cross-language tasks,
+  `route_callers`) to call whenever it wants.
 
-The consistent finding across runs: **giving an agent a summary of the codebase as
-text does not help; giving it precise lookups does.**
+Answers are scored by **F1**: 100% means exactly the right files, no misses and no
+extras.
+
+![Answer quality: lookup tool 98% vs map 58% vs no help 61% on navigation; lookup tool 100% vs no help 87% on cross-language](docs/images/agent-quality.svg)
+
+- With the **lookup tool**, the model found the right files almost every time:
+  98% on navigation, where 64 of 68 answers were exactly right (12 of 68 with no
+  help), and 100% on the cross-language tasks.
+- With the **map in the prompt**, it did slightly *worse* than with no help at all.
+
+![Tokens relative to no help: lookup tool 82% and map 183% on navigation; lookup tool 28% on cross-language](docs/images/agent-tokens.svg)
+
+- The lookup tool also made tasks **cheaper**: one call replaces a long chain of
+  searches and file reads.
+- The map made every task **almost twice as expensive**, because the model re-reads
+  it on every step.
+
+<details>
+<summary>Exact numbers, confidence intervals and caveats</summary>
+
+Change in F1 against no help, averaged per task, with a 95% bootstrap confidence
+interval. An interval that does not include 0 is a clear effect.
+
+| Benchmark | Setup | Change in F1 | 95% CI | Tasks |
+|---|---|---:|---|---:|
+| Navigation | Lookup tool | +0.372 | [+0.28, +0.47] | 34 |
+| Navigation | Map in the prompt | −0.024 | [−0.12, +0.08] | 34 |
+| Cross-language | Lookup tool | +0.126 | [+0.05, +0.21] | 8 |
+| Cross-language | Map in the prompt | −0.096 | [−0.46, +0.27] | 7 |
+
+- **Navigation:** 34 tasks on Hono, Next.js Commerce and TypeDI, 2 attempts each,
+  `gemini-3.5-flash-lite`, all three setups in the same runs
+  ([`results-nav-rescored`](eval/results-nav-rescored/)).
+- **Cross-language:** a Django view changes; which Angular files are affected? 8 tasks
+  on paperless-ngx, `gemini-3.6-flash`, 1 attempt per setup
+  ([`results-xlang-routes`](eval/results-xlang-routes/),
+  [`results-xlang-routes-fixed`](eval/results-xlang-routes-fixed/)). The map-in-prompt
+  row comes from a separate run and is compared only with that run's own no-help
+  setup ([`results-xlang-36flash-paid`](eval/results-xlang-36flash-paid/)), so it has
+  no bar in the charts.
+- **The cross-language answer key uses the same idea as the tool** (URL callers plus
+  their direct importers). The result shows the lookup works as served; it does not
+  independently prove the links are right. It rests on one repository.
+- The navigation tasks were rebuilt after a first version turned out to be solvable
+  by plain grep; every task now passes adversary gates (see `eval/README.md`).
+- Charts and table are generated from the result files by
+  `python eval/make_readme_charts.py`. Full write-ups are in each results folder and
+  in [`code_arch_architecture.md`](code_arch_architecture.md).
+
+</details>
 
 ## Optional: local model labeling
 
