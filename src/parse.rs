@@ -231,9 +231,11 @@ const HTTP_MARKERS: &[&str] = &["HttpClient", "this.http.", "fetch(", "axios", "
 const ROUTER_PATH_KEYS: &[&str] = &["path", "redirectTo", "routerLink"];
 
 /// Method names whose string arguments name something other than a request
-/// URL: client-side navigation, DOM lookups, form controls. `get` is absent
-/// on purpose: `form.get('name')` reads a control but `http.get(url)` sends
-/// a request, so it is decided per receiver (see `call_args_are_non_request`).
+/// URL: client-side navigation, DOM lookups, form controls, pattern
+/// rewrites (`.replace()` arguments transform a string; neither the pattern
+/// nor the replacement is itself a request). `get` is absent on purpose:
+/// `form.get('name')` reads a control but `http.get(url)` sends a request,
+/// so it is decided per receiver (see `call_args_are_non_request`).
 const NON_REQUEST_METHODS: &[&str] = &[
     "navigate",
     "navigateByUrl",
@@ -242,6 +244,7 @@ const NON_REQUEST_METHODS: &[&str] = &[
     "addControl",
     "removeControl",
     "setControl",
+    "replace",
 ];
 
 /// Longest literal read for route segments. Route strings are short; long
@@ -450,7 +453,10 @@ fn visit(
             _ => None,
         };
         if let Some(lit) = literal {
-            if lit.len() <= MAX_ROUTE_LITERAL && !lit.contains(char::is_whitespace) {
+            // A literal starting with `#` is a URL fragment (`url.hash =
+            // `#search="…"`), never a request path: HTTP never sends one.
+            let path_shaped = !lit.strip_prefix('`').unwrap_or(&lit).starts_with('#');
+            if path_shaped && lit.len() <= MAX_ROUTE_LITERAL && !lit.contains(char::is_whitespace) {
                 let segs = route_segments(&lit);
                 if !segs.is_empty() {
                     out.url_segment_seqs.push(segs.clone());
@@ -1113,5 +1119,26 @@ urlpatterns = [
         let http = parse("this.http.get(`${base}documents/1/`)\n", Language::Ts);
         assert!(http.url_segments.contains(&"documents".to_string()));
         assert!(http.http);
+    }
+
+    #[test]
+    fn replace_pattern_rewrites_are_not_route_evidence() {
+        // `pathname.replace(/\/api\/$/, '/share/')` builds a browser link;
+        // the pattern is not a request to the share route.
+        let out = parse("apiURL.pathname.replace(/\\/api\\/$/, '/share/')\n", Language::Ts);
+        assert!(!out.url_segments.contains(&"share".to_string()));
+        // The string being rewritten still counts when it holds a URL.
+        let kept = parse("this.http.get(`${base}documents/`.replace('x', 'y'))\n", Language::Ts);
+        assert!(kept.url_segments.contains(&"documents".to_string()));
+    }
+
+    #[test]
+    fn hash_fragments_are_not_route_evidence() {
+        // `` url.hash = `#search="…"` `` is a fragment, never a request path.
+        let out = parse("url.hash = `#search=\"${this.searchQuery}\"`\n", Language::Ts);
+        assert!(!out.url_segments.contains(&"search".to_string()));
+        // A real search endpoint template still counts.
+        let kept = parse("this.http.get(`${environment.apiBaseUrl}search/`, {})\n", Language::Ts);
+        assert!(kept.url_segments.contains(&"search".to_string()));
     }
 }

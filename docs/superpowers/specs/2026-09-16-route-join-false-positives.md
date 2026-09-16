@@ -185,6 +185,31 @@ or an oracle scope choice, and write the decision in this file. Change code only
 is generic and cheap (e.g. literals passed to `.replace(` are pattern rewrites, not
 requests).
 
+**Decision (2026-09-16, measured): join error under `routes.md`'s own contract, fixed.**
+`routes.md` promises "frontend files whose *request strings* name every segment", and the
+`route_callers` consumer asks which files *send requests* to a view. No HTTP is ever sent
+to `/share/` from these files — `'/share/'` is the replacement pattern of
+`pathname.replace(/\/api\/$/, '/share/')`, and the result feeds `navigator.share` /
+clipboard (a browser page link), not a request. Listing page-link builders as API callers
+is exactly the false-caller cost the goal statement worries about, so the three
+`SharedLinkView` rows are join errors, not just oracle scope. The fix — skip string
+arguments of `.replace(` (one entry in the existing non-request-methods list; the string
+being rewritten still counts) — is generic (`String.prototype`, no repo names) and cheap.
+Measured: FP 5 → 2, recall 1.00, tasks 8/8. The files still reference the server route in
+a page-link sense; if a future edge wants page-link dependents, that is a different claim
+than `route_join` makes.
+
+**Extra (not in the plan above): `#`-fragment literals.** `document.service.ts` line 221
+sets `url.hash = `#search="…"` — a fragment, never a request path (HTTP never sends one).
+Same literal-shape family as the existing space-free rule, one line, recall-safe by
+construction. Measured: FP 2 → 1, recall 1.00, tasks 8/8. Kept.
+
+**Known limit left standing:** `serve_logo` ← `logo.component.ts`. Its `logo` segments
+come from `['logo'].concat(...).join(' ')` (a CSS class list) plus `templateUrl` /
+`styleUrls` file metadata. Suppressing those needs dataflow (array → `.join(' ')`) or
+framework-metadata keys, both narrower than every rule above; one FP is not worth the
+tuning risk. Recorded in the `route_join` doc comment.
+
 ## Rules while working
 
 - **One change, one measurement.** Record every attempt in the log below, including failed
@@ -212,4 +237,6 @@ requests).
 | 2-ablate | step 2 without `path:`-pair rule | 45 | 6 | 0 | 0.88 | 1.00 | 8/8 | — (`path:`-keys −0 on paperless; kept as generic router rule with unit test) |
 | 2-ablate | step 2 without call-arg rules (navigate + accessors) | 45 | 8 | 0 | 0.85 | 1.00 | 8/8 | — (navigate = −1 doc-detail `['documents']`, accessors = −1 doc-detail `.get('custom_fields')`) |
 | 3 | most-specific route wins (`url_segment_seqs`, FORMAT 5) | 45 | 5 | 0 | 0.90 | 1.00 | 8/8 | kept (−1: chat.service `` `…documents/chat/` ``; still caller of `ChatStreamingView`, doc.service still caller of `UnifiedSearchViewSet`) |
+| 4 | skip `.replace(` pattern args (cause D: join error, see decision) | 45 | 2 | 0 | 0.96 | 1.00 | 8/8 | kept (−3: share dialogs; `SharedLinkView` section drops, oracle agrees it has no `/api/` caller) |
+| extra | skip `#`-fragment literals (`` url.hash = `#search=…` ``) | 45 | 1 | 0 | 0.98 | 1.00 | 8/8 | kept (−1: doc.service `#search`; request paths never start with `#`) |
 | | | | | | | | | |
