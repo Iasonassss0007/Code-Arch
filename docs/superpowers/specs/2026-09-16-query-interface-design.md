@@ -212,6 +212,18 @@ over stdio, reusing `query.rs` unchanged.
 "Lifecycle", "Transports" (stdio) and "Tools"). The outline below is from memory and may
 be out of date; where it differs, the spec wins, and note the difference here.
 
+Spec check 2026-09-16 (Lifecycle, Transports, Tools, Ping, Discovery pages, all read):
+the outline below holds verbatim for protocol versions 2025-11-25 and earlier. One
+real difference: the newest revision (2026-07-28) removes the `initialize` handshake
+entirely (stateless per-request versions in `_meta`, plus mandatory `server/discover`).
+The server implements legacy handshake semantics — the only flow deployed clients
+speak — for `2024-11-05`/`2025-03-26`/`2025-06-18`/`2025-11-25`, *plus* `server/discover`
+advertising exactly those versions, which is the new spec's own stdio
+backward-compatibility probe (a dual-era client falls back to the handshake from it).
+Tool descriptions reuse the eval prompts' sentences minus the harness's
+`{"tool":...}` action wrapper, which is eval syntax, not prose. Everything else below
+matched the spec as written.
+
 - Transport: newline-delimited JSON-RPC 2.0 on stdin/stdout. **Nothing but protocol
   messages on stdout**; diagnostics go to stderr.
 - `initialize`: reply with a protocol version the spec lists as supported (the client's
@@ -261,4 +273,4 @@ README: a "Use from an MCP client" snippet with that command.
 |---|---|---|
 | A5 parity | 42/42 lookups match (0 mismatches) | 34 nav targets (hono/commerce/typedi) + 8 xlang views (paperless-ngx) |
 | B map token change | +12/map without routes, +24 with | cl100k on CODEBASE.md: hono 3452→3464, commerce 2886→2898, typedi 1684→1696, paperless 3298→3322 (both sentences; routes.md written there) |
-| C manual client check | | |
+| C manual client check | pass | `claude -p --mcp-config <file>` (one-off config, nothing persisted) with `codearch mcp --repo eval/fixtures/tier1`: server `connected`, agent called `mcp__codearch__importers {"path":"src/auth/service.ts"}`, got the exact `--json` payload, answered `src/auth/index.ts` |

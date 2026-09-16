@@ -53,6 +53,19 @@ prints one object for scripting. Both read the index as written and never
 re-analyze: stderr says `index written <N> minutes ago`, and an agent seeing a
 stale index re-runs `codearch` itself.
 
+### Use from an MCP client
+
+The same two lookups as MCP tools (`importers`, `route_callers`) over stdio,
+reusing the CLI's answers unchanged:
+
+```
+claude mcp add codearch -- codearch mcp --repo <path>
+```
+
+`--codearch-dir` points at another state directory when the index does not
+live in `<repo>/.codearch`. The index files are loaded per call, so
+re-running `codearch` is picked up without restarting the server.
+
 ### What to commit
 
 Commit the map, ignore the cache: `CODEBASE.md`, `.codearch/domains/`,
