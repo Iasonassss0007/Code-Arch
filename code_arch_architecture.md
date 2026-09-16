@@ -855,13 +855,15 @@ The name+summary groundedness row should be read as a conformity measure against
 the derived template, not as a hallucination rate, and it should not be used to
 compare a generator against a template.
 
-### Known defect, unfixed
+### Known defect — closed 2026-09-13
 
-`validate.rs` checks only the name, and accepts it if *any* token traces to
-evidence. The metric checks *every* token of name and summary. So the generated
-summary reaches `CODEBASE.md` with no grounding check applied to it at all, and
-the fallback counter cannot see it. `core_idea.md:445` argues a confident wrong
-name is worse than no name; the same holds for the sentence under it. Open.
+As recorded at M0.5: `validate.rs` checked only the name, and accepted it if
+*any* token traced to evidence, while the metric checks *every* token of name
+and summary, so the generated summary reached `CODEBASE.md` unchecked.
+Closed by the M6-lite label guard (section below): `validate::check_summary`
+applies the scorer's every-token rule to the summary, a rejected summary keeps
+the name and falls back to the derived sentence, and `summary_fell_back`
+counts it.
 
 ### Conclusion
 

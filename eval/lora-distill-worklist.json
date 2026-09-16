@@ -1,0 +1,1224 @@
+{
+  "repos": {
+    "hono": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+    "commerce": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+    "typedi": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+    "realworld": "29c9d42831fa0cfc5a4aa7561f674396eacf20a2"
+  },
+  "clusters": [
+    {
+      "id": "hono::0",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/jsx"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 20
+      },
+      "derived_fallback": {
+        "name": "Jsx",
+        "summary": "20 files under `src/jsx`."
+      }
+    },
+    {
+      "id": "hono::1",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/jsx/dom"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 16
+      },
+      "derived_fallback": {
+        "name": "Dom",
+        "summary": "16 files under `src/jsx/dom`."
+      }
+    },
+    {
+      "id": "hono::2",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "entry: src/index.ts"
+        ],
+        "external_deps": [],
+        "file_count": 15
+      },
+      "derived_fallback": {
+        "name": "Core",
+        "summary": "15 files under `src`."
+      }
+    },
+    {
+      "id": "hono::3",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "benchmarks/routers/src"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 13
+      },
+      "derived_fallback": {
+        "name": "Routers",
+        "summary": "13 files under `benchmarks/routers/src`."
+      }
+    },
+    {
+      "id": "hono::4",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/cloudflare-workers"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 10
+      },
+      "derived_fallback": {
+        "name": "Cloudflare Workers",
+        "summary": "10 files under `src/adapter/cloudflare-workers`."
+      }
+    },
+    {
+      "id": "hono::5",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "benchmarks/jsx/src/react-jsx"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 9
+      },
+      "derived_fallback": {
+        "name": "React Jsx",
+        "summary": "9 files under `benchmarks/jsx/src/react-jsx`."
+      }
+    },
+    {
+      "id": "hono::6",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/bun"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 9
+      },
+      "derived_fallback": {
+        "name": "Bun",
+        "summary": "9 files under `src/adapter/bun`."
+      }
+    },
+    {
+      "id": "hono::7",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "benchmarks/routers-deno/src"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Routers Deno",
+        "summary": "8 files under `benchmarks/routers-deno/src`."
+      }
+    },
+    {
+      "id": "hono::8",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/client"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Client",
+        "summary": "8 files under `src/client`."
+      }
+    },
+    {
+      "id": "hono::9",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/helper/ssg"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Ssg",
+        "summary": "8 files under `src/helper/ssg`."
+      }
+    },
+    {
+      "id": "hono::10",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/helper/streaming"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Streaming",
+        "summary": "8 files under `src/helper/streaming`."
+      }
+    },
+    {
+      "id": "hono::11",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/router/reg-exp-router"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Reg Exp Router",
+        "summary": "8 files under `src/router/reg-exp-router`."
+      }
+    },
+    {
+      "id": "hono::12",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/utils/jwt"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Jwt",
+        "summary": "8 files under `src/utils/jwt`."
+      }
+    },
+    {
+      "id": "hono::13",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "benchmarks/jsx/src"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 7
+      },
+      "derived_fallback": {
+        "name": "Jsx",
+        "summary": "7 files under `benchmarks/jsx/src`."
+      }
+    },
+    {
+      "id": "hono::14",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/deno"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 7
+      },
+      "derived_fallback": {
+        "name": "Deno",
+        "summary": "7 files under `src/adapter/deno`."
+      }
+    },
+    {
+      "id": "hono::15",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/aws-lambda"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 6
+      },
+      "derived_fallback": {
+        "name": "Aws Lambda",
+        "summary": "6 files under `src/adapter/aws-lambda`."
+      }
+    },
+    {
+      "id": "hono::16",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/cloudflare-pages"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Cloudflare Pages",
+        "summary": "5 files under `src/adapter/cloudflare-pages`."
+      }
+    },
+    {
+      "id": "hono::17",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/lambda-edge"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Lambda Edge",
+        "summary": "5 files under `src/adapter/lambda-edge`."
+      }
+    },
+    {
+      "id": "hono::18",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/netlify"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Netlify",
+        "summary": "5 files under `src/adapter/netlify`."
+      }
+    },
+    {
+      "id": "hono::19",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/vercel"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Vercel",
+        "summary": "5 files under `src/adapter/vercel`."
+      }
+    },
+    {
+      "id": "hono::20",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/router/trie-router"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Trie Router",
+        "summary": "5 files under `src/router/trie-router`."
+      }
+    },
+    {
+      "id": "hono::21",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/validator"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Validator",
+        "summary": "5 files under `src/validator`."
+      }
+    },
+    {
+      "id": "hono::22",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "benchmarks/query-param/src"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Query Param",
+        "summary": "4 files under `benchmarks/query-param/src`."
+      }
+    },
+    {
+      "id": "hono::23",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "runtime-tests/deno"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Deno",
+        "summary": "4 files under `runtime-tests/deno`."
+      }
+    },
+    {
+      "id": "hono::24",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "runtime-tests/lambda"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Lambda",
+        "summary": "4 files under `runtime-tests/lambda`."
+      }
+    },
+    {
+      "id": "hono::25",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/adapter/service-worker"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Service Worker",
+        "summary": "4 files under `src/adapter/service-worker`."
+      }
+    },
+    {
+      "id": "hono::26",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/helper/css"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Css",
+        "summary": "4 files under `src/helper/css`."
+      }
+    },
+    {
+      "id": "hono::27",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/middleware/etag"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Etag",
+        "summary": "4 files under `src/middleware/etag`."
+      }
+    },
+    {
+      "id": "hono::28",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/middleware/secure-headers"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Secure Headers",
+        "summary": "4 files under `src/middleware/secure-headers`."
+      }
+    },
+    {
+      "id": "hono::29",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/middleware/serve-static"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Serve Static",
+        "summary": "4 files under `src/middleware/serve-static`."
+      }
+    },
+    {
+      "id": "hono::30",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/preset"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Preset",
+        "summary": "4 files under `src/preset`."
+      }
+    },
+    {
+      "id": "hono::31",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "benchmarks/fetch"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Fetch",
+        "summary": "3 files under `benchmarks/fetch`."
+      }
+    },
+    {
+      "id": "hono::32",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/helper/accepts"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Accepts",
+        "summary": "3 files under `src/helper/accepts`."
+      }
+    },
+    {
+      "id": "hono::33",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/jsx/hooks"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Hooks",
+        "summary": "3 files under `src/jsx/hooks`."
+      }
+    },
+    {
+      "id": "hono::34",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/jsx/intrinsic-element"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Intrinsic Element",
+        "summary": "3 files under `src/jsx/intrinsic-element`."
+      }
+    },
+    {
+      "id": "hono::35",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/middleware/jwk"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Jwk",
+        "summary": "3 files under `src/middleware/jwk`."
+      }
+    },
+    {
+      "id": "hono::36",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/middleware/jwt"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Jwt",
+        "summary": "3 files under `src/middleware/jwt`."
+      }
+    },
+    {
+      "id": "hono::37",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/middleware/language"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Language",
+        "summary": "3 files under `src/middleware/language`."
+      }
+    },
+    {
+      "id": "hono::38",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/middleware/request-id"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Request Id",
+        "summary": "3 files under `src/middleware/request-id`."
+      }
+    },
+    {
+      "id": "hono::39",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/middleware/timing"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Timing",
+        "summary": "3 files under `src/middleware/timing`."
+      }
+    },
+    {
+      "id": "hono::40",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/router/linear-router"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Linear Router",
+        "summary": "3 files under `src/router/linear-router`."
+      }
+    },
+    {
+      "id": "hono::41",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/router/pattern-router"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Pattern Router",
+        "summary": "3 files under `src/router/pattern-router`."
+      }
+    },
+    {
+      "id": "hono::42",
+      "repo": "hono",
+      "revision": "e7b38ee42bfa41f20194ad20fb949b625346be62",
+      "evidence": {
+        "dirs": [
+          "src/router/smart-router"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Smart Router",
+        "summary": "3 files under `src/router/smart-router`."
+      }
+    },
+    {
+      "id": "commerce::1",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "components"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Components",
+        "summary": "8 files under `components`."
+      }
+    },
+    {
+      "id": "commerce::2",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "components/cart"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 7
+      },
+      "derived_fallback": {
+        "name": "Cart",
+        "summary": "7 files under `components/cart`."
+      }
+    },
+    {
+      "id": "commerce::0",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "app"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "error /",
+          "layout /",
+          "opengraph-image /",
+          "page /"
+        ],
+        "external_deps": [],
+        "file_count": 6
+      },
+      "derived_fallback": {
+        "name": "Core",
+        "summary": "6 files under `app`."
+      }
+    },
+    {
+      "id": "commerce::5",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "lib/shopify/queries"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Queries",
+        "summary": "5 files under `lib/shopify/queries`."
+      }
+    },
+    {
+      "id": "commerce::3",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "app/search"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "layout /search",
+          "loading /search",
+          "page /search"
+        ],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Search",
+        "summary": "4 files under `app/search`."
+      }
+    },
+    {
+      "id": "commerce::6",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "lib/shopify/fragments"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Fragments",
+        "summary": "4 files under `lib/shopify/fragments`."
+      }
+    },
+    {
+      "id": "commerce::4",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "app/[page]"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "layout /:page",
+          "opengraph-image /:page",
+          "page /:page"
+        ],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "[page]",
+        "summary": "3 files under `app/[page]`."
+      }
+    },
+    {
+      "id": "commerce::8",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "components/grid"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Grid",
+        "summary": "3 files under `components/grid`."
+      }
+    },
+    {
+      "id": "commerce::9",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "components/layout"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Layout",
+        "summary": "3 files under `components/layout`."
+      }
+    },
+    {
+      "id": "commerce::10",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "components/layout/navbar"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Navbar",
+        "summary": "3 files under `components/layout/navbar`."
+      }
+    },
+    {
+      "id": "commerce::11",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "components/layout/search/filter"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Filter",
+        "summary": "3 files under `components/layout/search/filter`."
+      }
+    },
+    {
+      "id": "commerce::12",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "components/product"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Product",
+        "summary": "3 files under `components/product`."
+      }
+    },
+    {
+      "id": "commerce::13",
+      "repo": "commerce",
+      "revision": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+      "evidence": {
+        "dirs": [
+          "lib"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Core",
+        "summary": "3 files under `lib`."
+      }
+    },
+    {
+      "id": "typedi::0",
+      "repo": "typedi",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "evidence": {
+        "dirs": [
+          "src"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "entry: src/index.ts"
+        ],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Core",
+        "summary": "5 files under `src`."
+      }
+    },
+    {
+      "id": "typedi::1",
+      "repo": "typedi",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "evidence": {
+        "dirs": [
+          "src/types"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Types",
+        "summary": "5 files under `src/types`."
+      }
+    },
+    {
+      "id": "typedi::2",
+      "repo": "typedi",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "evidence": {
+        "dirs": [
+          "src/interfaces"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Interfaces",
+        "summary": "4 files under `src/interfaces`."
+      }
+    },
+    {
+      "id": "typedi::3",
+      "repo": "typedi",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "evidence": {
+        "dirs": [
+          "src/decorators"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Decorators",
+        "summary": "3 files under `src/decorators`."
+      }
+    },
+    {
+      "id": "typedi::4",
+      "repo": "typedi",
+      "revision": "7c6ac12a3de8507b1306f761942562f15375ed1f",
+      "evidence": {
+        "dirs": [
+          "src/error"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 3
+      },
+      "derived_fallback": {
+        "name": "Error",
+        "summary": "3 files under `src/error`."
+      }
+    },
+    {
+      "id": "realworld::0",
+      "repo": "realworld",
+      "revision": "29c9d42831fa0cfc5a4aa7561f674396eacf20a2",
+      "evidence": {
+        "dirs": [
+          "conduit/apps/articles"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "urls articles"
+        ],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Articles",
+        "summary": "8 files under `conduit/apps/articles`."
+      }
+    },
+    {
+      "id": "realworld::1",
+      "repo": "realworld",
+      "revision": "29c9d42831fa0cfc5a4aa7561f674396eacf20a2",
+      "evidence": {
+        "dirs": [
+          "conduit/apps/authentication"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "urls authentication"
+        ],
+        "external_deps": [],
+        "file_count": 8
+      },
+      "derived_fallback": {
+        "name": "Authentication",
+        "summary": "8 files under `conduit/apps/authentication`."
+      }
+    },
+    {
+      "id": "realworld::2",
+      "repo": "realworld",
+      "revision": "29c9d42831fa0cfc5a4aa7561f674396eacf20a2",
+      "evidence": {
+        "dirs": [
+          "conduit/apps/profiles"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "urls profiles"
+        ],
+        "external_deps": [],
+        "file_count": 7
+      },
+      "derived_fallback": {
+        "name": "Profiles",
+        "summary": "7 files under `conduit/apps/profiles`."
+      }
+    },
+    {
+      "id": "realworld::4",
+      "repo": "realworld",
+      "revision": "29c9d42831fa0cfc5a4aa7561f674396eacf20a2",
+      "evidence": {
+        "dirs": [
+          "conduit/apps/core"
+        ],
+        "top_symbols": [],
+        "entry_points": [],
+        "external_deps": [],
+        "file_count": 5
+      },
+      "derived_fallback": {
+        "name": "Core",
+        "summary": "5 files under `conduit/apps/core`."
+      }
+    },
+    {
+      "id": "realworld::3",
+      "repo": "realworld",
+      "revision": "29c9d42831fa0cfc5a4aa7561f674396eacf20a2",
+      "evidence": {
+        "dirs": [
+          "conduit"
+        ],
+        "top_symbols": [],
+        "entry_points": [
+          "urls conduit",
+          "wsgi"
+        ],
+        "external_deps": [],
+        "file_count": 4
+      },
+      "derived_fallback": {
+        "name": "Conduit",
+        "summary": "4 files under `conduit`."
+      }
+    }
+  ]
+}
