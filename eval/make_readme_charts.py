@@ -2,9 +2,19 @@
 
     python eval/make_readme_charts.py
 
-Writes docs/images/agent-quality.svg and docs/images/agent-tokens.svg, and prints
-the paired-delta table the README shows under the charts. Every number comes from
-a result file named below; nothing is typed in by hand.
+Writes docs/images/agent-quality.svg, agent-context.svg and agent-tokens.svg, and
+prints the paired-delta table the README shows under the charts. Every number comes
+from a result file named below; nothing is typed in by hand.
+
+Two token measures, as the harness reports them:
+
+  context   every item placed in the agent's context, counted once (task, file
+            list, search results, opened files, tool answers), tokenized by
+            eval-support's `tokens` op exactly as run_agent.py does. Navigation
+            checkpoints store 0 here (the harness fills it at report time), so it
+            is recomputed from the recorded traces; needs `cargo build --bins`.
+  billed    provider input + output tokens, which re-count the conversation on
+            every model call.
 
 Arms are compared only inside one run (or one task set on the same model), so a
 chart never pits a number against a baseline from a different run:
@@ -63,24 +73,48 @@ def paired(a, b, seed=0, n=10000):
     return statistics.mean(d), (boot[int(0.025 * n)], boot[int(0.975 * n)]), len(tasks)
 
 
+def nav_context_tokens(task_ids):
+    """Mean context tokens per episode by arm, over the rescored navigation task set.
+
+    Same count as run_agent.py's report step: each trace item tokenized once.
+    """
+    from run import CRATE, bridge
+    helper = CRATE / 'target' / 'debug' / ('eval-support.exe' if __import__('os').name == 'nt' else 'eval-support')
+    if not helper.exists():
+        raise SystemExit(f'{helper} missing; run: cargo build --bins')
+    rows = [e for run in ('results-nav-3arm', 'results-nav-importers')
+            for e in load(f'{run}/checkpoint.json')['episodes'] if e['task'] in task_ids]
+    counts = iter(bridge(helper, {'op': 'tokens', 'texts': [t['content'] for r in rows for t in r['trace']]}))
+    by = defaultdict(list)
+    for r in rows:
+        by[r['arm']].append(sum(next(counts) for _ in r['trace']))
+    return {arm: statistics.mean(v) for arm, v in by.items()}
+
+
 def numbers():
     nav = load('results-nav-rescored/report.json')
     s = nav['summary']
     routes = load('results-xlang-routes/report.json')['episodes']
     fixed = load('results-xlang-routes-fixed/report.json')['episodes']
     paid = load('results-xlang-36flash-paid/checkpoint.json')['episodes']
+    task_ids = {t['id'] for t in load('tasks-nav-gated.json')}
+    ctx = nav_context_tokens(task_ids)
 
+    def context(episodes, arm):
+        return statistics.mean(e['tokens'] for e in episodes if e['arm'] == arm)
+
+    # Each arm: (mean F1, billed tokens per task, context tokens per task).
     x_none, x_lookup = per_task(routes, 'without_map'), per_task(fixed, 'routes_tool')
     groups = [
         ('Navigation: which files are affected if this file changes?',
          '34 tasks on Hono, Next.js Commerce, TypeDI · gemini-3.5-flash-lite',
-         {'lookup': (s['importers_tool']['mean_f1'], s['importers_tool']['provider_tokens_per_episode']),
-          'map': (s['with_map']['mean_f1'], s['with_map']['provider_tokens_per_episode']),
-          'none': (s['without_map']['mean_f1'], s['without_map']['provider_tokens_per_episode'])}),
+         {'lookup': (s['importers_tool']['mean_f1'], s['importers_tool']['provider_tokens_per_episode'], ctx['importers_tool']),
+          'map': (s['with_map']['mean_f1'], s['with_map']['provider_tokens_per_episode'], ctx['with_map']),
+          'none': (s['without_map']['mean_f1'], s['without_map']['provider_tokens_per_episode'], ctx['without_map'])}),
         ('Cross-language: a Django view changes, which Angular files are affected?',
          '8 tasks on paperless-ngx · gemini-3.6-flash',
-         {'lookup': (statistics.mean(x_lookup.values()), provider_tokens(fixed, 'routes_tool')),
-          'none': (statistics.mean(x_none.values()), provider_tokens(routes, 'without_map'))}),
+         {'lookup': (statistics.mean(x_lookup.values()), provider_tokens(fixed, 'routes_tool'), context(fixed, 'routes_tool')),
+          'none': (statistics.mean(x_none.values()), provider_tokens(routes, 'without_map'), context(routes, 'without_map'))}),
     ]
     p = nav['paired']
     deltas = [
@@ -125,7 +159,8 @@ def bar(x, y, w, h, fill):
             f'fill="var(--{fill})"/>')
 
 
-def chart(title, subtitle, groups, value, vmax, ticks, fmt, path):
+def chart(title, subtitle, groups, value, vmax, ticks, fmt, path, label=None):
+    """`label(key, arms)` overrides a bar's value text; `fmt` always formats ticks."""
     width, left, right = 760, 170, 70
     plot = width - left - right
     bar_h, bar_gap, group_gap = 22, 6, 30
@@ -164,7 +199,8 @@ def chart(title, subtitle, groups, value, vmax, ticks, fmt, path):
             w = plot * v / vmax
             body.append(f'<text class="label" x="{left - 10}" y="{y + bar_h / 2 + 4.5:.1f}" text-anchor="end">{esc(name)}</text>')
             body.append(bar(left, y, w, bar_h, key))
-            body.append(f'<text class="value" x="{left + w + 8:.1f}" y="{y + bar_h / 2 + 4.5:.1f}">{fmt(v)}</text>')
+            text = label(key, arms) if label else fmt(v)
+            body.append(f'<text class="value" x="{left + w + 8:.1f}" y="{y + bar_h / 2 + 4.5:.1f}">{esc(text)}</text>')
             y += bar_h + bar_gap
         y += group_gap - bar_gap
     # Shared axis ticks under the last group.
@@ -187,12 +223,27 @@ def main():
           'Share of the affected files found, balanced against wrong files listed.',
           groups, lambda a: a[0], 1.0, [0, 0.25, 0.5, 0.75, 1.0],
           lambda v: f'{v * 100:.0f}%', OUT / 'agent-quality.svg')
-    # Benchmarks differ ~15x in absolute tokens, so each is indexed to its own
+    # Context: both benchmarks fit one absolute axis, so show real token counts,
+    # with each bar's change against its own no-help arm spelled out.
+    def change(key, arms):
+        v, base = arms[key][2], arms['none'][2]
+        text = f'{v / 1000:.1f}k tokens'
+        if key != 'none':
+            pct = round(100 * (v - base) / base)
+            text += f' · {abs(pct)}% {"less" if pct < 0 else "more"}'
+        return text
+    top = max(a[2] for _, _, arms in groups for a in arms.values())
+    vmax = 10000 * (int(top // 10000) + 1)
+    chart('Context the agent reads per task (lower is better)',
+          'Task, file list, search results, opened files and tool answers, each counted once.',
+          groups, lambda a: a[2], vmax, list(range(0, vmax + 1, 10000)),
+          lambda v: f'{v / 1000:.0f}k' if v else '0', OUT / 'agent-context.svg', label=change)
+    # Billed tokens differ ~15x between benchmarks, so each is indexed to its own
     # no-help arm (= 100%): one axis, no second scale.
     relative = [(g, n, {k: (v[0], v[1] / arms['none'][1]) for k, v in arms.items()})
                 for g, n, arms in groups]
-    chart('Tokens used per task, relative to no help (lower is cheaper)',
-          'Model input + output tokens, averaged over all attempts. No help = 100%.',
+    chart('Model tokens billed per task, relative to no help (lower is cheaper)',
+          'Input + output tokens across every model call; the conversation is re-sent each step. No help = 100%.',
           relative, lambda a: a[1], 2.0, [0, 0.5, 1.0, 1.5, 2.0],
           lambda v: f'{v * 100:.0f}%', OUT / 'agent-tokens.svg')
     print('| Benchmark | Setup | Change in F1 vs no help | 95% CI | Tasks |')
@@ -200,7 +251,7 @@ def main():
     for bench, arm, d, ci, n in deltas:
         print(f'| {bench} | {arm} | {d:+.3f} | [{ci[0]:+.2f}, {ci[1]:+.2f}] | {n} |')
     for gtitle, _, arms in groups:
-        print(gtitle, {k: (round(v[0], 3), round(v[1])) for k, v in arms.items()})
+        print(gtitle, {k: (round(v[0], 3), round(v[1]), round(v[2])) for k, v in arms.items()})
 
 
 if __name__ == '__main__':

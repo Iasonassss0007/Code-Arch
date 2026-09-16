@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="378" viewBox="0 0 760 378" role="img" aria-label="Model tokens billed per task, relative to no help (lower is cheaper)">
-<title>Model tokens billed per task, relative to no help (lower is cheaper)</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="378" viewBox="0 0 760 378" role="img" aria-label="Context the agent reads per task (lower is better)">
+<title>Context the agent reads per task (lower is better)</title>
 <style>
   svg { --surface:#fcfcfb; --text-1:#0b0b0b; --text-2:#52514e; --grid:#e4e3df;
          --lookup:#2a78d6; --map:#eb6834; --none:#1baf7a; }
@@ -16,8 +16,8 @@
   .tick { font-size:11px; fill:var(--text-2); }
 </style>
 <rect width="100%" height="100%" rx="8" fill="var(--surface)"/>
-<text class="title" x="16" y="28">Model tokens billed per task, relative to no help (lower is cheaper)</text>
-<text class="note" x="16" y="48">Input + output tokens across every model call; the conversation is re-sent each step. No help = 100%.</text>
+<text class="title" x="16" y="28">Context the agent reads per task (lower is better)</text>
+<text class="note" x="16" y="48">Task, file list, search results, opened files and tool answers, each counted once.</text>
 <rect x="16" y="62" width="12" height="12" rx="3" fill="var(--lookup)"/>
 <text class="label" x="34" y="72">Lookup tool</text>
 <rect x="150" y="62" width="12" height="12" rx="3" fill="var(--map)"/>
@@ -27,35 +27,32 @@
 <text class="group" x="16" y="108">Navigation: which files are affected if this file changes?</text>
 <text class="note" x="16" y="126">34 tasks on Hono, Next.js Commerce, TypeDI · gemini-3.5-flash-lite</text>
 <line x1="170.0" y1="134" x2="170.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
-<line x1="300.0" y1="134" x2="300.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
-<line x1="430.0" y1="134" x2="430.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
-<line x1="560.0" y1="134" x2="560.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
+<line x1="343.3" y1="134" x2="343.3" y2="220" stroke="var(--grid)" stroke-width="1"/>
+<line x1="516.7" y1="134" x2="516.7" y2="220" stroke="var(--grid)" stroke-width="1"/>
 <line x1="690.0" y1="134" x2="690.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
 <text class="label" x="160" y="153.5" text-anchor="end">Lookup tool</text>
-<path d="M170.0,138.0 H380.1 Q384.1,138.0 384.1,142.0 V156.0 Q384.1,160.0 380.1,160.0 H170.0 Z" fill="var(--lookup)"/>
-<text class="value" x="392.1" y="153.5">82%</text>
+<path d="M170.0,138.0 H225.9 Q229.9,138.0 229.9,142.0 V156.0 Q229.9,160.0 225.9,160.0 H170.0 Z" fill="var(--lookup)"/>
+<text class="value" x="237.9" y="153.5">3.5k tokens · 34% less</text>
 <text class="label" x="160" y="181.5" text-anchor="end">Map in the prompt</text>
-<path d="M170.0,166.0 H641.7 Q645.7,166.0 645.7,170.0 V184.0 Q645.7,188.0 641.7,188.0 H170.0 Z" fill="var(--map)"/>
-<text class="value" x="653.7" y="181.5">183%</text>
+<path d="M170.0,166.0 H328.8 Q332.8,166.0 332.8,170.0 V184.0 Q332.8,188.0 328.8,188.0 H170.0 Z" fill="var(--map)"/>
+<text class="value" x="340.8" y="181.5">9.4k tokens · 81% more</text>
 <text class="label" x="160" y="209.5" text-anchor="end">No help</text>
-<path d="M170.0,194.0 H426.0 Q430.0,194.0 430.0,198.0 V212.0 Q430.0,216.0 426.0,216.0 H170.0 Z" fill="var(--none)"/>
-<text class="value" x="438.0" y="209.5">100%</text>
+<path d="M170.0,194.0 H256.1 Q260.1,194.0 260.1,198.0 V212.0 Q260.1,216.0 256.1,216.0 H170.0 Z" fill="var(--none)"/>
+<text class="value" x="268.1" y="209.5">5.2k tokens</text>
 <text class="group" x="16" y="260">Cross-language: a Django view changes, which Angular files are affected?</text>
 <text class="note" x="16" y="278">8 tasks on paperless-ngx · gemini-3.6-flash</text>
 <line x1="170.0" y1="286" x2="170.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
-<line x1="300.0" y1="286" x2="300.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
-<line x1="430.0" y1="286" x2="430.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
-<line x1="560.0" y1="286" x2="560.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
+<line x1="343.3" y1="286" x2="343.3" y2="344" stroke="var(--grid)" stroke-width="1"/>
+<line x1="516.7" y1="286" x2="516.7" y2="344" stroke="var(--grid)" stroke-width="1"/>
 <line x1="690.0" y1="286" x2="690.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
 <text class="label" x="160" y="305.5" text-anchor="end">Lookup tool</text>
-<path d="M170.0,290.0 H238.5 Q242.5,290.0 242.5,294.0 V308.0 Q242.5,312.0 238.5,312.0 H170.0 Z" fill="var(--lookup)"/>
-<text class="value" x="250.5" y="305.5">28%</text>
+<path d="M170.0,290.0 H376.8 Q380.8,290.0 380.8,294.0 V308.0 Q380.8,312.0 376.8,312.0 H170.0 Z" fill="var(--lookup)"/>
+<text class="value" x="388.8" y="305.5">12.2k tokens · 54% less</text>
 <text class="label" x="160" y="333.5" text-anchor="end">No help</text>
-<path d="M170.0,318.0 H426.0 Q430.0,318.0 430.0,322.0 V336.0 Q430.0,340.0 426.0,340.0 H170.0 Z" fill="var(--none)"/>
-<text class="value" x="438.0" y="333.5">100%</text>
-<text class="tick" x="170.0" y="362" text-anchor="middle">0%</text>
-<text class="tick" x="300.0" y="362" text-anchor="middle">50%</text>
-<text class="tick" x="430.0" y="362" text-anchor="middle">100%</text>
-<text class="tick" x="560.0" y="362" text-anchor="middle">150%</text>
-<text class="tick" x="690.0" y="362" text-anchor="middle">200%</text>
+<path d="M170.0,318.0 H626.8 Q630.8,318.0 630.8,322.0 V336.0 Q630.8,340.0 626.8,340.0 H170.0 Z" fill="var(--none)"/>
+<text class="value" x="638.8" y="333.5">26.6k tokens</text>
+<text class="tick" x="170.0" y="362" text-anchor="middle">0</text>
+<text class="tick" x="343.3" y="362" text-anchor="middle">10k</text>
+<text class="tick" x="516.7" y="362" text-anchor="middle">20k</text>
+<text class="tick" x="690.0" y="362" text-anchor="middle">30k</text>
 </svg>
