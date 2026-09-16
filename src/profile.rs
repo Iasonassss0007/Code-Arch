@@ -170,6 +170,15 @@ pub fn detect(inv: &Inventory) -> Profile {
         p.package_frameworks.push((pkg.clone(), package_frameworks(inv, &pkg, &pkg_deps)));
     }
 
+    // A standalone app beside a backend (`src-ui/` next to a Django `src/`)
+    // is no workspace, yet its tsconfig baseUrl decides how its own imports
+    // resolve: paperless-ngx's `'src/app/services/...'` specifiers were all
+    // unresolved without it. Only the tsconfig is read; the directory does
+    // not become a package, so package scoping is unchanged.
+    for app in nested_ts_apps(&inv.root, &p.package_dirs) {
+        read_tsconfig(&inv.root.join(&app), &app, &mut p);
+    }
+
     for (dep, display) in FRAMEWORKS {
         if p.deps.contains(*dep) && !p.frameworks.iter().any(|f| f == display) {
             p.frameworks.push((*display).to_string());
@@ -369,6 +378,28 @@ fn discover_packages(root: &Path, raw: Option<&serde_json::Value>) -> Vec<String
     out.sort();
     out.dedup();
     out.truncate(64);
+    out
+}
+
+/// Top-level directories with their own tsconfig/jsconfig that no workspace
+/// declares, sorted. Hidden and dependency directories are skipped.
+fn nested_ts_apps(root: &Path, packages: &[String]) -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir(root) else {
+        return Vec::new();
+    };
+    let mut out: Vec<String> = entries
+        .flatten()
+        .filter(|e| e.path().is_dir())
+        .filter_map(|e| e.file_name().to_str().map(str::to_string))
+        .filter(|name| !name.starts_with('.') && name != "node_modules")
+        .filter(|name| !packages.contains(name))
+        .filter(|name| {
+            ["tsconfig.json", "jsconfig.json"]
+                .iter()
+                .any(|f| root.join(name).join(f).is_file())
+        })
+        .collect();
+    out.sort();
     out
 }
 
@@ -1120,6 +1151,22 @@ mod tests {
         assert_eq!(rebase("packages/web", "."), "packages/web");
         assert_eq!(rebase("", "dist/index.js"), "dist/index.js");
         assert_eq!(rebase("pkg", "./main.js"), "pkg/main.js");
+    }
+
+    #[test]
+    fn standalone_app_tsconfig_base_url_is_read_without_becoming_a_package() {
+        let dir = std::env::temp_dir().join(format!("codearch-nested-app-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(&dir.join("pyproject.toml"), "[project]
+name = \"backend\"
+");
+        write_tree(&dir.join("src-ui/package.json"), r#"{"name":"ui"}"#);
+        write_tree(&dir.join("src-ui/tsconfig.json"), r#"{"compilerOptions":{"baseUrl":"./"}}"#);
+        write_tree(&dir.join("node_modules/x/tsconfig.json"), r#"{"compilerOptions":{"baseUrl":"."}}"#);
+        let p = detect(&test_inventory_at(dir.clone(), &[]));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(p.package_dirs.is_empty());
+        assert_eq!(p.mappings.extra_base_urls, vec!["src-ui".to_string()]);
     }
 
     #[test]
