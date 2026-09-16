@@ -239,4 +239,9 @@ tuning risk. Recorded in the `route_join` doc comment.
 | 3 | most-specific route wins (`url_segment_seqs`, FORMAT 5) | 45 | 5 | 0 | 0.90 | 1.00 | 8/8 | kept (−1: chat.service `` `…documents/chat/` ``; still caller of `ChatStreamingView`, doc.service still caller of `UnifiedSearchViewSet`) |
 | 4 | skip `.replace(` pattern args (cause D: join error, see decision) | 45 | 2 | 0 | 0.96 | 1.00 | 8/8 | kept (−3: share dialogs; `SharedLinkView` section drops, oracle agrees it has no `/api/` caller) |
 | extra | skip `#`-fragment literals (`` url.hash = `#search=…` ``) | 45 | 1 | 0 | 0.98 | 1.00 | 8/8 | kept (−1: doc.service `#search`; request paths never start with `#`) |
+
+Other repos (before → after, `--codearch-dir` outside each checkout, checkouts verified
+clean): `hono`, `commerce`, `typedi`, `realworld` all have no `routes.md` at baseline
+(`027049d` worktree build) and none after — no route links lost or gained. (`realworld`
+here is backend-only for route purposes: 37 files, no TS frontend callers.)
 | | | | | | | | | |
