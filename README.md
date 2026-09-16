@@ -11,9 +11,6 @@ guessing:
 Lookups are what measurably help agents (see [What helps agents](#what-helps-agents)),
 so that is all `codearch` builds.
 
-Everything runs locally. The tool makes no network connection, needs no account and
-collects nothing.
-
 ## Install
 
 Requires Rust 1.85 or newer (edition 2024). Pure Rust, no native toolchain for the
