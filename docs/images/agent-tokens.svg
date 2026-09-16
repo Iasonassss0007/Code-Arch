@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="378" viewBox="0 0 760 378" role="img" aria-label="Tokens used per task, relative to no help (lower is cheaper)">
+<title>Tokens used per task, relative to no help (lower is cheaper)</title>
+<style>
+  svg { --surface:#fcfcfb; --text-1:#0b0b0b; --text-2:#52514e; --grid:#e4e3df;
+         --lookup:#2a78d6; --map:#eb6834; --none:#1baf7a; }
+  @media (prefers-color-scheme: dark) {
+    svg { --surface:#1a1a19; --text-1:#ffffff; --text-2:#c3c2b7; --grid:#383835;
+           --lookup:#3987e5; --map:#d95926; --none:#199e70; }
+  }
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .title { font-size:17px; font-weight:600; fill:var(--text-1); }
+  .group { font-size:14px; font-weight:600; fill:var(--text-1); }
+  .note { font-size:12px; fill:var(--text-2); }
+  .label { font-size:13px; fill:var(--text-1); }
+  .value { font-size:13px; font-weight:600; fill:var(--text-1); }
+  .tick { font-size:11px; fill:var(--text-2); }
+</style>
+<rect width="100%" height="100%" rx="8" fill="var(--surface)"/>
+<text class="title" x="16" y="28">Tokens used per task, relative to no help (lower is cheaper)</text>
+<text class="note" x="16" y="48">Model input + output tokens, averaged over all attempts. No help = 100%.</text>
+<rect x="16" y="62" width="12" height="12" rx="3" fill="var(--lookup)"/>
+<text class="label" x="34" y="72">Lookup tool</text>
+<rect x="150" y="62" width="12" height="12" rx="3" fill="var(--map)"/>
+<text class="label" x="168" y="72">Map in the prompt</text>
+<rect x="332" y="62" width="12" height="12" rx="3" fill="var(--none)"/>
+<text class="label" x="350" y="72">No help</text>
+<text class="group" x="16" y="108">Navigation: which files are affected if this file changes?</text>
+<text class="note" x="16" y="126">34 tasks on Hono, Next.js Commerce, TypeDI · gemini-3.5-flash-lite</text>
+<line x1="170.0" y1="134" x2="170.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
+<line x1="300.0" y1="134" x2="300.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
+<line x1="430.0" y1="134" x2="430.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
+<line x1="560.0" y1="134" x2="560.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
+<line x1="690.0" y1="134" x2="690.0" y2="220" stroke="var(--grid)" stroke-width="1"/>
+<text class="label" x="160" y="153.5" text-anchor="end">Lookup tool</text>
+<path d="M170.0,138.0 H380.1 Q384.1,138.0 384.1,142.0 V156.0 Q384.1,160.0 380.1,160.0 H170.0 Z" fill="var(--lookup)"/>
+<text class="value" x="392.1" y="153.5">82%</text>
+<text class="label" x="160" y="181.5" text-anchor="end">Map in the prompt</text>
+<path d="M170.0,166.0 H641.7 Q645.7,166.0 645.7,170.0 V184.0 Q645.7,188.0 641.7,188.0 H170.0 Z" fill="var(--map)"/>
+<text class="value" x="653.7" y="181.5">183%</text>
+<text class="label" x="160" y="209.5" text-anchor="end">No help</text>
+<path d="M170.0,194.0 H426.0 Q430.0,194.0 430.0,198.0 V212.0 Q430.0,216.0 426.0,216.0 H170.0 Z" fill="var(--none)"/>
+<text class="value" x="438.0" y="209.5">100%</text>
+<text class="group" x="16" y="260">Cross-language: a Django view changes, which Angular files are affected?</text>
+<text class="note" x="16" y="278">8 tasks on paperless-ngx · gemini-3.6-flash</text>
+<line x1="170.0" y1="286" x2="170.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
+<line x1="300.0" y1="286" x2="300.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
+<line x1="430.0" y1="286" x2="430.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
+<line x1="560.0" y1="286" x2="560.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
+<line x1="690.0" y1="286" x2="690.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
+<text class="label" x="160" y="305.5" text-anchor="end">Lookup tool</text>
+<path d="M170.0,290.0 H238.5 Q242.5,290.0 242.5,294.0 V308.0 Q242.5,312.0 238.5,312.0 H170.0 Z" fill="var(--lookup)"/>
+<text class="value" x="250.5" y="305.5">28%</text>
+<text class="label" x="160" y="333.5" text-anchor="end">No help</text>
+<path d="M170.0,318.0 H426.0 Q430.0,318.0 430.0,322.0 V336.0 Q430.0,340.0 426.0,340.0 H170.0 Z" fill="var(--none)"/>
+<text class="value" x="438.0" y="333.5">100%</text>
+<text class="tick" x="170.0" y="362" text-anchor="middle">0%</text>
+<text class="tick" x="300.0" y="362" text-anchor="middle">50%</text>
+<text class="tick" x="430.0" y="362" text-anchor="middle">100%</text>
+<text class="tick" x="560.0" y="362" text-anchor="middle">150%</text>
+<text class="tick" x="690.0" y="362" text-anchor="middle">200%</text>
+</svg>
