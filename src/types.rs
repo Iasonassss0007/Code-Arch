@@ -69,7 +69,7 @@ impl FileClass {
 
     /// Whether this file participates in parsing, the graph and clustering.
     pub fn is_analyzed(&self) -> bool {
-        matches!(self, FileClass::Source | FileClass::Test)
+        matches!(self, FileClass::Source | FileClass::Test | FileClass::Config)
     }
 }
 
