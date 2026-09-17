@@ -181,8 +181,7 @@ interval. An interval that does not include 0 is a clear effect.
 - The navigation tasks were rebuilt after a first version turned out to be solvable
   by plain grep; every task now passes adversary gates (see `eval/README.md`).
 - Charts and table are generated from the result files by
-  `python eval/make_readme_charts.py`. Full write-ups are in each results folder and
-  in [`code_arch_architecture.md`](code_arch_architecture.md).
+  `python eval/make_readme_charts.py`. Full write-ups are in each results folder.
 
 </details>
 
@@ -193,8 +192,7 @@ cargo test
 python -m pytest -q eval/test_*.py
 ```
 
-218 Rust tests and 65 harness tests pass. `code_arch_architecture.md` records the
-design, every milestone, and every measured result. The benchmark harness, task
+218 Rust tests and 65 harness tests pass. The benchmark harness, task
 builders and reproduction commands are documented in `eval/README.md`; paid runs
 need a provider key (`GEMINI_API_KEY`, `OPENROUTER_API_KEY` or `GROQ_API_KEY`), which
 is never written to artifacts.
