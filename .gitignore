@@ -15,6 +15,7 @@ eval/*.txt
 # Internal design docs; not for the public repo
 /code_arch_architecture.md
 /code_arch_core_idea.md
+/docs/superpowers/
 
 # Local research workspace (reports, renders, vendored repos); not part of the tool
 /research/
