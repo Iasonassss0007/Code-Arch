@@ -29,7 +29,7 @@ transitively, from a static import index. Run it before changing a file to see w
     ];
     if has_routes {
         lines.push(
-            "- `codearch callers <View>`: frontend files whose request URLs name a route served by that backend view.",
+            "- `codearch callers <View>`: frontend files requesting that backend view's routes, each with its direct importers.",
         );
     }
     lines.extend([

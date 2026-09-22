@@ -30,7 +30,7 @@ IMPORTERS_TOOL = '''
 
 # routes_tool arm: the importers tool plus the cross-language hop it cannot see.
 ROUTES_TOOL = '''
-{"tool":"route_callers","view":"ViewClassName"} returns frontend files whose request URLs name a route served by that backend view, from a static route index. It may miss URLs built at runtime and may include files that merely mention the route's words.'''
+{"tool":"route_callers","view":"ViewClassName"} returns frontend files whose request URLs name a route served by that backend view, from a static route index, each with the files that directly import it. It may miss URLs built at runtime and may include files that merely mention the route's words.'''
 
 
 def system_for(task, arm=None):

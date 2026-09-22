@@ -217,6 +217,12 @@ def test_session_route_callers_tool_serves_the_route_index(tmp_path):
     assert s.route_lookups == 2
     with pytest.raises(ValueError):
         Session(tmp_path, "q", "").action({"tool": "route_callers", "view": "TagViewSet"})
+    # Each caller's direct importers ride along, as `codearch callers` serves them.
+    walk = {"ui/a.ts": {"ui/x.ts": 1, "ui/deep.ts": 2}}
+    s = Session(tmp_path, "q", "", importers=lambda rel: walk.get(rel, {}), route_callers=index)
+    s.action({"tool": "route_callers", "view": "TagViewSet"})
+    assert json.loads(s.trace[-1]["content"]) == {
+        "view": "TagViewSet", "callers": ["ui/a.ts", "ui/tag.service.ts"], "importers": {"ui/a.ts": ["ui/x.ts"]}}
 
 
 def test_routes_tool_prompt_and_schema_offer_both_indexes_only_to_that_arm():

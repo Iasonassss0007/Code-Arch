@@ -36,6 +36,7 @@ codearch agents --write AGENTS.md         # tell your agents these lookups exist
 $ codearch callers WorkflowViewSet
 src/documents/views.py  (routes: workflows)
   src-ui/src/app/services/rest/workflow.service.ts
+    imported by: src-ui/src/app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts, src-ui/src/app/components/manage/workflows/workflows.component.spec.ts, src-ui/src/app/components/manage/workflows/workflows.component.ts, src-ui/src/app/services/rest/workflow.service.spec.ts
 ```
 
 ### Use from an agent
@@ -77,8 +78,10 @@ A directory literally named `importers` or `callers` is analyzed with
 
 - `importers` prints one `depth  path` line per importing file. `--depth 1` limits
   the answer to direct importers.
-- `callers` prints the view's file and routes, then its frontend callers. It needs
-  `.codearch/routes.md`, which is written only when route links were found.
+- `callers` prints the view's file and routes, then its frontend callers, each with
+  the files that directly import it (so one call answers "what does changing this API
+  touch"). It needs `.codearch/routes.md`, which is written only when route links were
+  found.
 - `--json` prints one object for scripting, in the same shape the benchmark's tools
   returned.
 - Both read the index as written and never re-analyze. stderr reports
@@ -102,13 +105,19 @@ cache. A fresh clone can then answer lookups immediately.
 | Area | Coverage |
 |---|---|
 | Languages | TypeScript, JavaScript (incl. `.mts/.cts/.mjs/.cjs`), Python |
-| Import resolution | Relative imports, tsconfig `paths` and `baseUrl` (root, workspace packages, and standalone apps such as `frontend/tsconfig.json`), npm/pnpm workspaces, Python packages, Django `include()` |
+| Import resolution | Relative imports, tsconfig `paths` and `baseUrl` (root, workspace packages, and standalone apps such as `frontend/tsconfig.json`), npm/pnpm workspace packages imported by name (`import 'shared/x'`, `@acme/ui`), Python packages including `from pkg import module`, Django `include()` |
 | Cross-language routes | Django `path`/`re_path`/`url` with nested `include()`, DRF `router.register`, matched to TypeScript files that send HTTP requests (`HttpClient`, `fetch`, `axios`), including services that inherit their client |
 | Frameworks recognized | Next.js, React, Django, Flask, and others from manifests |
 
 Route matching is static. On paperless-ngx it finds every caller the benchmark oracle
-finds (recall 1.00) at precision 0.98. URLs assembled at runtime can be missed, and a
-route named by a common word can match a file that uses the word for something else.
+finds (recall 1.00) at precision 1.00 (`python eval/score_routes.py`). URLs assembled
+at runtime can be missed, and a route named by a common word can match a file that
+uses the word for something else.
+
+In a monorepo, imports that name a workspace package resolve to that package's files:
+on the React repository the import index grows from 4,339 to 7,682 edges, with import
+resolution at 97%. Scoped npm packages and stylesheet/JSON imports are not counted as
+failures, so the reported resolution rate reflects real misses only.
 
 ## What helps agents
 
@@ -136,20 +145,20 @@ extras.
   help), and 100% on the cross-language tasks.
 - With the **map in the prompt**, it did slightly *worse* than with no help at all.
 
-![Context read per task: lookup tool 3.5k tokens (34% less) vs map 9.4k (81% more) vs no help 5.2k on navigation; lookup tool 12.2k (54% less) vs no help 26.6k on cross-language](docs/images/agent-context.svg)
+![Context read per task: lookup tool 3.5k tokens (34% less) vs map 9.4k (81% more) vs no help 5.2k on navigation; lookup tool 11.8k (56% less) vs no help 26.6k on cross-language](docs/images/agent-context.svg)
 
 - With the **lookup tool**, the agent's context holds **34% less** on navigation and
-  **54% less** on cross-language tasks. One lookup answer replaces the search results
+  **56% less** on cross-language tasks. One lookup answer replaces the search results
   and opened files the agent would otherwise read to work out the same thing, which
   leaves more room in the context window for the actual work.
 - With the **map in the prompt**, the context holds **81% more**: the map is added,
   and the agent still searches and opens files.
 
-![Model tokens billed relative to no help: lookup tool 82% and map 183% on navigation; lookup tool 28% on cross-language](docs/images/agent-tokens.svg)
+![Model tokens billed relative to no help: lookup tool 82% and map 183% on navigation; lookup tool 23% on cross-language](docs/images/agent-tokens.svg)
 
 - The smaller context also makes tasks **cheaper**. Models are billed for the whole
   conversation on every step, so the saving compounds: the lookup tool cost 82% of
-  no help on navigation and **28%** on cross-language tasks.
+  no help on navigation and **23%** on cross-language tasks.
 - The map made every navigation task **almost twice as expensive** (183%).
 
 <details>
@@ -171,7 +180,7 @@ interval. An interval that does not include 0 is a clear effect.
 - **Cross-language:** a Django view changes; which Angular files are affected? 8 tasks
   on paperless-ngx, `gemini-3.6-flash`, 1 attempt per setup
   ([`results-xlang-routes`](eval/results-xlang-routes/),
-  [`results-xlang-routes-fixed`](eval/results-xlang-routes-fixed/)). The map-in-prompt
+  [`results-xlang-routes-callers`](eval/results-xlang-routes-callers/)). The map-in-prompt
   row comes from a separate run and is compared only with that run's own no-help
   setup ([`results-xlang-36flash-paid`](eval/results-xlang-36flash-paid/)), so it has
   no bar in the charts.
@@ -192,7 +201,7 @@ cargo test
 python -m pytest -q eval/test_*.py
 ```
 
-218 Rust tests and 65 harness tests pass. The benchmark harness, task
+225 Rust tests and 65 harness tests pass. The benchmark harness, task
 builders and reproduction commands are documented in `eval/README.md`; paid runs
 need a provider key (`GEMINI_API_KEY`, `OPENROUTER_API_KEY` or `GROQ_API_KEY`), which
 is never written to artifacts.

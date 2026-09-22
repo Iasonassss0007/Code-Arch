@@ -40,7 +40,7 @@ const SUPPORTED_VERSIONS: &[&str] = &[
 const LATEST_VERSION: &str = "2025-11-25";
 
 const IMPORTERS_DESCRIPTION: &str = "Returns every file that imports that path, directly (depth 1) or transitively (depth 2+), from a static import index. It may miss runtime or string-based coupling.";
-const ROUTE_CALLERS_DESCRIPTION: &str = "Returns frontend files whose request URLs name a route served by that backend view, from a static route index. It may miss URLs built at runtime and may include files that merely mention the route's words.";
+const ROUTE_CALLERS_DESCRIPTION: &str = "Returns frontend files whose request URLs name a route served by that backend view, from a static route index, each with the files that directly import it. It may miss URLs built at runtime and may include files that merely mention the route's words.";
 
 pub struct Server {
     pub repo: PathBuf,
@@ -228,7 +228,10 @@ impl Server {
             }
             return tool_text(id, &reason, false);
         }
-        tool_text(id, &query::callers_json(view, &matches), false)
+        let imports = query::index_text(&self.dir, "imports.md", "")
+            .ok()
+            .map(|t| query::parse_imports(&t));
+        tool_text(id, &query::callers_json(view, &matches, imports.as_ref()), false)
     }
 }
 

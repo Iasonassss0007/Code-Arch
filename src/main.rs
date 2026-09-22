@@ -363,6 +363,10 @@ fn run_query(command: &Commands) -> i32 {
             };
             let index = query::parse_routes(&text);
             let matches = index.get(view.as_str()).cloned().unwrap_or_default();
+            // Optional: without an import index the answer is callers only.
+            let imports = query::index_text(&dir, "imports.md", "")
+                .ok()
+                .map(|t| query::parse_imports(&t));
             if matches.is_empty() {
                 let mut reason = format!("no route in the index names this view '{view}'");
                 let suggestions = query::suggest_views(&index, view);
@@ -371,14 +375,14 @@ fn run_query(command: &Commands) -> i32 {
                 }
                 eprintln!("{reason}");
                 if *json {
-                    println!("{}", query::callers_json(view, &matches));
+                    println!("{}", query::callers_json(view, &matches, None));
                 }
                 return 0;
             }
             if *json {
-                println!("{}", query::callers_json(view, &matches));
+                println!("{}", query::callers_json(view, &matches, imports.as_ref()));
             } else {
-                print!("{}", query::callers_text(&matches));
+                print!("{}", query::callers_text(&matches, imports.as_ref()));
             }
             if let Some(mins) = query::index_age_minutes(&dir, "routes.md") {
                 eprintln!("index written {mins} minutes ago");

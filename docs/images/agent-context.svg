@@ -46,8 +46,8 @@
 <line x1="516.7" y1="286" x2="516.7" y2="344" stroke="var(--grid)" stroke-width="1"/>
 <line x1="690.0" y1="286" x2="690.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
 <text class="label" x="160" y="305.5" text-anchor="end">Lookup tool</text>
-<path d="M170.0,290.0 H376.8 Q380.8,290.0 380.8,294.0 V308.0 Q380.8,312.0 376.8,312.0 H170.0 Z" fill="var(--lookup)"/>
-<text class="value" x="388.8" y="305.5">12.2k tokens · 54% less</text>
+<path d="M170.0,290.0 H370.7 Q374.7,290.0 374.7,294.0 V308.0 Q374.7,312.0 370.7,312.0 H170.0 Z" fill="var(--lookup)"/>
+<text class="value" x="382.7" y="305.5">11.8k tokens · 56% less</text>
 <text class="label" x="160" y="333.5" text-anchor="end">No help</text>
 <path d="M170.0,318.0 H626.8 Q630.8,318.0 630.8,322.0 V336.0 Q630.8,340.0 626.8,340.0 H170.0 Z" fill="var(--none)"/>
 <text class="value" x="638.8" y="333.5">26.6k tokens</text>

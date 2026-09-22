@@ -20,8 +20,9 @@ Arms are compared only inside one run (or one task set on the same model), so a
 chart never pits a number against a baseline from a different run:
 
   navigation      results-nav-rescored (34 tasks, gemini-3.5-flash-lite)
-  cross-language  results-xlang-routes (no help) + results-xlang-routes-fixed
-                  (lookup tool), same tasks/model/prompt, same day
+  cross-language  results-xlang-routes (no help) + results-xlang-routes-callers
+                  (lookup tool: route_callers now carries each caller's direct importers),
+                  same tasks and model; the no-help prompt is unchanged
   cross-language map-in-prompt: only as a paired delta against its own run's
                   no-help arm (results-xlang-36flash-paid), never as a bar
 
@@ -95,7 +96,7 @@ def numbers():
     nav = load('results-nav-rescored/report.json')
     s = nav['summary']
     routes = load('results-xlang-routes/report.json')['episodes']
-    fixed = load('results-xlang-routes-fixed/report.json')['episodes']
+    fixed = load('results-xlang-routes-callers/report.json')['episodes']
     paid = load('results-xlang-36flash-paid/checkpoint.json')['episodes']
     task_ids = {t['id'] for t in load('tasks-nav-gated.json')}
     ctx = nav_context_tokens(task_ids)

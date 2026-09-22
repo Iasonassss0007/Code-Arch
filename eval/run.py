@@ -124,7 +124,16 @@ class Session:
             if not isinstance(view, str) or not view:
                 raise ValueError('route_callers needs a view name')
             self.route_lookups += 1
-            self.observe('route_callers', {'view':view, 'callers':sorted(self.route_callers.get(view, []))})
+            callers = sorted(self.route_callers.get(view, []))
+            observed = {'view':view, 'callers':callers}
+            # Mirrors `codearch callers`: each caller's direct importers ride
+            # along, so the answer needs no follow-up lookup per caller.
+            if self.importers:
+                by = {c: sorted(p for p, d in self.importers(c).items() if d == 1) for c in callers}
+                by = {c: v for c, v in by.items() if v}
+                if by:
+                    observed['importers'] = by
+            self.observe('route_callers', observed)
         elif kind == 'answer':
             answer = action['files']
             if not isinstance(answer, list) or not all(isinstance(x,str) and x in self.paths for x in answer):

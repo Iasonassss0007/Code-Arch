@@ -229,26 +229,60 @@ pub fn importers_json(target: &str, hits: &[(String, usize)]) -> String {
     .to_string()
 }
 
+/// Direct importers of each caller: the second half of "what does an API
+/// change touch", served with the callers so an agent needs no follow-up
+/// lookup per caller. Callers nothing imports are left out.
+pub fn caller_importers(
+    imports: &BTreeMap<String, Vec<String>>,
+    callers: &[String],
+) -> BTreeMap<String, Vec<String>> {
+    callers
+        .iter()
+        .filter_map(|c| {
+            let direct: Vec<String> = importers(imports, c, Some(1)).into_iter().map(|(p, _)| p).collect();
+            (!direct.is_empty()).then(|| (c.clone(), direct))
+        })
+        .collect()
+}
+
 /// Plain-text `callers` answer: one block per matching section, the defining
-/// file and its routes first, then each caller indented.
-pub fn callers_text(matches: &[RouteEntry]) -> String {
+/// file and its routes first, then each caller indented, followed by the
+/// files importing it when an import index is at hand.
+pub fn callers_text(matches: &[RouteEntry], imports: Option<&BTreeMap<String, Vec<String>>>) -> String {
     let mut s = String::new();
     for m in matches {
         s.push_str(&format!("{}  (routes: {})\n", m.file, m.routes.join(", ")));
+        let by = imports.map(|i| caller_importers(i, &m.callers)).unwrap_or_default();
         for c in &m.callers {
             s.push_str(&format!("  {c}\n"));
+            if let Some(list) = by.get(c) {
+                s.push_str(&format!("    imported by: {}\n", list.join(", ")));
+            }
         }
     }
     s
 }
 
-/// JSON `callers` answer: the view plus every matching section.
-pub fn callers_json(view: &str, matches: &[RouteEntry]) -> String {
+/// JSON `callers` answer: the view plus every matching section. With an
+/// import index, a section also maps each caller to its direct importers
+/// (`importers`, omitted when empty).
+pub fn callers_json(
+    view: &str,
+    matches: &[RouteEntry],
+    imports: Option<&BTreeMap<String, Vec<String>>>,
+) -> String {
     serde_json::json!({
         "view": view,
-        "matches": matches.iter().map(|m| serde_json::json!({
-            "file": m.file, "routes": m.routes, "callers": m.callers,
-        })).collect::<Vec<_>>(),
+        "matches": matches.iter().map(|m| {
+            let mut o = serde_json::json!({
+                "file": m.file, "routes": m.routes, "callers": m.callers,
+            });
+            let by = imports.map(|i| caller_importers(i, &m.callers)).unwrap_or_default();
+            if !by.is_empty() {
+                o["importers"] = serde_json::json!(by);
+            }
+            o
+        }).collect::<Vec<_>>(),
     })
     .to_string()
 }
@@ -338,6 +372,27 @@ mod tests {
             vec!["documents".to_string(), "documents/notes".to_string()]
         );
         assert_eq!(parsed.len(), 2);
+    }
+
+    #[test]
+    fn callers_carry_their_direct_importers_when_the_index_is_there() {
+        let imports = parse_imports("ui/a.ts ← ui/x.ts, ui/y.ts\nui/x.ts ← ui/deep.ts\n");
+        let m = vec![RouteEntry {
+            file: "v.py".to_string(),
+            routes: vec!["tags".to_string()],
+            callers: vec!["ui/a.ts".to_string(), "ui/b.ts".to_string()],
+        }];
+        let json: serde_json::Value = serde_json::from_str(&callers_json("V", &m, Some(&imports))).unwrap();
+        // Direct only; a caller nothing imports is left out.
+        assert_eq!(json["matches"][0]["importers"], serde_json::json!({"ui/a.ts": ["ui/x.ts", "ui/y.ts"]}));
+        assert_eq!(json["matches"][0]["callers"], serde_json::json!(["ui/a.ts", "ui/b.ts"]));
+        let bare: serde_json::Value = serde_json::from_str(&callers_json("V", &m, None)).unwrap();
+        assert!(bare["matches"][0].get("importers").is_none(), "no index, no field");
+        assert_eq!(
+            callers_text(&m, Some(&imports)),
+            "v.py  (routes: tags)\n  ui/a.ts\n    imported by: ui/x.ts, ui/y.ts\n  ui/b.ts\n"
+        );
+        assert_eq!(callers_text(&m, None), "v.py  (routes: tags)\n  ui/a.ts\n  ui/b.ts\n");
     }
 
     #[test]

@@ -48,8 +48,8 @@
 <line x1="560.0" y1="286" x2="560.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
 <line x1="690.0" y1="286" x2="690.0" y2="344" stroke="var(--grid)" stroke-width="1"/>
 <text class="label" x="160" y="305.5" text-anchor="end">Lookup tool</text>
-<path d="M170.0,290.0 H238.5 Q242.5,290.0 242.5,294.0 V308.0 Q242.5,312.0 238.5,312.0 H170.0 Z" fill="var(--lookup)"/>
-<text class="value" x="250.5" y="305.5">28%</text>
+<path d="M170.0,290.0 H226.6 Q230.6,290.0 230.6,294.0 V308.0 Q230.6,312.0 226.6,312.0 H170.0 Z" fill="var(--lookup)"/>
+<text class="value" x="238.6" y="305.5">23%</text>
 <text class="label" x="160" y="333.5" text-anchor="end">No help</text>
 <path d="M170.0,318.0 H426.0 Q430.0,318.0 430.0,322.0 V336.0 Q430.0,340.0 426.0,340.0 H170.0 Z" fill="var(--none)"/>
 <text class="value" x="438.0" y="333.5">100%</text>
