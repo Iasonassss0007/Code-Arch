@@ -89,6 +89,12 @@ pub struct FileParse {
     /// TS: base classes named in `extends` clauses, generics stripped.
     #[serde(default)]
     pub extends: Vec<String>,
+    /// Python: `from X import a` names joined onto their module (`.a`,
+    /// `pkg.a`). Each may be a submodule (`from . import views`) or just an
+    /// attribute; stage 3 adds an edge when one resolves to a file and is
+    /// otherwise silent, so these never count toward resolution.
+    #[serde(default)]
+    pub py_members: Vec<RawRef>,
     /// The grammar reported at least one ERROR node.
     pub partial: bool,
 }
@@ -570,6 +576,10 @@ fn visit_python(node: Node, src: &str, line: usize, out: &mut FileParse) {
         }
         "import_from_statement" => {
             if let Some(spec) = python_from_module(node, src) {
+                let sep = if spec.ends_with('.') { "" } else { "." };
+                for name in python_from_names(node, src) {
+                    out.py_members.push(RawRef { specifier: format!("{spec}{sep}{name}"), line });
+                }
                 out.refs.push(RawRef { specifier: spec, line });
             }
         }
@@ -692,6 +702,35 @@ fn python_from_module(node: Node, src: &str) -> Option<String> {
         return None;
     }
     Some(slice.to_string())
+}
+
+/// The imported names of `from X import a, b as c, (d)`: `a`, `b`, `d`.
+/// Everything after the `import` keyword; a wildcard yields nothing.
+fn python_from_names(node: Node, src: &str) -> Vec<String> {
+    let bytes = src.as_bytes();
+    let mut out = Vec::new();
+    let mut after_import = false;
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if !child.is_named() {
+            after_import |= child.utf8_text(bytes).ok() == Some("import");
+            continue;
+        }
+        if !after_import {
+            continue;
+        }
+        let name = match child.kind() {
+            "dotted_name" => Some(child),
+            "aliased_import" => child.child_by_field_name("name"),
+            _ => None,
+        };
+        if let Some(text) = name.and_then(|n| n.utf8_text(bytes).ok())
+            && is_identifier(text)
+        {
+            out.push(text.to_string());
+        }
+    }
+    out
 }
 
 /// Django URL wiring: `include('conduit.apps.articles.urls')` is a real

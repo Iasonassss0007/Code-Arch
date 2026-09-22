@@ -71,6 +71,20 @@ pub struct PathMappings {
     /// Package-level baseUrls rebased to repository-relative form (slice 2).
     /// Tried in order after `base_url`; first hit wins.
     pub extra_base_urls: Vec<String>,
+    /// Workspace packages by `package.json` name, so `import 'shared/x'` in a
+    /// monorepo reaches `packages/shared/x` instead of filing as an npm
+    /// package. Tried after every tsconfig rule, as node_modules is.
+    pub workspace_packages: Vec<WorkspacePackage>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct WorkspacePackage {
+    pub name: String,
+    /// Repository-relative package dir.
+    pub dir: String,
+    /// Repository-relative entry candidates for the bare name, in order
+    /// (`exports["."]`, `module`, `main`).
+    pub entries: Vec<String>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -162,6 +176,9 @@ pub fn detect(inv: &Inventory) -> Profile {
         let before = p.deps.clone();
         if let Some(raw) = read_json(&dir.join("package.json")) {
             read_package_json(&raw, &pkg, &mut p);
+            if let Some(ws) = workspace_package(&raw, &pkg) {
+                p.mappings.workspace_packages.push(ws);
+            }
         }
         read_pyproject(&dir, &mut p);
         read_requirements(&dir, &mut p);
@@ -236,6 +253,33 @@ fn read_package_json(raw: &serde_json::Value, prefix: &str, p: &mut Profile) {
         }
         _ => {}
     }
+}
+
+/// A workspace package's name and entry candidates. Conditional `exports`
+/// take the first string among the usual source-bearing conditions; `types`
+/// is skipped (declaration files are not analyzed).
+fn workspace_package(raw: &serde_json::Value, dir: &str) -> Option<WorkspacePackage> {
+    let name = raw.get("name")?.as_str()?.to_string();
+    let mut entries: Vec<String> = Vec::new();
+    let dot = match raw.get("exports") {
+        Some(serde_json::Value::Object(o)) => o.get("."),
+        other => other,
+    };
+    let export = match dot {
+        Some(serde_json::Value::String(s)) => Some(s.as_str()),
+        Some(serde_json::Value::Object(o)) => ["source", "import", "module", "default", "require", "node"]
+            .iter()
+            .find_map(|k| o.get(*k).and_then(|v| v.as_str())),
+        _ => None,
+    };
+    let fields = ["module", "main"].map(|k| raw.get(k).and_then(|v| v.as_str()));
+    for e in std::iter::once(export).chain(fields).flatten() {
+        let e = rebase(dir, e);
+        if !entries.contains(&e) {
+            entries.push(e);
+        }
+    }
+    Some(WorkspacePackage { name, dir: dir.to_string(), entries })
 }
 
 /// The root tsconfig block, generalized the same way. Package baseUrls cannot
@@ -1167,6 +1211,34 @@ name = \"backend\"
         let _ = std::fs::remove_dir_all(&dir);
         assert!(p.package_dirs.is_empty());
         assert_eq!(p.mappings.extra_base_urls, vec!["src-ui".to_string()]);
+    }
+
+    #[test]
+    fn workspace_packages_are_named_with_their_entries() {
+        let dir = std::env::temp_dir().join(format!("codearch-ws-names-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(&dir.join("package.json"), r#"{"name":"mono","workspaces":["packages/*"]}"#);
+        write_tree(
+            &dir.join("packages/ui/package.json"),
+            r#"{"name":"@acme/ui","main":"./dist/index.js","exports":{".":{"types":"./x.d.ts","import":"./src/index.ts"}}}"#,
+        );
+        write_tree(&dir.join("packages/core/package.json"), r#"{"name":"core","exports":"./lib/core.js"}"#);
+        write_tree(&dir.join("packages/py/pyproject.toml"), "[project]\nname = \"py\"\n");
+        let p = detect(&test_inventory_at(dir.clone(), &[]));
+        let _ = std::fs::remove_dir_all(&dir);
+        let got: Vec<(&str, &str, Vec<&str>)> = p
+            .mappings
+            .workspace_packages
+            .iter()
+            .map(|w| (w.name.as_str(), w.dir.as_str(), w.entries.iter().map(String::as_str).collect()))
+            .collect();
+        assert_eq!(
+            got,
+            vec![
+                ("core", "packages/core", vec!["packages/core/lib/core.js"]),
+                ("@acme/ui", "packages/ui", vec!["packages/ui/src/index.ts", "packages/ui/dist/index.js"]),
+            ]
+        );
     }
 
     #[test]

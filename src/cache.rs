@@ -39,7 +39,9 @@ use std::path::Path;
 /// from v5 would keep the old answer.
 /// v7: the local-model label cache (`labels_llm`) is removed with the model
 /// labeler.
-pub const FORMAT: u32 = 7;
+/// v8: `FileParse` gains `py_members` (`from X import name` candidates);
+/// v7 parses would serve without them and drop those edges.
+pub const FORMAT: u32 = 8;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StoredFile {

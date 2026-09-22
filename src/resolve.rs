@@ -12,7 +12,7 @@
 
 use crate::inventory::Inventory;
 use crate::parse::{DJANGO_INCLUDE_MARKER, FileParse};
-use crate::profile::PathMappings;
+use crate::profile::{PathMappings, WorkspacePackage};
 use crate::types::FileId;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
@@ -189,7 +189,13 @@ pub fn resolve_all(
                 }
             }
 
-            if is_external_specifier(spec) {
+            // A stylesheet or data file is not code the inventory holds: it
+            // can never resolve, and a miss says nothing about the resolver.
+            if spec.starts_with('.') && is_asset(spec) {
+                continue;
+            }
+
+            if is_external_specifier(spec) || is_unaliased_scoped(spec, mappings) {
                 let pkg = package_name(spec);
                 if from < out.file_externals.len() && !out.file_externals[from].contains(&pkg) {
                     out.file_externals[from].push(pkg.clone());
@@ -207,6 +213,20 @@ pub fn resolve_all(
                     }
                 }
                 None => out.unresolved.push((from, spec.to_string())),
+            }
+        }
+
+        // `from . import views`: the module ref above reached the package;
+        // a name that is itself a module file earns its own edge.
+        for m in &p.py_members {
+            let spec = m.specifier.as_str();
+            let to = if spec.starts_with('.') {
+                resolve_py_relative(spec, &from_dir, &index)
+            } else {
+                resolve_dotted(spec, &py_roots, &index)
+            };
+            if let Some(to) = to {
+                push_edge(&mut out, &mut seen, from, to);
             }
         }
     }
@@ -273,7 +293,62 @@ fn resolve_bare(spec: &str, mappings: &PathMappings, index: &FileIndex) -> Optio
         }
     }
 
-    None
+    resolve_workspace(spec, &mappings.workspace_packages, index)
+}
+
+/// `shared/x` or `@acme/ui` against the monorepo's own packages. The bare
+/// name tries the manifest entries, then `index`, then `src/index`; a
+/// subpath tries the package dir, then its `src/`. Longest name wins, so
+/// `@acme/ui-kit` never answers for `@acme/ui`.
+fn resolve_workspace(spec: &str, pkgs: &[WorkspacePackage], index: &FileIndex) -> Option<FileId> {
+    let pkg = pkgs
+        .iter()
+        .filter(|p| {
+            spec.strip_prefix(p.name.as_str())
+                .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+        })
+        .max_by_key(|p| p.name.len())?;
+    let rest = spec[pkg.name.len()..].trim_start_matches('/');
+    if rest.is_empty() {
+        pkg.entries
+            .iter()
+            .find_map(|e| lookup(e, index))
+            .or_else(|| lookup(&pkg.dir, index))
+            .or_else(|| lookup(&format!("{}/src/index", pkg.dir), index))
+    } else {
+        lookup(&format!("{}/{rest}", pkg.dir), index)
+            .or_else(|| lookup(&format!("{}/src/{rest}", pkg.dir), index))
+    }
+}
+
+/// Relative imports of files the inventory never holds.
+const ASSET_EXTS: &[&str] = &[
+    "css", "scss", "sass", "less", "styl", "json", "json5", "svg", "png", "jpg", "jpeg", "gif",
+    "webp", "avif", "ico", "woff", "woff2", "ttf", "otf", "html", "md", "mdx", "txt", "yaml",
+    "yml", "graphql", "gql", "wasm",
+];
+
+fn is_asset(spec: &str) -> bool {
+    let file = spec.rsplit('/').next().unwrap_or(spec);
+    let file = file.split(['?', '#']).next().unwrap_or(file);
+    file.rsplit_once('.')
+        .is_some_and(|(_, ext)| ASSET_EXTS.contains(&ext.to_ascii_lowercase().as_str()))
+}
+
+/// `@angular/core`: a scoped npm package, unless a tsconfig alias claims the
+/// specifier. `@/x` has no scope, so it stays with the alias table and a
+/// miss there is still the resolver's.
+fn is_unaliased_scoped(spec: &str, mappings: &PathMappings) -> bool {
+    let Some(rest) = spec.strip_prefix('@') else {
+        return false;
+    };
+    let Some((scope, name)) = rest.split_once('/') else {
+        return false;
+    };
+    let name = name.split('/').next().unwrap_or(name);
+    looks_like_package(scope)
+        && looks_like_package(name)
+        && !mappings.paths.iter().any(|(p, _)| match_alias(p, spec).is_some())
 }
 
 /// Import roots for absolute dotted specs: always the project root, plus
@@ -471,7 +546,7 @@ fn is_external_specifier(spec: &str) -> bool {
     if spec.starts_with('.') {
         return false;
     }
-    if spec.starts_with("node:") || spec.starts_with("bun:") {
+    if ["node:", "bun:", "npm:", "jsr:"].iter().any(|p| spec.starts_with(p)) {
         return true;
     }
     if NODE_BUILTINS.contains(&spec) {
@@ -492,7 +567,10 @@ fn looks_like_package(spec: &str) -> bool {
 }
 
 fn package_name(spec: &str) -> String {
-    let spec = spec.strip_prefix("node:").unwrap_or(spec);
+    let spec = ["node:", "npm:", "jsr:"]
+        .iter()
+        .find_map(|p| spec.strip_prefix(p))
+        .unwrap_or(spec);
     let parts: Vec<&str> = spec.split('/').collect();
     if spec.starts_with('@') && parts.len() >= 2 {
         format!("{}/{}", parts[0], parts[1])
@@ -668,6 +746,7 @@ mod tests {
             base_url: None,
             paths: Vec::new(),
             extra_base_urls: vec!["packages/web".into()],
+            ..Default::default()
         };
         let res = resolve_all(&inv, &[parsed(0, &["src/b"])], &m, &[]);
         assert_eq!(res.edges, vec![(0, 1)]);
@@ -838,6 +917,90 @@ mod tests {
         assert_eq!(res.edges, vec![(0, 1)]);
         assert!(res.unresolved.is_empty());
         assert!(res.externals.is_empty());
+    }
+
+    fn workspace(name: &str, dir: &str, entries: &[&str]) -> WorkspacePackage {
+        WorkspacePackage {
+            name: name.into(),
+            dir: dir.into(),
+            entries: entries.iter().map(|e| (*e).into()).collect(),
+        }
+    }
+
+    #[test]
+    fn workspace_package_names_resolve_to_their_dirs() {
+        let inv = inventory(&[
+            "packages/app/src/a.ts",
+            "packages/shared/index.js",
+            "packages/shared/src/flags.ts",
+            "packages/ui/src/index.ts",
+            "packages/ui-kit/src/index.ts",
+        ]);
+        let m = PathMappings {
+            workspace_packages: vec![
+                workspace("shared", "packages/shared", &["packages/shared/dist/main.js"]),
+                workspace("@acme/ui", "packages/ui", &[]),
+                workspace("@acme/ui-kit", "packages/ui-kit", &[]),
+            ],
+            ..Default::default()
+        };
+        let specs = ["shared", "shared/src/flags", "shared/flags", "@acme/ui", "@acme/ui-kit", "react"];
+        let res = resolve_all(&inv, &[parsed(0, &specs)], &m, &[]);
+        // Missing built entry falls back to index; subpaths try the dir, then src/.
+        assert_eq!(res.edges, vec![(0, 1), (0, 2), (0, 3), (0, 4)]);
+        assert_eq!(res.externals.get("react"), Some(&1));
+        assert!(!res.externals.contains_key("shared"));
+        assert!(res.unresolved.is_empty());
+    }
+
+    #[test]
+    fn scoped_packages_are_external_unless_an_alias_claims_them() {
+        let inv = inventory(&["src/a.ts"]);
+        let m = PathMappings {
+            paths: vec![("@app/*".into(), vec!["src/*".into()]), ("@/*".into(), vec!["src/*".into()])],
+            ..Default::default()
+        };
+        let specs = ["@angular/core", "@angular/common/http", "npm:@medley/router", "jsr:@std/assert", "@app/missing", "@/missing"];
+        let res = resolve_all(&inv, &[parsed(0, &specs)], &m, &[]);
+        for pkg in ["@angular/core", "@angular/common", "@medley/router", "@std/assert"] {
+            assert_eq!(res.externals.get(pkg), Some(&1), "{pkg}");
+        }
+        // Alias misses are still the resolver's to report.
+        let missed: Vec<&str> = res.unresolved.iter().map(|(_, s)| s.as_str()).collect();
+        assert_eq!(missed, vec!["@app/missing", "@/missing"]);
+    }
+
+    #[test]
+    fn relative_asset_imports_neither_resolve_nor_count() {
+        let inv = inventory(&["app/layout.tsx", "app/page.tsx"]);
+        let specs = ["./globals.css", "../data/keys.json", "./logo.svg?url", "./page"];
+        let res = resolve_all(&inv, &[parsed(0, &specs)], &PathMappings::default(), &[]);
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert!(res.unresolved.is_empty());
+        assert!((res.resolution_rate - 1.0).abs() < 1e-9);
+    }
+
+    fn parsed_py(file: usize, src: &str) -> FileParse {
+        let mut p = crate::parse::Parsers::new();
+        crate::parse::parse_one(&mut p, file, crate::types::Language::Python, src)
+    }
+
+    #[test]
+    fn python_from_import_reaches_submodules() {
+        let inv = inventory(&[
+            "app/__init__.py",
+            "app/models.py",
+            "app/sub/__init__.py",
+            "app/urls.py",
+            "app/views.py",
+        ]);
+        let src = "from . import views, sub as s\nfrom app import models, helper\nfrom .views import home\nfrom . import *\n";
+        let res = resolve_all(&inv, &[parsed_py(3, src)], &PathMappings::default(), &[]);
+        // Package inits stay (the old edge), and each submodule joins; a
+        // plain attribute (`helper`, `home`) adds nothing and costs nothing.
+        assert_eq!(res.edges, vec![(3, 0), (3, 1), (3, 2), (3, 4)]);
+        assert!(res.unresolved.is_empty());
+        assert!((res.resolution_rate - 1.0).abs() < 1e-9);
     }
 
     #[test]
