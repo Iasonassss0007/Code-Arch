@@ -1,20 +1,17 @@
 # codearch
 
-Local code-graph lookups for coding agents. `codearch` analyzes a repository on
-your machine and answers two questions an agent otherwise answers by grepping and
-guessing:
+Fast, local code lookups for coding agents. `codearch` indexes a repository on your
+machine and answers two questions agents otherwise answer by grepping and guessing:
 
-- **Who imports this file?** Directly and transitively, with hop depth.
-- **Which frontend files call this backend endpoint?** Across the language
-  boundary, from a Django view to the TypeScript files that request it.
+- **Who imports this file?** Directly and transitively.
+- **Which frontend files call this backend endpoint?** From a Django view to the
+  TypeScript files that request it, plus the files that import those.
 
-Lookups are what measurably help agents (see [What helps agents](#what-helps-agents)),
-so that is all `codearch` builds.
+Works with TypeScript, JavaScript and Python.
 
 ## Install
 
-Requires Rust 1.85 or newer (edition 2024). Pure Rust, no native toolchain for the
-default build.
+Requires Rust 1.85 or newer.
 
 ```
 git clone https://github.com/Iasonassss0007/Code-Arch.git
@@ -22,177 +19,80 @@ cd Code-Arch
 cargo install --path .
 ```
 
-## Quick start
+## Use
 
 ```
 cd /path/to/repo
-codearch                                  # build the lookup indexes (seconds)
+codearch                                  # build the index (seconds)
 codearch importers src/lib/auth.ts        # who depends on this file
 codearch callers TagViewSet               # which frontend files call this view
 codearch agents --write AGENTS.md         # tell your agents these lookups exist
 ```
 
-```
-$ codearch callers WorkflowViewSet
-src/documents/views.py  (routes: workflows)
-  src-ui/src/app/services/rest/workflow.service.ts
-    imported by: src-ui/src/app/components/common/edit-dialog/workflow-edit-dialog/workflow-edit-dialog.component.ts, src-ui/src/app/components/manage/workflows/workflows.component.spec.ts, src-ui/src/app/components/manage/workflows/workflows.component.ts, src-ui/src/app/services/rest/workflow.service.spec.ts
-```
+Add `--json` to a lookup for machine-readable output. Re-run `codearch` when the code
+changes.
 
-### Use from an agent
-
-Any agent that can run shell commands can call the two lookups directly, once it
-knows they exist. `codearch agents` prints a short block saying so;
-`codearch agents --write AGENTS.md` (or `CLAUDE.md`, or whichever file your agent
-reads) adds it between `<!-- codearch:start -->` and `<!-- codearch:end -->` markers.
-Re-running replaces only that block and leaves the rest of the file alone.
-
-For MCP clients, the same lookups are served as tools (`importers`, `route_callers`)
-over stdio:
+For MCP clients (Claude Code and others):
 
 ```
 claude mcp add codearch -- codearch mcp --repo /path/to/repo
 ```
 
-The index files are loaded per call, so re-running `codearch` is picked up without
-restarting the server.
-
-## Commands
-
-```
-codearch [PATH] [--codearch-dir DIR]
-codearch importers <file> [--depth N] [--json] [--repo PATH] [--codearch-dir DIR]
-codearch callers <View> [--json] [--repo PATH] [--codearch-dir DIR]
-codearch agents [--write FILE] [--repo PATH] [--codearch-dir DIR]
-codearch mcp [--repo PATH] [--codearch-dir DIR]
-```
-
-```
---codearch-dir <path> where the indexes are written (default: <repo>/.codearch)
-```
-
-A directory literally named `importers` or `callers` is analyzed with
-`codearch ./importers`.
-
-### Lookups
-
-- `importers` prints one `depth  path` line per importing file. `--depth 1` limits
-  the answer to direct importers.
-- `callers` prints the view's file and routes, then its frontend callers, each with
-  the files that directly import it (so one call answers "what does changing this API
-  touch"). It needs `.codearch/routes.md`, which is written only when route links were
-  found.
-- `--json` prints one object for scripting, in the same shape the benchmark's tools
-  returned.
-- Both read the index as written and never re-analyze. stderr reports
-  `index written <N> minutes ago`; re-run `codearch` when the code has moved on.
-- A miss exits 0 with a one-line reason on stderr. A missing index, a path outside
-  the repository, or bad arguments exit 2.
-
-### What it writes
-
-| File | Written | Contents |
-|---|---|---|
-| `.codearch/imports.md` | always | Reverse import index: for every imported file, each file that imports it |
-| `.codearch/routes.md` | when route links exist | Backend views and their frontend callers |
-| `.codearch/cache/` | always | Parse and git caches for fast re-runs; ignored by the tool's own `.gitignore` |
-
-**What to commit:** `.codearch/*.md`, not the
-cache. A fresh clone can then answer lookups immediately.
-
-## Supported code
-
-| Area | Coverage |
-|---|---|
-| Languages | TypeScript, JavaScript (incl. `.mts/.cts/.mjs/.cjs`), Python |
-| Import resolution | Relative imports, tsconfig `paths` and `baseUrl` (root, workspace packages, and standalone apps such as `frontend/tsconfig.json`), npm/pnpm workspace packages imported by name (`import 'shared/x'`, `@acme/ui`), Python packages including `from pkg import module`, Django `include()` |
-| Cross-language routes | Django `path`/`re_path`/`url` with nested `include()`, DRF `router.register`, matched to TypeScript files that send HTTP requests (`HttpClient`, `fetch`, `axios`), including services that inherit their client |
-| Frameworks recognized | Next.js, React, Django, Flask, and others from manifests |
-
-Route matching is static. On paperless-ngx it finds every caller the benchmark oracle
-finds (recall 1.00) at precision 1.00 (`python eval/score_routes.py`). URLs assembled
-at runtime can be missed, and a route named by a common word can match a file that
-uses the word for something else.
-
-In a monorepo, imports that name a workspace package resolve to that package's files:
-on the React repository the import index grows from 4,339 to 7,682 edges, with import
-resolution at 97%. Scoped npm packages and stylesheet/JSON imports are not counted as
-failures, so the reported resolution rate reflects real misses only.
+Commit `.codearch/*.md` so a fresh clone can answer lookups right away; the
+`.codearch/cache/` folder is ignored automatically.
 
 ## What helps agents
 
-**In short: giving an agent a summary of the codebase does not help. Giving it a
-precise lookup does.**
+**Giving an agent a summary of the codebase does not help. Giving it a precise
+lookup does.**
 
-We tested this with real AI models on public repositories. Each task asks a
-question a developer asks before changing code: *"if I change this file, which other
-files are affected?"* The model explores the repository with search and file-open
-tools, then answers with a list of files. It tries each task in one of three setups:
-
-- **No help:** only search and open.
-- **Map in the prompt:** the same, plus a generated codebase overview pasted into its
-  instructions.
-- **Lookup tool:** the same, plus `importers` (and, for cross-language tasks,
-  `route_callers`) to call whenever it wants.
-
-Answers are scored by **F1**: 100% means exactly the right files, no misses and no
-extras.
+We gave real AI models the question developers ask before a change: *"if I change
+this file, which other files are affected?"* Each task ran three ways: with no help,
+with a codebase map in the prompt, and with the `codearch` lookup tool.
 
 ![Answer quality: lookup tool 98% vs map 58% vs no help 61% on navigation; lookup tool 100% vs no help 87% on cross-language](docs/images/agent-quality.svg)
 
-- With the **lookup tool**, the model found the right files almost every time:
-  98% on navigation, where 64 of 68 answers were exactly right (12 of 68 with no
-  help), and 100% on the cross-language tasks.
-- With the **map in the prompt**, it did slightly *worse* than with no help at all.
+With the lookup tool, the model found the right files almost every time (98% and
+100%). The map made it slightly *worse* than no help.
 
 ![Context read per task: lookup tool 3.5k tokens (34% less) vs map 9.4k (81% more) vs no help 5.2k on navigation; lookup tool 11.8k (56% less) vs no help 26.6k on cross-language](docs/images/agent-context.svg)
 
-- With the **lookup tool**, the agent's context holds **34% less** on navigation and
-  **56% less** on cross-language tasks. One lookup answer replaces the search results
-  and opened files the agent would otherwise read to work out the same thing, which
-  leaves more room in the context window for the actual work.
-- With the **map in the prompt**, the context holds **81% more**: the map is added,
-  and the agent still searches and opens files.
+The lookup tool also leaves the agent with less to read: 34% and 56% less context.
 
 ![Model tokens billed relative to no help: lookup tool 82% and map 183% on navigation; lookup tool 23% on cross-language](docs/images/agent-tokens.svg)
 
-- The smaller context also makes tasks **cheaper**. Models are billed for the whole
-  conversation on every step, so the saving compounds: the lookup tool cost 82% of
-  no help on navigation and **23%** on cross-language tasks.
-- The map made every navigation task **almost twice as expensive** (183%).
+And it makes tasks cheaper: 82% and 23% of the cost of no help. The map nearly
+doubled the cost.
 
-<details>
-<summary>Exact numbers, confidence intervals and caveats</summary>
+Tested on Hono, Next.js Commerce, TypeDI and paperless-ngx with Gemini models. The
+cross-language result rests on one repository. Methods are in
+[`eval/README.md`](eval/README.md), per-run results and confidence intervals in the
+`eval/results-*` folders; the charts are generated from those files by
+`python eval/make_readme_charts.py`.
 
-Change in F1 against no help, averaged per task, with a 95% bootstrap confidence
-interval. An interval that does not include 0 is a clear effect.
+## Versus grep
 
-| Benchmark | Setup | Change in F1 | 95% CI | Tasks |
-|---|---|---:|---|---:|
-| Navigation | Lookup tool | +0.372 | [+0.28, +0.47] | 34 |
-| Navigation | Map in the prompt | −0.024 | [−0.12, +0.08] | 34 |
-| Cross-language | Lookup tool | +0.126 | [+0.05, +0.21] | 8 |
-| Cross-language | Map in the prompt | −0.096 | [−0.46, +0.27] | 7 |
+The context an agent spends on a blast-radius lookup ("if I change file X, which
+files are affected, directly and transitively?") was also measured, using a best-effort
+grep search, one batched regex per depth, against a single `codearch importers` call.
+Tokens are counted with the Gemini `countTokens` API by
+[`eval/grep_vs_codearch.py`](eval/grep_vs_codearch.py).
 
-- **Navigation:** 34 tasks on Hono, Next.js Commerce and TypeDI, 2 attempts each,
-  `gemini-3.5-flash-lite`, all three setups in the same runs
-  ([`results-nav-rescored`](eval/results-nav-rescored/)).
-- **Cross-language:** a Django view changes; which Angular files are affected? 8 tasks
-  on paperless-ngx, `gemini-3.6-flash`, 1 attempt per setup
-  ([`results-xlang-routes`](eval/results-xlang-routes/),
-  [`results-xlang-routes-callers`](eval/results-xlang-routes-callers/)). The map-in-prompt
-  row comes from a separate run and is compared only with that run's own no-help
-  setup ([`results-xlang-36flash-paid`](eval/results-xlang-36flash-paid/)), so it has
-  no bar in the charts.
-- **The cross-language answer key uses the same idea as the tool** (URL callers plus
-  their direct importers). The result shows the lookup works as served; it does not
-  independently prove the links are right. It rests on one repository.
-- The navigation tasks were rebuilt after a first version turned out to be solvable
-  by plain grep; every task now passes adversary gates (see `eval/README.md`).
-- Charts and table are generated from the result files by
-  `python eval/make_readme_charts.py`. Full write-ups are in each results folder.
+| Repo | grep context | codearch context | Ratio |
+|---|---|---|---|
+| Small (~155 TS/JS files) | 2,240 tok, 4 rounds | 1,152 tok, 1 call | 1.9x |
+| Large (~2,800 TS/JS/Python files) | 148,757 tok, 7 rounds | 1,278 tok, 1 call | 116x |
 
-</details>
+- **Small repo:** a careful grep matches codearch (72 files each). A naive one stopped
+  at depth 2 and silently missed 23 of the 72.
+- **Large repo:** common basenames (`types`, `utils`, `client`) made grep match
+  unrelated files. It converged on 2,732 of the repo's 2,795 files; codearch reported
+  57, in 156 ms after a one-off 100 s index build.
+- **Caveats:** codearch's 57 is a lower bound, since import resolution was 34% on the
+  large repo and unresolved specifiers carry no edge.
+
+For a single direct-importer lookup, `grep -l` is as good. codearch wins on
+transitive impact, and the win grows with repo size.
 
 ## Development
 
@@ -200,17 +100,6 @@ interval. An interval that does not include 0 is a clear effect.
 cargo test
 python -m pytest -q eval/test_*.py
 ```
-
-225 Rust tests and 65 harness tests pass. The benchmark harness, task
-builders and reproduction commands are documented in `eval/README.md`; paid runs
-need a provider key (`GEMINI_API_KEY`, `OPENROUTER_API_KEY` or `GROQ_API_KEY`), which
-is never written to artifacts.
-
-## Status
-
-A working tool at version 0.3. The lookups (`importers`, `callers`, `agents`, MCP) are the
-recommended interface. Coverage is TypeScript, JavaScript and Python; other
-ecosystems and route frameworks are not supported yet.
 
 ## License
 
