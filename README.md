@@ -81,18 +81,53 @@ Tokens are counted with the Gemini `countTokens` API by
 | Repo | grep context | codearch context | Ratio |
 |---|---|---|---|
 | Small (~155 TS/JS files) | 2,240 tok, 4 rounds | 1,152 tok, 1 call | 1.9x |
-| Large (~2,800 TS/JS/Python files) | 148,757 tok, 7 rounds | 1,278 tok, 1 call | 116x |
+| Large (~2,800 TS/JS/Python files) | 148,757 tok, 7 rounds | 3,809 tok, 1 call | 39x |
 
 - **Small repo:** a careful grep matches codearch (72 files each). A naive one stopped
   at depth 2 and silently missed 23 of the 72.
 - **Large repo:** common basenames (`types`, `utils`, `client`) made grep match
-  unrelated files. It converged on 2,732 of the repo's 2,795 files; codearch reported
-  57, in 156 ms after a one-off 100 s index build.
-- **Caveats:** codearch's 57 is a lower bound, since import resolution was 34% on the
-  large repo and unresolved specifiers carry no edge.
+  unrelated files. It converged on 2,503 files. codearch reported 173 importers; the
+  TypeScript compiler's own graph has 177. The lookup took 150–175 ms after a 5.6 s
+  index build.
+- **Earlier figure:** an earlier version of this table showed 116x for the large
+  repo. That build resolved only 34% of the repo's first-party imports, so it
+  reported 57 importers and a much shorter answer. The large-repo row was
+  re-measured after the resolution fixes below; the small-repo row is from the
+  earlier build.
 
 For a single direct-importer lookup, `grep -l` is as good. codearch wins on
 transitive impact, and the win grows with repo size.
+
+## Accuracy
+
+Measured on the large repo above, a pnpm monorepo with 245 workspace packages,
+tsconfig `paths` inherited through `extends`, and Python under `python/*/src`.
+
+**Import resolution: 99.8% of first-party imports** (11,346 of 11,369), as codearch
+reports it. An independent classifier, which checks against the repo's manifests and
+tsconfigs, puts it at 99.65%. External packages, asset imports (`.css`) and imports
+of files codearch skips as generated are counted separately, not as failures.
+
+**Transitive importers against the TypeScript compiler's import graph:**
+
+| Target file | Ground truth | codearch | Recall | Precision |
+|---|---:|---:|---:|---:|
+| `contract/chat-nodes.ts` | 177 | 173 | 97.7% | 100% |
+| `submission-settings.ts` | 190 | 173 | 91.1% | 100% |
+| `web-app/src/index.ts` | 3 | 3 | 100% | 100% |
+| `directory-picker/src/index.ts` | 30 | 30 | 100% | 100% |
+| `cosmokit/src/misc.ts` | 2,063 | 2,057 | 99.5% | 99.8% |
+
+- **Misses:** every missed file depends on its target through a
+  `declare module '…'` block (module augmentation). The TypeScript compiler
+  counts that as a dependency; codearch doesn't read it yet.
+- **Extras:** all five are test-fixture files whose own tsconfig maps a package
+  to a stub.
+- **Details:** the per-step numbers, every missed file and the known limitations
+  are in [`eval/resolution_report.md`](eval/resolution_report.md).
+- **Reproduce** with
+  [`eval/ts_ground_truth.mjs`](eval/ts_ground_truth.mjs) and
+  [`eval/recall_vs_ground_truth.py`](eval/recall_vs_ground_truth.py).
 
 ## Development
 
