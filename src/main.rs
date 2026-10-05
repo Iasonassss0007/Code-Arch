@@ -157,15 +157,7 @@ fn main() -> Result<()> {
         "Est. source context: {} tokens",
         report.source_tokens_estimate
     );
-    println!(
-        "Import resolution:   {:.0}%{}",
-        report.resolution_rate * 100.0,
-        if report.unresolved > 0 {
-            format!(" ({} unresolved)", report.unresolved)
-        } else {
-            String::new()
-        }
-    );
+    print_resolution(&report);
     println!(
         "Git co-change:       {}",
         if report.commits_read == 0 {
@@ -246,12 +238,9 @@ imports, so merging them further would assert a relationship the code does not h
     Ok(())
 }
 
-/// The default run's summary: what the lookups can see, and what to do next.
-fn print_index_report(report: &codearch::RunReport, opts: &Options) {
-    println!();
-    println!("Source files:        {}", report.files);
+fn print_resolution(report: &codearch::RunReport) {
     println!(
-        "Import resolution:   {:.0}%{}",
+        "Import resolution:   {:.0}% of first-party imports{}",
         report.resolution_rate * 100.0,
         if report.unresolved > 0 {
             format!(" ({} unresolved)", report.unresolved)
@@ -259,6 +248,17 @@ fn print_index_report(report: &codearch::RunReport, opts: &Options) {
             String::new()
         }
     );
+    println!(
+        "Not counted:         {} external, {} asset, {} into excluded files",
+        report.external_refs, report.asset_refs, report.excluded_refs
+    );
+}
+
+/// The default run's summary: what the lookups can see, and what to do next.
+fn print_index_report(report: &codearch::RunReport, opts: &Options) {
+    println!();
+    println!("Source files:        {}", report.files);
+    print_resolution(report);
     println!("Import index:        {} imports", report.import_edges);
     println!(
         "Route callers:       {}",

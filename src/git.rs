@@ -328,6 +328,7 @@ mod tests {
             root: PathBuf::from("."),
             files,
             skipped: Vec::new(),
+            manifests: Vec::new(),
             excluded: Default::default(),
         }
     }

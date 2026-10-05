@@ -43,6 +43,8 @@ pub struct Resolution {
     pub unresolved: Vec<(FileId, String)>,
     /// Internal specifiers resolved / internal specifiers attempted.
     pub resolution_rate: f64,
+    pub asset_refs: usize,
+    pub excluded_refs: usize,
 }
 
 impl Resolution {
@@ -143,6 +145,7 @@ pub fn resolve_all(
     let mut internal_attempts = 0usize;
     let mut internal_hits = 0usize;
     let py_roots = python_roots(inv, package_dirs);
+    let py_local = python_packages(inv);
 
     for p in parsed {
         let from = p.file;
@@ -160,6 +163,7 @@ pub fn resolve_all(
                     from,
                     &from_dir,
                     &py_roots,
+                    &py_local,
                     &index,
                     &mut out,
                     &mut seen,
@@ -192,6 +196,13 @@ pub fn resolve_all(
             // A stylesheet or data file is not code the inventory holds: it
             // can never resolve, and a miss says nothing about the resolver.
             if spec.starts_with('.') && is_asset(spec) {
+                out.asset_refs += 1;
+                continue;
+            }
+
+            if !spec.starts_with('.') && mappings.local_packages.contains(&package_name(spec)) {
+                internal_attempts += 1;
+                out.unresolved.push((from, spec.to_string()));
                 continue;
             }
 
@@ -204,15 +215,23 @@ pub fn resolve_all(
                 continue;
             }
 
-            internal_attempts += 1;
             match resolve_one(spec, &from_dir, mappings, &index) {
                 Some(to) => {
+                    internal_attempts += 1;
                     internal_hits += 1;
                     if to != from && seen.insert((from, to)) {
                         out.edges.push((from, to));
                     }
                 }
-                None => out.unresolved.push((from, spec.to_string())),
+                None if spec.starts_with('.')
+                    && on_disk(&inv.root, &join_relative(&from_dir, spec)) =>
+                {
+                    out.excluded_refs += 1;
+                }
+                None => {
+                    internal_attempts += 1;
+                    out.unresolved.push((from, spec.to_string()));
+                }
             }
         }
 
@@ -378,19 +397,27 @@ fn python_roots(inv: &Inventory, package_dirs: &[String]) -> Vec<String> {
             roots.push(pkg.clone());
         }
     }
+    for top in top_python_packages(inv) {
+        let parent = top.rsplit_once('/').map_or("", |(p, _)| p).to_string();
+        if !roots.contains(&parent) {
+            roots.push(parent);
+        }
+    }
     roots
 }
 
 /// One Python ref, dispatched by shape. Attempt counting is asymmetric on
-/// purpose: an absolute miss is indistinguishable from third-party and goes
-/// external without touching the rate, while a relative miss is always the
-/// tool's failure and counts. `__future__` is external by definition.
+/// purpose: an absolute miss goes external without touching the rate unless
+/// its top-level name is a package in the repository, while a relative miss
+/// is always the tool's failure and counts. `__future__` is external by
+/// definition.
 #[allow(clippy::too_many_arguments)]
 fn resolve_py(
     spec: &str,
     from: FileId,
     from_dir: &str,
     roots: &[String],
+    local: &HashSet<String>,
     index: &FileIndex,
     out: &mut Resolution,
     seen: &mut HashSet<(FileId, FileId)>,
@@ -436,8 +463,46 @@ fn resolve_py(
             *hits += 1;
             push_edge(out, seen, from, to);
         }
+        None if local.contains(spec.split('.').next().unwrap_or(spec)) => {
+            *attempts += 1;
+            out.unresolved.push((from, spec.to_string()));
+        }
         None => push_external(out, from, spec.split('.').next().unwrap_or(spec)),
     }
+}
+
+fn python_packages(inv: &Inventory) -> HashSet<String> {
+    top_python_packages(inv)
+        .into_iter()
+        .map(|d| d.rsplit('/').next().unwrap_or(d).to_string())
+        .collect()
+}
+
+fn top_python_packages(inv: &Inventory) -> Vec<&str> {
+    let inits: HashSet<&str> = inv
+        .files
+        .iter()
+        .filter_map(|f| f.rel.strip_suffix("/__init__.py"))
+        .collect();
+    let mut tops: Vec<&str> = inits
+        .iter()
+        .copied()
+        .filter(|d| d.rsplit_once('/').is_none_or(|(parent, _)| !inits.contains(parent)))
+        .collect();
+    tops.sort_unstable();
+    tops
+}
+
+fn on_disk(root: &std::path::Path, path: &str) -> bool {
+    std::iter::once(path)
+        .chain([".js", ".jsx", ".mjs", ".cjs"].iter().filter_map(|e| path.strip_suffix(e)))
+        .any(|base| {
+            root.join(base).is_file()
+                || EXT_PRECEDENCE.iter().any(|e| {
+                    root.join(format!("{base}.{e}")).is_file()
+                        || root.join(format!("{base}/index.{e}")).is_file()
+                })
+        })
 }
 
 fn push_edge(out: &mut Resolution, seen: &mut HashSet<(FileId, FileId)>, from: FileId, to: FileId) {
@@ -671,6 +736,7 @@ mod tests {
                 })
                 .collect(),
             skipped: Vec::new(),
+            manifests: Vec::new(),
             excluded: crate::inventory::ExcludeStats {
                 generated: 0,
                 config: 0,
@@ -737,6 +803,67 @@ mod tests {
             &[],
         );
         assert_eq!(res.unresolved.len(), 1);
+    }
+
+    #[test]
+    fn scoped_first_party_package_is_not_external() {
+        let inv = inventory(&["apps/web/a.ts"]);
+        let m = PathMappings {
+            local_packages: ["@acme/ui".to_string()].into(),
+            ..Default::default()
+        };
+        let res = resolve_all(&inv, &[parsed(0, &["@acme/ui/button", "@other/pkg"])], &m, &[]);
+        assert_eq!(res.unresolved, vec![(0, "@acme/ui/button".to_string())]);
+        assert!(!res.externals.contains_key("@acme/ui"));
+        assert_eq!(res.externals.get("@other/pkg"), Some(&1));
+        assert!(res.resolution_rate.abs() < 1e-9);
+    }
+
+    #[test]
+    fn assets_and_excluded_targets_are_counted_apart_from_misses() {
+        let dir = std::env::temp_dir().join(format!("codearch-excluded-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("src")).unwrap();
+        std::fs::write(dir.join("src/catalog.ts"), "// @generated\n").unwrap();
+        let mut inv = inventory(&["src/a.ts"]);
+        inv.root = dir.clone();
+        let specs = ["./catalog.ts", "./a.module.css", "./missing"];
+        let res = resolve_all(&inv, &[parsed(0, &specs)], &PathMappings::default(), &[]);
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!((res.excluded_refs, res.asset_refs), (1, 1));
+        assert_eq!(res.unresolved, vec![(0, "./missing".to_string())]);
+        assert!(res.resolution_rate.abs() < 1e-9);
+    }
+
+    #[test]
+    fn python_first_party_miss_is_unresolved_not_external() {
+        let inv = inventory(&["sdk/src/harness/__init__.py", "app.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(1, &["harness.errors", "requests"])],
+            &PathMappings::default(),
+            &[],
+        );
+        assert_eq!(res.unresolved, vec![(1, "harness.errors".to_string())]);
+        assert_eq!(res.externals.get("requests"), Some(&1));
+    }
+
+    #[test]
+    fn python_source_root_below_the_repo_root_resolves() {
+        let inv = inventory(&[
+            "python/sdk/src/harness/__init__.py",
+            "python/sdk/src/harness/errors.py",
+            "examples/run.py",
+        ]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(2, &["harness.errors", "harness"])],
+            &PathMappings::default(),
+            &[],
+        );
+        assert_eq!(res.edges, vec![(2, 0), (2, 1)]);
+        assert!(res.unresolved.is_empty());
+        assert!((res.resolution_rate - 1.0).abs() < 1e-9);
     }
 
     #[test]

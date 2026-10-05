@@ -1,9 +1,9 @@
 """Context cost of a blast-radius lookup: batched-grep BFS vs one `codearch importers` call.
 
 Tokens are counted with the Gemini countTokens API (GEMINI_API_KEY), not estimated.
-usage: python eval/grep_vs_codearch.py REPO FILE
+usage: python eval/grep_vs_codearch.py REPO FILE [--codearch-bin target/release/codearch.exe]
 """
-import json, os, re, subprocess, sys, urllib.request
+import argparse, json, os, re, subprocess, urllib.request
 from pathlib import Path
 
 MODEL = "gemini-3.1-flash-lite"
@@ -44,10 +44,17 @@ def grep_bfs(repo, target):
 
 
 def main():
-    repo, target = Path(sys.argv[1]), sys.argv[2]
-    subprocess.run(["codearch", "."], cwd=repo, check=True, capture_output=True)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("repo", type=Path)
+    ap.add_argument("target")
+    ap.add_argument("--codearch-bin", default="codearch")
+    args = ap.parse_args()
+    repo, target = args.repo, args.target
+    bin_path = Path(args.codearch_bin)
+    ca = str(bin_path.resolve()) if bin_path.exists() else args.codearch_bin
+    subprocess.run([ca, "."], cwd=repo, check=True, capture_output=True)
     ca_cmd = f"codearch importers {target}"
-    ca_out = subprocess.run(["codearch", "importers", target], cwd=repo, text=True, capture_output=True).stdout
+    ca_out = subprocess.run([ca, "importers", target], cwd=repo, text=True, capture_output=True).stdout
     n, rounds, g_cmd, g_out = grep_bfs(repo, target)
     g = tokens(g_cmd) + tokens(g_out)
     c = tokens(ca_cmd) + tokens(ca_out)

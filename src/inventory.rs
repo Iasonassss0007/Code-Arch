@@ -75,6 +75,7 @@ pub struct Inventory {
     pub files: Vec<FileRecord>,
     /// Everything recognized but deliberately not analyzed.
     pub skipped: Vec<FileRecord>,
+    pub manifests: Vec<String>,
     pub excluded: ExcludeStats,
 }
 
@@ -124,17 +125,28 @@ pub fn collect_cached(
     let mut stats = ExcludeStats::default();
     let mut analyzed: Vec<FileRecord> = Vec::new();
     let mut skipped: Vec<FileRecord> = Vec::new();
+    let mut manifests: Vec<String> = Vec::new();
     let mut read_stats = (0usize, 0usize); // (stat-hits, disk reads)
 
+    let workspaces: Vec<String> = crate::profile::workspace_patterns(&root)
+        .into_iter()
+        .filter(|p| !p.starts_with('!'))
+        .collect();
+    let walk_root = root.clone();
     let walker = WalkBuilder::new(&root)
         .hidden(true)
         .git_ignore(true)
         .git_global(false)
         .parents(false)
-        .filter_entry(|e| {
+        .filter_entry(move |e| {
             let name = e.file_name().to_string_lossy();
             let is_dir = e.file_type().is_some_and(|t| t.is_dir());
-            !VENDOR_DIRS.contains(&name.as_ref()) && !(is_dir && is_python_env(e.path()))
+            let workspace = || {
+                let rel = e.path().strip_prefix(&walk_root).map(|r| r.to_string_lossy().replace('\\', "/"));
+                rel.is_ok_and(|rel| workspaces.iter().any(|p| crate::profile::glob_covers(p, &rel)))
+            };
+            (!VENDOR_DIRS.contains(&name.as_ref()) || (name != "node_modules" && workspace()))
+                && !(is_dir && is_python_env(e.path()))
         })
         .build();
 
@@ -153,6 +165,11 @@ pub fn collect_cached(
 
         let abs = entry.path().to_path_buf();
         let Some(language) = Language::from_path(&abs) else {
+            if entry.file_name() == "package.json"
+                && let Ok(r) = abs.strip_prefix(&root)
+            {
+                manifests.push(r.to_string_lossy().replace('\\', "/"));
+            }
             stats.non_supported += 1;
             continue;
         };
@@ -284,10 +301,12 @@ pub fn collect_cached(
         eprintln!("time inventory-cache hits={} reads={} dropped={}", read_stats.0, read_stats.1, dropped);
     }
 
+    manifests.sort();
     Ok(Inventory {
         root,
         files: analyzed,
         skipped,
+        manifests,
         excluded: stats,
     })
 }
@@ -375,6 +394,28 @@ fn is_generated(text: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn walks_vendor_dirs_only_when_a_workspace_declares_them() {
+        let dir = std::env::temp_dir().join(format!("codearch-vendor-ws-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        for (rel, text) in [
+            ("pnpm-workspace.yaml", "packages:\n  - vendor/*\n"),
+            ("vendor/lib/package.json", r#"{"name":"@acme/lib"}"#),
+            ("vendor/lib/src/a.ts", "export const a = 1;\n"),
+            ("vendor/lib/node_modules/dep/index.js", "module.exports = 1;\n"),
+            ("other/vendor/x.ts", "export const x = 1;\n"),
+            ("src/main.ts", "export const m = 1;\n"),
+        ] {
+            std::fs::create_dir_all(dir.join(rel).parent().unwrap()).unwrap();
+            std::fs::write(dir.join(rel), text).unwrap();
+        }
+        let inv = collect(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+        let rels: Vec<&str> = inv.files.iter().map(|f| f.rel.as_str()).collect();
+        assert_eq!(rels, vec!["src/main.ts", "vendor/lib/src/a.ts"]);
+        assert_eq!(inv.manifests, vec!["vendor/lib/package.json".to_string()]);
+    }
 
     #[test]
     fn recognizes_test_paths() {

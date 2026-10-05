@@ -11,8 +11,8 @@
 
 use crate::inventory::Inventory;
 use crate::types::{FileRecord, RouteHint};
-use std::collections::BTreeSet;
-use std::path::Path;
+use std::collections::{BTreeSet, HashMap};
+use std::path::{Path, PathBuf};
 
 /// Dependency name -> display name. Order here is the order shown in the map.
 const FRAMEWORKS: &[(&str, &str)] = &[
@@ -75,6 +75,7 @@ pub struct PathMappings {
     /// monorepo reaches `packages/shared/x` instead of filing as an npm
     /// package. Tried after every tsconfig rule, as node_modules is.
     pub workspace_packages: Vec<WorkspacePackage>,
+    pub local_packages: BTreeSet<String>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -163,12 +164,21 @@ pub fn detect(inv: &Inventory) -> Profile {
     }
     read_pyproject(&inv.root, &mut p);
     read_requirements(&inv.root, &mut p);
-    read_tsconfig(&inv.root, "", &mut p);
+    let local_dirs: HashMap<String, String> = inv
+        .manifests
+        .iter()
+        .filter_map(|m| {
+            let name = read_json(&inv.root.join(m))?.get("name")?.as_str()?.to_string();
+            Some((name, m.rsplit_once('/').map_or(String::new(), |(d, _)| d.to_string())))
+        })
+        .collect();
+    p.mappings.local_packages = local_dirs.keys().cloned().collect();
+    read_tsconfig(&inv.root, "", &local_dirs, &mut p);
 
     // Slice 2: workspace packages merge into the same profile, rebased to
     // repository-relative form. Root is read first so it wins every
     // first-wins rule (alias patterns, baseUrl, name/description).
-    p.package_dirs = discover_packages(&inv.root, root_raw.as_ref());
+    p.package_dirs = discover_packages(&inv.root);
     for pkg in p.package_dirs.clone() {
         let dir = inv.root.join(&pkg);
         // Snapshot-diff: the readers merge into `p.deps`, and the difference
@@ -182,7 +192,7 @@ pub fn detect(inv: &Inventory) -> Profile {
         }
         read_pyproject(&dir, &mut p);
         read_requirements(&dir, &mut p);
-        read_tsconfig(&dir, &pkg, &mut p);
+        read_tsconfig(&inv.root, &pkg, &local_dirs, &mut p);
         let pkg_deps: BTreeSet<String> = p.deps.difference(&before).cloned().collect();
         p.package_frameworks.push((pkg.clone(), package_frameworks(inv, &pkg, &pkg_deps)));
     }
@@ -193,7 +203,7 @@ pub fn detect(inv: &Inventory) -> Profile {
     // unresolved without it. Only the tsconfig is read; the directory does
     // not become a package, so package scoping is unchanged.
     for app in nested_ts_apps(&inv.root, &p.package_dirs) {
-        read_tsconfig(&inv.root.join(&app), &app, &mut p);
+        read_tsconfig(&inv.root, &app, &local_dirs, &mut p);
     }
 
     for (dep, display) in FRAMEWORKS {
@@ -287,30 +297,28 @@ fn workspace_package(raw: &serde_json::Value, dir: &str) -> Option<WorkspacePack
 /// package alias targets rebase to repository-relative form. Duplicate alias
 /// patterns keep the first registration (root before packages, packages in
 /// sorted order).
-fn read_tsconfig(dir: &Path, prefix: &str, p: &mut Profile) {
-    // tsconfig.json is very often JSONC, so it cannot go through serde directly.
+fn read_tsconfig(root: &Path, prefix: &str, local: &HashMap<String, String>, p: &mut Profile) {
+    let dir = root.join(prefix);
     for candidate in ["tsconfig.json", "jsconfig.json"] {
         let path = dir.join(candidate);
         if !path.exists() {
             continue;
         }
-        let Ok(text) = std::fs::read_to_string(&path) else {
-            continue;
-        };
-        let Ok(v) = serde_json::from_str::<serde_json::Value>(&strip_jsonc(&text)) else {
+        let Some(ts) = load_tsconfig(root, &path, local, 0) else {
             continue;
         };
         p.has_tsconfig = true;
-        let Some(co) = v.get("compilerOptions") else {
+        if ts.base_url.is_none() && ts.paths.is_none() {
             continue;
-        };
-        if let Some(b) = co.get("baseUrl").and_then(|v| v.as_str()) {
-            // Root keeps its exact historical value ("." stays ".").
-            let rebased = if prefix.is_empty() {
-                normalize_rel(b)
+        }
+        let base_url = ts.base_url.map(|(b, decl)| {
+            if decl.is_empty() {
+                normalize_rel(&b)
             } else {
-                rebase(prefix, b)
-            };
+                rebase(&decl, &b)
+            }
+        });
+        if let Some(rebased) = base_url.clone() {
             if prefix.is_empty() {
                 p.mappings.base_url = Some(rebased);
             } else if Some(&rebased) != p.mappings.base_url.as_ref()
@@ -319,7 +327,8 @@ fn read_tsconfig(dir: &Path, prefix: &str, p: &mut Profile) {
                 p.mappings.extra_base_urls.push(rebased);
             }
         }
-        if let Some(paths) = co.get("paths").and_then(|v| v.as_object()) {
+        if let Some((paths, decl)) = &ts.paths {
+            let anchor = base_url.as_deref().unwrap_or(decl);
             for (alias, targets) in paths {
                 if p.mappings.paths.iter().any(|(a, _)| a == alias) {
                     continue;
@@ -329,7 +338,7 @@ fn read_tsconfig(dir: &Path, prefix: &str, p: &mut Profile) {
                     .map(|a| {
                         a.iter()
                             .filter_map(|t| t.as_str())
-                            .map(|t| rebase(prefix, t))
+                            .map(|t| rebase(anchor, t))
                             .collect()
                     })
                     .unwrap_or_default();
@@ -340,6 +349,79 @@ fn read_tsconfig(dir: &Path, prefix: &str, p: &mut Profile) {
         }
         break;
     }
+}
+
+type TsPaths = (serde_json::Map<String, serde_json::Value>, String);
+
+struct TsConfig {
+    base_url: Option<(String, String)>,
+    paths: Option<TsPaths>,
+}
+
+fn load_tsconfig(root: &Path, file: &Path, local: &HashMap<String, String>, depth: usize) -> Option<TsConfig> {
+    if depth > 16 {
+        return None;
+    }
+    let text = std::fs::read_to_string(file).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&strip_jsonc(&text)).ok()?;
+    let dir = file.parent()?;
+    let rel_dir = normalize_rel(&rel_of(root, dir));
+    let mut out = TsConfig { base_url: None, paths: None };
+    let parents: Vec<&str> = match v.get("extends") {
+        Some(serde_json::Value::String(s)) => vec![s.as_str()],
+        Some(serde_json::Value::Array(a)) => a.iter().filter_map(|x| x.as_str()).collect(),
+        _ => Vec::new(),
+    };
+    for spec in parents {
+        let Some(parent) = extends_target(root, dir, spec, local)
+            .and_then(|f| load_tsconfig(root, &f, local, depth + 1))
+        else {
+            continue;
+        };
+        out.base_url = parent.base_url.or(out.base_url);
+        out.paths = parent.paths.or(out.paths);
+    }
+    let co = v.get("compilerOptions");
+    if let Some(b) = co.and_then(|c| c.get("baseUrl")).and_then(|b| b.as_str()) {
+        out.base_url = Some((b.to_string(), rel_dir.clone()));
+    }
+    if let Some(paths) = co.and_then(|c| c.get("paths")).and_then(|x| x.as_object()) {
+        out.paths = Some((paths.clone(), rel_dir));
+    }
+    Some(out)
+}
+
+fn extends_target(root: &Path, dir: &Path, spec: &str, local: &HashMap<String, String>) -> Option<PathBuf> {
+    let config_at = |p: PathBuf| -> Option<PathBuf> {
+        if p.is_file() {
+            return Some(p);
+        }
+        let json = PathBuf::from(format!("{}.json", p.display()));
+        if json.is_file() {
+            return Some(json);
+        }
+        let nested = p.join("tsconfig.json");
+        nested.is_file().then_some(nested)
+    };
+    if spec.starts_with('.') || Path::new(spec).is_absolute() {
+        return config_at(dir.join(spec));
+    }
+    let segs = if spec.starts_with('@') { 2 } else { 1 };
+    let name: String = spec.split('/').take(segs).collect::<Vec<_>>().join("/");
+    let sub = spec.split('/').skip(segs).collect::<Vec<_>>().join("/");
+    let pkg = dir
+        .ancestors()
+        .take_while(|a| a.starts_with(root))
+        .map(|a| a.join("node_modules").join(&name))
+        .find(|p| p.is_dir())
+        .or_else(|| local.get(&name).map(|d| root.join(d)))?;
+    if !sub.is_empty() {
+        return config_at(pkg.join(sub));
+    }
+    read_json(&pkg.join("package.json"))
+        .and_then(|raw| raw.get("tsconfig")?.as_str().map(|t| pkg.join(t)))
+        .filter(|t| t.is_file())
+        .or_else(|| config_at(pkg.join("tsconfig.json")))
 }
 
 /// Join a package dir and a manifest-relative target, lexically normalizing
@@ -362,67 +444,110 @@ fn rebase(pkg: &str, target: &str) -> String {
     normalize_rel(&parts.join("/"))
 }
 
+pub fn workspace_patterns(root: &Path) -> Vec<String> {
+    let mut patterns: Vec<String> = Vec::new();
+    if let Some(r) = read_json(&root.join("package.json")) {
+        let list = match r.get("workspaces") {
+            Some(serde_json::Value::Array(a)) => Some(a),
+            Some(serde_json::Value::Object(o)) => o.get("packages").and_then(|v| v.as_array()),
+            _ => None,
+        };
+        patterns.extend(list.into_iter().flatten().filter_map(|v| v.as_str()).map(str::to_string));
+    }
+    patterns.extend(read_pnpm_workspaces(root));
+    patterns
+}
+
+pub fn glob_covers(pattern: &str, rel: &str) -> bool {
+    let pattern = normalize_rel(pattern);
+    let mut pat = pattern.split('/');
+    for seg in rel.split('/') {
+        match pat.next() {
+            Some("**") => return true,
+            Some(p) if seg_match(p, seg) => {}
+            _ => return false,
+        }
+    }
+    true
+}
+
+fn seg_match(pat: &str, name: &str) -> bool {
+    match pat.split_once('*') {
+        None => pat == name,
+        Some((pre, rest)) => name.strip_prefix(pre).is_some_and(|n| {
+            (0..=n.len()).any(|i| n.is_char_boundary(i) && seg_match(rest, &n[i..]))
+        }),
+    }
+}
+
 /// Workspace package dirs, repository-relative and sorted. Sources, in order:
 /// root `package.json` `workspaces` (array or `{packages: [...]}`), then
 /// `pnpm-workspace.yaml` `packages:` entries (line-scanned, same precedent as
-/// `read_requirements`). Only `*` (single segment) globs expand; `!`
-/// negations are ignored. A dir counts only if it holds at least one
-/// manifest, so a stale glob cannot invent packages. Capped at 64.
-fn discover_packages(root: &Path, raw: Option<&serde_json::Value>) -> Vec<String> {
-    let mut patterns: Vec<String> = Vec::new();
-    if let Some(r) = raw {
-        match r.get("workspaces") {
-            Some(serde_json::Value::Array(a)) => {
-                for v in a {
-                    if let Some(s) = v.as_str() {
-                        patterns.push(s.to_string());
-                    }
-                }
-            }
-            Some(serde_json::Value::Object(o)) => {
-                if let Some(a) = o.get("packages").and_then(|v| v.as_array()) {
-                    for v in a {
-                        if let Some(s) = v.as_str() {
-                            patterns.push(s.to_string());
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    patterns.extend(read_pnpm_workspaces(root));
-
-    let mut out: Vec<String> = Vec::new();
-    for pat in patterns {
-        if pat.starts_with('!') {
-            continue;
-        }
-        if let Some((head, _)) = pat.split_once('*') {
-            let base = root.join(head);
-            let Ok(entries) = std::fs::read_dir(&base) else {
-                continue;
-            };
-            for e in entries.flatten() {
-                let path = e.path();
-                if path.is_dir() && has_manifest(&path) {
-                    out.push(normalize_rel(&rel_of(root, &path)));
-                }
-            }
-        } else {
-            let path = root.join(&pat);
-            if path.is_dir() && has_manifest(&path) {
-                out.push(normalize_rel(&pat));
-            }
-        }
-        if out.len() >= 64 {
-            break;
-        }
-    }
+/// `read_requirements`). Globs expand per segment (`*` within a segment, `**`
+/// for any depth); `!` negations are ignored. A dir counts only if it holds
+/// at least one manifest, so a stale glob cannot invent packages.
+fn discover_packages(root: &Path) -> Vec<String> {
+    let mut out: Vec<String> = workspace_patterns(root)
+        .iter()
+        .filter(|p| !p.starts_with('!'))
+        .flat_map(|p| expand_glob(root, &normalize_rel(p)))
+        .filter(|d| has_manifest(&root.join(d)))
+        .collect();
     out.sort();
     out.dedup();
-    out.truncate(64);
     out
+}
+
+fn expand_glob(root: &Path, pattern: &str) -> Vec<String> {
+    let mut dirs = vec![String::new()];
+    for seg in pattern.split('/').filter(|s| !s.is_empty() && *s != ".") {
+        let mut next = Vec::new();
+        for d in &dirs {
+            if seg == "**" {
+                next.push(d.clone());
+                sub_dirs(root, d, &mut next);
+            } else if seg.contains('*') {
+                next.extend(child_dirs(root, d).into_iter().filter(|c| {
+                    seg_match(seg, c.rsplit('/').next().unwrap_or(c))
+                }));
+            } else {
+                let c = join_rel(d, seg);
+                if root.join(&c).is_dir() {
+                    next.push(c);
+                }
+            }
+        }
+        dirs = next;
+    }
+    dirs
+}
+
+fn child_dirs(root: &Path, dir: &str) -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir(root.join(dir)) else {
+        return Vec::new();
+    };
+    entries
+        .flatten()
+        .filter(|e| e.path().is_dir())
+        .filter_map(|e| e.file_name().to_str().map(str::to_string))
+        .filter(|n| !n.starts_with('.') && n != "node_modules")
+        .map(|n| join_rel(dir, &n))
+        .collect()
+}
+
+fn sub_dirs(root: &Path, dir: &str, out: &mut Vec<String>) {
+    for c in child_dirs(root, dir) {
+        out.push(c.clone());
+        sub_dirs(root, &c, out);
+    }
+}
+
+fn join_rel(dir: &str, name: &str) -> String {
+    if dir.is_empty() {
+        name.to_string()
+    } else {
+        format!("{dir}/{name}")
+    }
 }
 
 /// Top-level directories with their own tsconfig/jsconfig that no workspace
@@ -1110,6 +1235,7 @@ mod tests {
                 })
                 .collect(),
             skipped: Vec::new(),
+            manifests: Vec::new(),
             excluded: Default::default(),
         }
     }
@@ -1178,6 +1304,7 @@ mod tests {
             root,
             files,
             skipped: Vec::new(),
+            manifests: Vec::new(),
             excluded: Default::default(),
         }
     }
@@ -1187,6 +1314,69 @@ mod tests {
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         let mut f = std::fs::File::create(path).unwrap();
         write!(f, "{content}").unwrap();
+    }
+
+    #[test]
+    fn nested_workspace_globs_expand_past_sixty_four_packages() {
+        let dir = std::env::temp_dir().join(format!("codearch-nested-ws-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(
+            &dir.join("pnpm-workspace.yaml"),
+            "packages:\n  - packages/*/*\n  - tools/**\n",
+        );
+        for i in 0..70 {
+            write_tree(
+                &dir.join(format!("packages/group{}/pkg{i}/package.json", i % 7)),
+                &format!(r#"{{"name":"@acme/pkg{i}"}}"#),
+            );
+        }
+        write_tree(&dir.join("packages/group0/package.json"), r#"{"name":"not-a-member"}"#);
+        write_tree(&dir.join("tools/a/b/c/package.json"), r#"{"name":"@acme/deep"}"#);
+        write_tree(&dir.join("tools/a/node_modules/x/package.json"), r#"{"name":"x"}"#);
+        let p = detect(&test_inventory_at(dir.clone(), &[]));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(p.package_dirs.len(), 71);
+        assert!(p.package_dirs.contains(&"packages/group6/pkg69".to_string()));
+        assert!(p.package_dirs.contains(&"tools/a/b/c".to_string()));
+        assert!(!p.package_dirs.contains(&"packages/group0".to_string()));
+        let names: Vec<&str> = p.mappings.workspace_packages.iter().map(|w| w.name.as_str()).collect();
+        assert!(names.contains(&"@acme/pkg69") && names.contains(&"@acme/deep") && !names.contains(&"x"));
+    }
+
+    #[test]
+    fn tsconfig_extends_chains_carry_paths_aliases() {
+        let dir = std::env::temp_dir().join(format!("codearch-extends-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(&dir.join("tsconfig.json"), r#"{ "extends": "./tsconfig.base", "files": [] }"#);
+        write_tree(&dir.join("tsconfig.base.json"), r#"{ "extends": ["./config/paths.json"] }"#);
+        write_tree(
+            &dir.join("config/paths.json"),
+            r#"{ "compilerOptions": { "paths": { "@app/*": ["../src/*"] } } }"#,
+        );
+        write_tree(&dir.join("tools/tsconfig/package.json"), r#"{"name":"@acme/tsconfig"}"#);
+        write_tree(
+            &dir.join("tools/tsconfig/base.json"),
+            r#"{ "compilerOptions": { "baseUrl": "../..", "paths": { "@lib/*": ["libs/*"] } } }"#,
+        );
+        write_tree(
+            &dir.join("node_modules/@ext/cfg/tsconfig.json"),
+            r#"{ "compilerOptions": { "paths": { "@ext/*": ["./ext/*"] } } }"#,
+        );
+        write_tree(&dir.join("apps/web/tsconfig.json"), r#"{ "extends": "@acme/tsconfig/base.json" }"#);
+        write_tree(&dir.join("apps/api/tsconfig.json"), r#"{ "extends": "@ext/cfg" }"#);
+        let local: HashMap<String, String> =
+            [("@acme/tsconfig".to_string(), "tools/tsconfig".to_string())].into();
+        let mut p = Profile::default();
+        read_tsconfig(&dir, "", &local, &mut p);
+        read_tsconfig(&dir, "apps/web", &local, &mut p);
+        read_tsconfig(&dir, "apps/api", &local, &mut p);
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(p.mappings.paths.contains(&("@app/*".to_string(), vec!["src/*".to_string()])));
+        assert!(p.mappings.paths.contains(&("@lib/*".to_string(), vec!["libs/*".to_string()])));
+        assert!(p.mappings.paths.contains(&(
+            "@ext/*".to_string(),
+            vec!["node_modules/@ext/cfg/ext/*".to_string()]
+        )));
     }
 
     #[test]

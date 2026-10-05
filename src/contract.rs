@@ -404,6 +404,7 @@ mod tests {
                 })
                 .collect(),
             skipped: Vec::new(),
+            manifests: Vec::new(),
             excluded: Default::default(),
         }
     }
