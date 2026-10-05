@@ -413,6 +413,10 @@ fn visit(
     // `T['status']`: the string sits in a `literal_type` under a
     // `lookup_type`. Type-level text is never a request URL.
     let in_type_literal = kind == "literal_type";
+    let augmented = (!py && kind == "module")
+        .then(|| node.child_by_field_name("name"))
+        .flatten()
+        .filter(|n| n.kind() == "string");
 
     if py {
         visit_python(node, src, line, out);
@@ -428,6 +432,16 @@ fn visit(
                     });
                 }
             }
+        }
+
+        if let Some(spec) = augmented
+            .and_then(|n| string_value(n, src))
+            .filter(|s| !s.contains('*'))
+        {
+            out.refs.push(RawRef {
+                specifier: spec,
+                line,
+            });
         }
 
         if kind == "call_expression" {
@@ -507,6 +521,7 @@ fn visit(
             || (is_source && source.is_some_and(|s| s.id() == child.id()))
             || ((is_import_call || skip_args)
                 && arguments.is_some_and(|a| a.id() == child.id()))
+            || augmented.is_some_and(|n| n.id() == child.id())
             || subscript_index.is_some_and(|ix| ix.id() == child.id())
             || router_value.is_some_and(|v| v.id() == child.id())
             || in_type_literal;
@@ -946,6 +961,25 @@ mod tests {
         assert!(specs.contains(&"node:fs"));
         assert!(specs.contains(&"./lazy"));
         assert!(!specs.contains(&"./skip"));
+    }
+
+    #[test]
+    fn module_augmentation_is_a_reference() {
+        let out = parse(
+            r#"
+            import { a } from './a';
+            declare module '@acme/ui/client' {
+                interface Nodes { tool: 1 }
+            }
+            declare module '*.css';
+            declare global { interface Window {} }
+            module Legacy {}
+            "#,
+            Language::Ts,
+        );
+        let specs: Vec<&str> = out.refs.iter().map(|r| r.specifier.as_str()).collect();
+        assert_eq!(specs, vec!["./a", "@acme/ui/client"]);
+        assert!(!out.url_segments.iter().any(|s| s == "client"));
     }
 
     #[test]

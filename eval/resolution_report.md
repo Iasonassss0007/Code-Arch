@@ -244,6 +244,7 @@ directory; `~/.cargo/bin/codearch.exe` is never used.
 | 2: tsconfig `extends` | 98.16% (11,160 / 11,369) | 98.02% (11,160 / 11,386) | 4,217 | 209 | 172 | 173 |
 | 3: nested workspace globs, no cap | 99.63% (11,327 / 11,369) | 99.48% (11,327 / 11,386) | 4,217 | 42 | 173 | 173 |
 | 4: Python roots below the repo root | 99.80% (11,346 / 11,369) | 99.65% (11,346 / 11,386) | 4,217 | 23 | 173 | 173 |
+| 5 (follow-up): parse `declare module` augmentation | 99.80% (11,590 / 11,613) | 99.66% (11,590 / 11,630) | 4,218 | 23 | 177 | 190 |
 
 Step 1 changes (`src/inventory.rs`, `src/profile.rs`, `src/resolve.rs`,
 `src/lib.rs`, `src/main.rs`):
@@ -361,6 +362,7 @@ edited.
 |---|---|---|---:|---:|
 | README (old build, as published) | 148,757 tok, 7 rounds | 1,278 tok, 1 call | 116x | 57 |
 | `chat-nodes.ts`, new build | 148,757 tok, 7 rounds, 2,503 files | 3,809 tok, 1 call | 39.1x | 173 |
+| `chat-nodes.ts`, after step 5 | 148,757 tok, 7 rounds, 2,503 files | 3,896 tok, 1 call | 38.2x | 177 |
 | `submission-settings.ts`, new build | 150,222 tok, 8 rounds, 2,503 files | 3,772 tok, 1 call | 39.8x | 173 |
 
 - **The README's target was very likely `chat-nodes.ts`.** Its grep figures
@@ -511,18 +513,48 @@ test-fixture workspace under `packages/typert/generator/tests/fixtures/`.
 - That is a parser gap, so the fix would belong in `src/parse.rs` rather than
   the resolver. It was not attempted, because it is outside the brief.
 
+### Follow-up: module augmentation parsed
+
+The parser (`src/parse.rs`) now records `declare module '<specifier>' { … }` as a
+reference, the same as an import.
+
+- **Excluded:** wildcard declarations (`declare module '*.css'`), `declare global`
+  and identifier-named `module X {}`.
+- **Cache:** `cache::FORMAT` is bumped from 8 to 9, so cached parses from
+  earlier runs are discarded and re-parsed.
+- **Regression test:** `parse::module_augmentation_is_a_reference`.
+- **Effect on deepseek-harness:** 244 more first-party references. Every one
+  resolves, so the unresolved count stays at 23.
+
+| Target | Truth | codearch | Recall | Precision | Missed | Extra |
+|---|---:|---:|---:|---:|---:|---:|
+| `packages/client/ui-conversation/src/client/contract/chat-nodes.ts` | 177 | 177 | 100% | 100% | 0 | 0 |
+| `packages/client/ui-conversation/src/submission-settings.ts` | 190 | 190 | 100% | 100% | 0 | 0 |
+| `packages/bundle/web-app/src/index.ts` | 3 | 3 | 100% | 100% | 0 | 0 |
+| `packages/host/directory-picker/src/index.ts` | 30 | 30 | 100% | 100% | 0 | 0 |
+| `vendor/cosmokit/src/misc.ts` | 2,063 | 2,068 | 100% | 99.8% | 0 | 5 |
+
+- **Remaining extras:** the same 5 test-fixture files as before. `paths`
+  aliases are global, not scoped per tsconfig.
+- **Other eval repos:** import-edge counts are unchanged on commerce,
+  paperless-ngx, react, realworld and typedi. hono gains 5 edges, all from real
+  `declare module '../..'` / `'./context'` augmentations in its middleware and
+  tests.
+- **Tests and lint:** `cargo test` passes 233, `pytest` passes 65, and the
+  clippy warning count is unchanged at 53.
+
 ## Summary: before and after
 
-| Metric (deepseek-harness) | Before (HEAD `956a936`) | After step 4 |
+| Metric (deepseek-harness) | Before (HEAD `956a936`) | After step 5 |
 |---|---:|---:|
 | Reported resolution | 99.57% (misleading) | 99.80% of first-party imports |
-| Ground-truth first-party resolution | 35.24% | 99.65% |
+| Ground-truth first-party resolution | 35.24% | 99.66% |
 | Unresolved first-party specifiers | 17 reported, about 7,300 real | 23 |
 | Analyzed source files | 2,708 | 2,743 (`vendor/` workspace added) |
 | Workspace packages discovered | 18 | 245 |
-| `chat-nodes.ts` transitive importers | 57 | 173 (ground truth 177) |
-| `submission-settings.ts` transitive importers | 57 | 173 (ground truth 190) |
-| grep vs codearch tokens, `chat-nodes.ts` | 116x (old build) | 39.1x |
+| `chat-nodes.ts` transitive importers | 57 | 177 (ground truth 177) |
+| `submission-settings.ts` transitive importers | 57 | 190 (ground truth 190) |
+| grep vs codearch tokens, `chat-nodes.ts` | 116x (old build) | 38.2x |
 
 - **Tests:** `cargo test` passes 232 (225 before, plus 7 new regression tests).
   `pytest` passes 65. The clippy warning count is unchanged at 53.
@@ -530,7 +562,6 @@ test-fixture workspace under `packages/typert/generator/tests/fixtures/`.
   react's reported rate moved from 97% to 96%: its own package names now count
   as first-party misses instead of external.
 - **Not fixed (documented above):**
-  - `declare module` augmentation is not parsed. It causes every recall miss.
   - `paths` aliases are global rather than scoped to each file's tsconfig. It
     causes the 5 extras.
   - `/remote` exports point only at build output.
