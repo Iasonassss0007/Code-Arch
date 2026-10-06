@@ -1,0 +1,15 @@
+Analyzing repository...
+
+Source files:        384
+Import resolution:   100% of first-party imports (1 unresolved)
+Not counted:         131 external, 1 asset, 0 into excluded files
+Import index:        965 imports
+Route callers:       none found
+
+Wrote:
+  eval/baseline/hono/imports.md
+
+Next:
+  codearch importers <file>             who depends on a file
+  codearch agents --write AGENTS.md     tell your agents about these lookups
+  codearch --map                        also write the CODEBASE.md overview

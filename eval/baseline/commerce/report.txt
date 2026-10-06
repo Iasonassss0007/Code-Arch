@@ -1,0 +1,15 @@
+Analyzing repository...
+
+Source files:        66
+Import resolution:   100% of first-party imports
+Not counted:         89 external, 1 asset, 0 into excluded files
+Import index:        120 imports
+Route callers:       none found
+
+Wrote:
+  eval/baseline/commerce/imports.md
+
+Next:
+  codearch importers <file>             who depends on a file
+  codearch agents --write AGENTS.md     tell your agents about these lookups
+  codearch --map                        also write the CODEBASE.md overview
