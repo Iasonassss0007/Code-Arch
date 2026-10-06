@@ -24,8 +24,9 @@ pub fn block(has_routes: bool) -> String {
         "",
         "This repository is indexed by codearch. Use these lookups instead of guessing from search:",
         "",
-        "- `codearch importers <file>`: every file that imports `<file>`, directly (depth 1) or \
+        "- `codearch importers <file> [--depth N] [--json]`: every file that imports `<file>`, directly (depth 1) or \
 transitively, from a static import index. Run it before changing a file to see what else is affected.",
+        "- `codearch mcp` serves the same lookups over stdio. `--refresh` rebuilds a stale or unknown index first.",
     ];
     if has_routes {
         lines.push(
@@ -95,7 +96,13 @@ mod tests {
     #[test]
     fn block_stays_short() {
         let words = block(true).split_whitespace().count();
-        assert!(words <= 90, "{words} words");
+        assert_eq!(words, 110, "{words} words");
+        assert!(words < 120, "{words} words");
+        let text = block(false);
+        assert!(text.contains("[--depth N] [--json]"));
+        assert!(text.contains("`--refresh`"));
+        assert!(text.contains("`codearch mcp`"));
+        assert!(!text.contains("codearch callers"));
     }
 
     #[test]
