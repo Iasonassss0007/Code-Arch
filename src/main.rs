@@ -309,7 +309,8 @@ fn print_index_report(report: &codearch::RunReport, opts: &Options) {
 
 /// Answer one index lookup. Returns the process exit code: 0 for answers
 /// and clean misses, 2 for a missing index, an out-of-repo path, or bad
-/// arguments. Queries never write anything and never re-analyze.
+/// arguments. `--refresh` rebuilds and writes the index when it is stale
+/// or unknown.
 fn run_query(command: &Commands) -> i32 {
     match command {
         Commands::Importers {

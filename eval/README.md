@@ -156,10 +156,10 @@ generalize the result beyond this model, corpus and access protocol.
 
 `clusters-real.json` replaces the synthetic ceiling test for meaningful label
 assessment. It contains the first ten ranked production clusters from Hono and
-Commerce, preserving full source member paths and structured summaries. Inputs
-were exported by `eval-support` with `{"op":"clusters","root":"..."}` before
-label generation. Reference names were authored from those inputs, then reviewed
-by GPT-4.1 Mini without candidate labels. `labels-reference-review.json` records
+Commerce, preserving full source member paths and structured summaries.
+`eval-support` accepts `tokens` and `labels`. `labels` reads a `clusters` array
+and returns derived labels. Reference names were authored from those inputs,
+then reviewed by GPT-4.1 Mini without candidate labels. `labels-reference-review.json` records
 that review and hashes the frozen references. This is **model-reviewed data, not
 human-reviewed ground truth**.
 
@@ -182,15 +182,15 @@ the derived labeler's 75%. The model labeler, its scorers and the LoRA pipeline 
 removed in codearch 0.3; the full code is at git tag `v0.2-with-llm`.
 
 The recorded results stay in the repository as history: `labels-llm-report.*`,
-`labels-llm-report-prompt-v1.*`, `labels-sweep-report.*` and `results-llm/`. See the
-M0.5, M6-lite and M6 sections of `code_arch_architecture.md`.
+`labels-llm-report-prompt-v1.*`, `labels-sweep-report.*` and `results-llm/`.
 
 ## Exit status
 
 Actual paired LLM runs and a measured real-cluster labeling baseline now exist.
 Read `results-agent/report.md` for the measured answer to whether the map helps
 under this protocol. Human label review and more demanding downstream tasks
-remain limitations, not completed work. No M2+ production features were added.
+remain limitations, not completed work. The import index, `importers`,
+`callers`, MCP, and co-change under `--map` have shipped.
 
 ## M1v2 — impact benchmark (`tasks-nav-gated.json`)
 

@@ -9,7 +9,7 @@
 //! Out    Sorted, deduplicated `(FileId, FileId)` pairs, smaller id first.
 //! Fails  Cannot fail. No shared evidence means no pairs.
 //!
-//! Deliberate limits, all stated in the Still Open record:
+//! Deliberate limits:
 //!
 //! ```text
 //! Ecosystem divide, not file extension: Ts vs Tsx vs Js share one import
