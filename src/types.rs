@@ -169,13 +169,3 @@ pub struct RouteHint {
     /// Human-readable form, e.g. "GET /api/users" or "bin: codearch".
     pub label: String,
 }
-
-/// Resolution outcome for a single specifier.
-#[derive(Debug, Clone)]
-pub enum RefTarget {
-    Internal(FileId),
-    /// Bare specifier that resolved to a declared dependency.
-    External(String),
-    /// Looked internal (relative or aliased) but no file matched.
-    Unresolved(String),
-}

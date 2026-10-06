@@ -111,25 +111,6 @@ pub struct Profile {
 }
 
 impl Profile {
-    /// Confidence that we understood the project's conventions at all.
-    pub fn confidence(&self) -> f32 {
-        let mut c: f32 = 0.3;
-        if self.has_package_json {
-            c += 0.3;
-        }
-        if self.has_tsconfig {
-            c += 0.2;
-        }
-        if !self.frameworks.is_empty() {
-            c += 0.2;
-        }
-        c.min(1.0)
-    }
-
-    pub fn uses(&self, framework: &str) -> bool {
-        self.frameworks.iter().any(|f| f == framework)
-    }
-
     /// Longest workspace package containing `rel`, else the root: the
     /// scope-relative path plus that scope's frameworks. Empty
     /// `package_dirs` collapses to `(rel, global)` — single-package behavior

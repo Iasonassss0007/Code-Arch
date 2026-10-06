@@ -141,10 +141,6 @@ impl Default for Parsers {
     }
 }
 
-pub fn parse_all(inv: &Inventory) -> Vec<FileParse> {
-    parse_all_cached(inv, &mut std::collections::HashMap::new())
-}
-
 /// Parse with a warm file cache. A hit reuses the stored parse with the
 /// *current* file id stamped on — stored ids go stale when files are added
 /// or removed, and an edge pointing at the wrong file is the failure this

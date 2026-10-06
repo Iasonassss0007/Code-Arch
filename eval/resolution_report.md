@@ -219,10 +219,7 @@ specifiers exist)
    output). The minified-line check (more than 3,000 bytes on one line) catches
    SVG-path components. This is an inventory decision, not a resolver one.
 
-Side finding, outside the CLI path: `parse::parse_all` (`src/parse.rs:144`)
-returns empty parses. `parse_all_cached` stores fresh results only into map
-entries that already exist, and `parse_all` passes an empty map. Nothing in the
-binary calls `parse_all`.
+`parse::parse_all` was deleted because it had no callers, and `parse_all_cached` remains.
 
 ## Phase 2: fixes, measured per step
 
@@ -566,4 +563,3 @@ reference, the same as an import.
     causes the 5 extras.
   - `/remote` exports point only at build output.
   - Test-fixture workspaces nested in the repo aren't resolution targets.
-  - The `parse::parse_all` bug is recorded in `eval/known_issues.md`.

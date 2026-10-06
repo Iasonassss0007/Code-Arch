@@ -31,10 +31,6 @@ use std::collections::VecDeque;
 /// Clusters smaller than this are folded into their strongest neighbour.
 pub const MIN_CLUSTER_SIZE: usize = 3;
 
-/// Bound on the adaptive resolution search, so the loop always terminates.
-#[allow(dead_code)]
-const MAX_RESOLUTION_ROUNDS: usize = 5;
-
 #[derive(Debug, Clone)]
 pub struct Partition {
     pub membership: Vec<usize>,
