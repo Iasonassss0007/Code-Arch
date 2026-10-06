@@ -11,6 +11,9 @@ use clap::{Parser, Subcommand};
 use codearch::{query, Options, DEFAULT_BUDGET, DEFAULT_MAX_DOMAINS};
 use std::path::PathBuf;
 
+const REFRESH_HELP: &str =
+    "Rebuild the index first when the code changed since it was built, or when that is unknown.";
+
 #[derive(Parser)]
 #[command(
     name = "codearch",
@@ -77,6 +80,8 @@ enum Commands {
         /// Emit one JSON object instead of `depth  path` lines.
         #[arg(long)]
         json: bool,
+        #[arg(long, help = REFRESH_HELP)]
+        refresh: bool,
         /// Repository root (default: `.`).
         #[arg(long)]
         repo: Option<PathBuf>,
@@ -91,6 +96,8 @@ enum Commands {
         /// Emit one JSON object instead of text blocks.
         #[arg(long)]
         json: bool,
+        #[arg(long, help = REFRESH_HELP)]
+        refresh: bool,
         /// Repository root (default: `.`).
         #[arg(long)]
         repo: Option<PathBuf>,
@@ -100,6 +107,8 @@ enum Commands {
     },
     /// Serve the two lookups as MCP tools over stdio.
     Mcp {
+        #[arg(long, help = REFRESH_HELP)]
+        refresh: bool,
         /// Repository root (default: `.`).
         #[arg(long)]
         repo: Option<PathBuf>,
@@ -307,19 +316,21 @@ fn run_query(command: &Commands) -> i32 {
             file,
             depth,
             json,
+            refresh,
             repo,
             codearch_dir,
         } => {
             let repo = repo.clone().unwrap_or_else(|| PathBuf::from("."));
             let dir = codearch_dir.clone().unwrap_or_else(|| repo.join(".codearch"));
-            let text = match query::index_text(&dir, "imports.md", &repo.display().to_string()) {
+            let target = match query::normalize_target(&repo, file) {
                 Ok(t) => t,
                 Err(e) => {
                     eprintln!("{e}");
                     return 2;
                 }
             };
-            let target = match query::normalize_target(&repo, file) {
+            let fresh = codearch::freshness::resolve(&repo, &dir, *refresh);
+            let text = match query::index_text(&dir, "imports.md", &repo.display().to_string()) {
                 Ok(t) => t,
                 Err(e) => {
                     eprintln!("{e}");
@@ -328,32 +339,31 @@ fn run_query(command: &Commands) -> i32 {
             };
             let hits = query::importers(&query::parse_imports(&text), &target, *depth);
             if hits.is_empty() {
-                eprintln!(
-                    "no importers for '{target}': nothing imports it, or it was not analyzed"
-                );
+                eprintln!("{}", query::importers_miss(&target, fresh.is_stale()));
+                eprintln!("{}", fresh.summary_line());
                 if *json {
-                    println!("{}", query::importers_json(&target, &hits));
+                    println!("{}", query::importers_json_with(&target, &hits, &fresh.to_json()));
                 }
                 return 0;
             }
             if *json {
-                println!("{}", query::importers_json(&target, &hits));
+                println!("{}", query::importers_json_with(&target, &hits, &fresh.to_json()));
             } else {
                 print!("{}", query::importers_text(&hits));
             }
-            if let Some(mins) = query::index_age_minutes(&dir, "imports.md") {
-                eprintln!("index written {mins} minutes ago");
-            }
+            eprintln!("{}", fresh.summary_line());
             0
         }
         Commands::Callers {
             view,
             json,
+            refresh,
             repo,
             codearch_dir,
         } => {
             let repo = repo.clone().unwrap_or_else(|| PathBuf::from("."));
             let dir = codearch_dir.clone().unwrap_or_else(|| repo.join(".codearch"));
+            let fresh = codearch::freshness::resolve(&repo, &dir, *refresh);
             let text = match query::index_text(&dir, "routes.md", &repo.display().to_string()) {
                 Ok(t) => t,
                 Err(e) => {
@@ -368,30 +378,31 @@ fn run_query(command: &Commands) -> i32 {
                 .ok()
                 .map(|t| query::parse_imports(&t));
             if matches.is_empty() {
-                let mut reason = format!("no route in the index names this view '{view}'");
-                let suggestions = query::suggest_views(&index, view);
-                if !suggestions.is_empty() {
-                    reason.push_str(&format!("; similar indexed views: {}", suggestions.join(", ")));
-                }
-                eprintln!("{reason}");
+                eprintln!("{}", query::callers_miss(&index, view, fresh.is_stale()));
+                eprintln!("{}", fresh.summary_line());
                 if *json {
-                    println!("{}", query::callers_json(view, &matches, None));
+                    println!("{}", query::callers_json_with(view, &matches, None, &fresh.to_json()));
                 }
                 return 0;
             }
             if *json {
-                println!("{}", query::callers_json(view, &matches, imports.as_ref()));
+                println!(
+                    "{}",
+                    query::callers_json_with(view, &matches, imports.as_ref(), &fresh.to_json())
+                );
             } else {
                 print!("{}", query::callers_text(&matches, imports.as_ref()));
             }
-            if let Some(mins) = query::index_age_minutes(&dir, "routes.md") {
-                eprintln!("index written {mins} minutes ago");
-            }
+            eprintln!("{}", fresh.summary_line());
             0
         }
-        Commands::Mcp { repo, codearch_dir } => {
+        Commands::Mcp {
+            refresh,
+            repo,
+            codearch_dir,
+        } => {
             let repo = repo.clone().unwrap_or_else(|| PathBuf::from("."));
-            let server = codearch::mcp::Server::new(repo, codearch_dir.clone());
+            let server = codearch::mcp::Server::new(repo, codearch_dir.clone()).with_refresh(*refresh);
             let stdin = std::io::stdin();
             server.serve(
                 std::io::BufReader::new(stdin.lock()),
@@ -486,6 +497,26 @@ mod tests {
             let err = Cli::try_parse_from(&args).err().expect("rejected without --map");
             assert!(err.to_string().contains("--map"), "{args:?}: {err}");
         }
+    }
+
+    #[test]
+    fn refresh_flag_parses_on_every_lookup() {
+        assert!(matches!(
+            cli(&["importers", "src/a.ts", "--refresh"]).command,
+            Some(Commands::Importers { refresh: true, .. })
+        ));
+        assert!(matches!(
+            cli(&["callers", "V", "--refresh"]).command,
+            Some(Commands::Callers { refresh: true, .. })
+        ));
+        assert!(matches!(
+            cli(&["mcp", "--refresh"]).command,
+            Some(Commands::Mcp { refresh: true, .. })
+        ));
+        assert!(matches!(
+            cli(&["mcp"]).command,
+            Some(Commands::Mcp { refresh: false, .. })
+        ));
     }
 
     #[test]

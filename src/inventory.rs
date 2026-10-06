@@ -128,27 +128,7 @@ pub fn collect_cached(
     let mut manifests: Vec<String> = Vec::new();
     let mut read_stats = (0usize, 0usize); // (stat-hits, disk reads)
 
-    let workspaces: Vec<String> = crate::profile::workspace_patterns(&root)
-        .into_iter()
-        .filter(|p| !p.starts_with('!'))
-        .collect();
-    let walk_root = root.clone();
-    let walker = WalkBuilder::new(&root)
-        .hidden(true)
-        .git_ignore(true)
-        .git_global(false)
-        .parents(false)
-        .filter_entry(move |e| {
-            let name = e.file_name().to_string_lossy();
-            let is_dir = e.file_type().is_some_and(|t| t.is_dir());
-            let workspace = || {
-                let rel = e.path().strip_prefix(&walk_root).map(|r| r.to_string_lossy().replace('\\', "/"));
-                rel.is_ok_and(|rel| workspaces.iter().any(|p| crate::profile::glob_covers(p, &rel)))
-            };
-            (!VENDOR_DIRS.contains(&name.as_ref()) || (name != "node_modules" && workspace()))
-                && !(is_dir && is_python_env(e.path()))
-        })
-        .build();
+    let walker = build_walker(&root);
 
     for entry in walker {
         let entry = match entry {
@@ -193,11 +173,7 @@ pub fn collect_cached(
             continue;
         }
 
-        let mtime_ns = meta
-            .modified()
-            .ok()
-            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-            .map(|d| d.as_nanos() as u64);
+        let mtime_ns = mtime_ns(&meta);
 
         // Warm cache: same stat signature reuses everything without reading.
         if let (Some(mtime), Some(stored)) = (mtime_ns, files.get(&rel)) {
@@ -309,6 +285,65 @@ pub fn collect_cached(
         manifests,
         excluded: stats,
     })
+}
+
+fn build_walker(root: &Path) -> ignore::Walk {
+    let workspaces: Vec<String> = crate::profile::workspace_patterns(root)
+        .into_iter()
+        .filter(|p| !p.starts_with('!'))
+        .collect();
+    let walk_root = root.to_path_buf();
+    WalkBuilder::new(root)
+        .hidden(true)
+        .git_ignore(true)
+        .git_global(false)
+        .parents(false)
+        .filter_entry(move |e| {
+            let name = e.file_name().to_string_lossy();
+            let is_dir = e.file_type().is_some_and(|t| t.is_dir());
+            let workspace = || {
+                let rel = e.path().strip_prefix(&walk_root).map(|r| r.to_string_lossy().replace('\\', "/"));
+                rel.is_ok_and(|rel| workspaces.iter().any(|p| crate::profile::glob_covers(p, &rel)))
+            };
+            (!VENDOR_DIRS.contains(&name.as_ref()) || (name != "node_modules" && workspace()))
+                && !(is_dir && is_python_env(e.path()))
+        })
+        .build()
+}
+
+fn mtime_ns(meta: &std::fs::Metadata) -> Option<u64> {
+    meta.modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_nanos() as u64)
+}
+
+pub fn stat_snapshot(root: &Path) -> Result<HashMap<String, (u64, u64)>> {
+    let root = canonical_root(root)?;
+    let mut out = HashMap::new();
+    for entry in build_walker(&root).flatten() {
+        if entry.file_type().is_some_and(|t| t.is_dir()) {
+            continue;
+        }
+        let abs = entry.path();
+        if Language::from_path(abs).is_none() {
+            continue;
+        }
+        let Ok(rel) = abs.strip_prefix(&root) else {
+            continue;
+        };
+        let Ok(meta) = entry.metadata() else {
+            continue;
+        };
+        if meta.len() > MAX_SOURCE_BYTES {
+            continue;
+        }
+        out.insert(
+            rel.to_string_lossy().replace('\\', "/"),
+            (mtime_ns(&meta).unwrap_or(0), meta.len()),
+        );
+    }
+    Ok(out)
 }
 
 /// A virtualenv or conda env, whatever it is called. Recognized by its

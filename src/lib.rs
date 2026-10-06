@@ -24,6 +24,7 @@ pub mod cache;
 pub mod confidence;
 pub mod contract;
 pub mod flows;
+pub mod freshness;
 pub mod git;
 pub mod graph;
 pub mod inventory;
@@ -232,18 +233,22 @@ fn write_indexes(
     route_links: &[contract::RouteLink],
 ) -> Result<(PathBuf, Option<PathBuf>)> {
     let imports_path = dir.join("imports.md");
-    std::fs::write(&imports_path, &imports.markdown)
-        .with_context(|| format!("cannot write {}", imports_path.display()))?;
+    write_atomic(&imports_path, &imports.markdown)?;
     let routes_file = dir.join("routes.md");
     let routes_path = if route_links.is_empty() {
         let _ = std::fs::remove_file(&routes_file);
         None
     } else {
-        std::fs::write(&routes_file, contract::routes_markdown(inv, route_links))
-            .with_context(|| format!("cannot write {}", routes_file.display()))?;
+        write_atomic(&routes_file, &contract::routes_markdown(inv, route_links))?;
         Some(routes_file)
     };
     Ok((imports_path, routes_path))
+}
+
+fn write_atomic(path: &std::path::Path, text: &str) -> Result<()> {
+    let tmp = path.with_extension("md.tmp");
+    std::fs::write(&tmp, text).with_context(|| format!("cannot write {}", tmp.display()))?;
+    std::fs::rename(&tmp, path).with_context(|| format!("cannot write {}", path.display()))
 }
 
 pub fn run(opts: &Options) -> Result<RunReport> {

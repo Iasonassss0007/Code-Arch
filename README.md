@@ -34,11 +34,19 @@ Add `--json` for machine-readable output, and re-run `codearch` when the code ch
 Commit `.codearch/*.md` so a fresh clone can answer lookups right away
 (`.codearch/cache/` is ignored automatically).
 
+Every lookup says whether the index still matches the code: `fresh`, `stale` (with the
+changed files) or `unknown` (a fresh clone has no cache yet). The CLI prints this on
+stderr and `--json` adds a `freshness` object. Add `--refresh` to rebuild first when the
+answer would be stale or unknown.
+
 For MCP clients (Claude Code and others):
 
 ```
-claude mcp add codearch -- codearch mcp --repo /path/to/repo
+claude mcp add codearch -- codearch mcp --repo /path/to/repo --refresh
 ```
+
+Each answer carries the same `freshness` object. With `--refresh` the server rebuilds a
+stale index before answering. Without it, the server never writes files.
 
 ## Results
 
@@ -52,8 +60,7 @@ than no help. The lookup also cut the context read by 34–56% and the token cos
 ![Answer quality: lookup tool 98% vs map 58% vs no help 61% on navigation; lookup tool 100% vs no help 87% on cross-language](docs/images/agent-quality.svg)
 
 Tested with Gemini models on Hono, Next.js Commerce, TypeDI and paperless-ngx. The
-cross-language result rests on one repository. Methods are in
-[`eval/README.md`](eval/README.md).
+cross-language result rests on one repository.
 
 **Cheaper than grep for transitive impact.** Context for one `codearch importers` call
 vs a batched grep search, one regex per depth

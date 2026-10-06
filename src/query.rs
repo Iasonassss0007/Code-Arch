@@ -222,11 +222,45 @@ pub fn importers_text(hits: &[(String, usize)]) -> String {
 
 /// JSON `importers` answer, matching the eval tool's observation shape.
 pub fn importers_json(target: &str, hits: &[(String, usize)]) -> String {
+    importers_value(target, hits).to_string()
+}
+
+pub fn importers_json_with(
+    target: &str,
+    hits: &[(String, usize)],
+    freshness: &serde_json::Value,
+) -> String {
+    let mut value = importers_value(target, hits);
+    value["freshness"] = freshness.clone();
+    value.to_string()
+}
+
+fn importers_value(target: &str, hits: &[(String, usize)]) -> serde_json::Value {
     serde_json::json!({
         "target": target,
         "importers": hits.iter().map(|(p, d)| serde_json::json!({"path": p, "depth": d})).collect::<Vec<_>>(),
     })
-    .to_string()
+}
+
+pub fn importers_miss(target: &str, stale: bool) -> String {
+    let reasons = if stale {
+        "nothing imports it, it was not analyzed, or the index is stale"
+    } else {
+        "nothing imports it, or it was not analyzed"
+    };
+    format!("no importers for '{target}': {reasons}")
+}
+
+pub fn callers_miss(index: &BTreeMap<String, Vec<RouteEntry>>, view: &str, stale: bool) -> String {
+    let mut reason = format!("no route in the index names this view '{view}'");
+    let suggestions = suggest_views(index, view);
+    if !suggestions.is_empty() {
+        reason.push_str(&format!("; similar indexed views: {}", suggestions.join(", ")));
+    }
+    if stale {
+        reason.push_str("; the index is stale, so the view may be new");
+    }
+    reason
 }
 
 /// Direct importers of each caller: the second half of "what does an API
@@ -271,6 +305,25 @@ pub fn callers_json(
     matches: &[RouteEntry],
     imports: Option<&BTreeMap<String, Vec<String>>>,
 ) -> String {
+    callers_value(view, matches, imports).to_string()
+}
+
+pub fn callers_json_with(
+    view: &str,
+    matches: &[RouteEntry],
+    imports: Option<&BTreeMap<String, Vec<String>>>,
+    freshness: &serde_json::Value,
+) -> String {
+    let mut value = callers_value(view, matches, imports);
+    value["freshness"] = freshness.clone();
+    value.to_string()
+}
+
+fn callers_value(
+    view: &str,
+    matches: &[RouteEntry],
+    imports: Option<&BTreeMap<String, Vec<String>>>,
+) -> serde_json::Value {
     serde_json::json!({
         "view": view,
         "matches": matches.iter().map(|m| {
@@ -284,12 +337,42 @@ pub fn callers_json(
             o
         }).collect::<Vec<_>>(),
     })
-    .to_string()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn answers_carry_freshness_only_through_the_with_variants() {
+        let hits = vec![("src/b.ts".to_string(), 1usize)];
+        let fresh = serde_json::json!({"state": "stale", "changed_count": 1, "changed": ["src/a.ts"]});
+        let plain: serde_json::Value = serde_json::from_str(&importers_json("src/a.ts", &hits)).unwrap();
+        assert!(plain.get("freshness").is_none());
+        let with: serde_json::Value =
+            serde_json::from_str(&importers_json_with("src/a.ts", &hits, &fresh)).unwrap();
+        assert_eq!(with["freshness"], fresh);
+        assert_eq!(with["importers"], plain["importers"]);
+        let callers: serde_json::Value =
+            serde_json::from_str(&callers_json_with("V", &[], None, &fresh)).unwrap();
+        assert_eq!(callers["freshness"], fresh);
+        assert_eq!(callers["view"], "V");
+    }
+
+    #[test]
+    fn miss_messages_name_staleness_only_when_stale() {
+        assert_eq!(
+            importers_miss("src/a.ts", false),
+            "no importers for 'src/a.ts': nothing imports it, or it was not analyzed"
+        );
+        assert!(importers_miss("src/a.ts", true).ends_with("or the index is stale"));
+        let mut index = BTreeMap::new();
+        index.insert("TagViewSet".to_string(), Vec::new());
+        let fresh = callers_miss(&index, "tag", false);
+        assert!(fresh.contains("similar indexed views: TagViewSet"));
+        assert!(!fresh.contains("stale"));
+        assert!(callers_miss(&index, "tag", true).ends_with("so the view may be new"));
+    }
 
     #[test]
     fn imports_parse_skips_headers_and_splits_importers() {

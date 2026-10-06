@@ -23,7 +23,7 @@
 //!   (`eval/openrouter_agent.py` `IMPORTERS_TOOL` / `ROUTES_TOOL`), minus
 //!   the harness's `{"tool":...}` action wrapper, which is eval syntax.
 
-use crate::query;
+use crate::{freshness, query};
 use std::collections::BTreeMap;
 use std::io::{BufRead, Write};
 use std::path::PathBuf;
@@ -45,12 +45,18 @@ const ROUTE_CALLERS_DESCRIPTION: &str = "Returns frontend files whose request UR
 pub struct Server {
     pub repo: PathBuf,
     pub dir: PathBuf,
+    pub refresh: bool,
 }
 
 impl Server {
     pub fn new(repo: PathBuf, codearch_dir: Option<PathBuf>) -> Server {
         let dir = codearch_dir.unwrap_or_else(|| repo.join(".codearch"));
-        Server { repo, dir }
+        Server { repo, dir, refresh: false }
+    }
+
+    pub fn with_refresh(mut self, refresh: bool) -> Server {
+        self.refresh = refresh;
+        self
     }
 
     /// Serve one JSON-RPC message per stdin line until EOF. Bad lines get a
@@ -187,23 +193,21 @@ impl Server {
             }
             _ => return tool_error(id, "importers 'depth' must be a non-negative integer"),
         };
-        let text = match query::index_text(&self.dir, "imports.md", &self.repo.display().to_string()) {
+        let target = match query::normalize_target(&self.repo, path) {
             Ok(t) => t,
             Err(e) => return tool_error(id, &e),
         };
-        let target = match query::normalize_target(&self.repo, path) {
+        let fresh = freshness::resolve(&self.repo, &self.dir, self.refresh);
+        let text = match query::index_text(&self.dir, "imports.md", &self.repo.display().to_string()) {
             Ok(t) => t,
             Err(e) => return tool_error(id, &e),
         };
         let hits = query::importers(&query::parse_imports(&text), &target, depth);
         if hits.is_empty() {
-            return tool_text(
-                id,
-                &format!("no importers for '{target}': nothing imports it, or it was not analyzed"),
-                false,
-            );
+            let reason = query::importers_miss(&target, fresh.is_stale());
+            return tool_text(id, &format!("{reason}\n{}", fresh.summary_line()), false);
         }
-        tool_text(id, &query::importers_json(&target, &hits), false)
+        tool_text(id, &query::importers_json_with(&target, &hits, &fresh.to_json()), false)
     }
 
     fn call_route_callers(
@@ -214,6 +218,7 @@ impl Server {
         let Some(view) = args.get("view").and_then(|v| v.as_str()) else {
             return tool_error(id, "route_callers needs a 'view' string argument");
         };
+        let fresh = freshness::resolve(&self.repo, &self.dir, self.refresh);
         let text = match query::index_text(&self.dir, "routes.md", &self.repo.display().to_string()) {
             Ok(t) => t,
             Err(e) => return tool_error(id, &e),
@@ -221,17 +226,17 @@ impl Server {
         let index: BTreeMap<String, Vec<query::RouteEntry>> = query::parse_routes(&text);
         let matches = index.get(view).cloned().unwrap_or_default();
         if matches.is_empty() {
-            let mut reason = format!("no route in the index names this view '{view}'");
-            let suggestions = query::suggest_views(&index, view);
-            if !suggestions.is_empty() {
-                reason.push_str(&format!("; similar indexed views: {}", suggestions.join(", ")));
-            }
-            return tool_text(id, &reason, false);
+            let reason = query::callers_miss(&index, view, fresh.is_stale());
+            return tool_text(id, &format!("{reason}\n{}", fresh.summary_line()), false);
         }
         let imports = query::index_text(&self.dir, "imports.md", "")
             .ok()
             .map(|t| query::parse_imports(&t));
-        tool_text(id, &query::callers_json(view, &matches, imports.as_ref()), false)
+        tool_text(
+            id,
+            &query::callers_json_with(view, &matches, imports.as_ref(), &fresh.to_json()),
+            false,
+        )
     }
 }
 
@@ -322,7 +327,9 @@ mod tests {
         assert!(tools[0]["inputSchema"]["properties"].get("depth").is_some());
 
         let text = replies[2]["result"]["content"][0]["text"].as_str().unwrap();
-        let hit: serde_json::Value = serde_json::from_str(text).unwrap();
+        let mut hit: serde_json::Value = serde_json::from_str(text).unwrap();
+        let freshness = hit.as_object_mut().unwrap().remove("freshness").unwrap();
+        assert_eq!(freshness["state"], "unknown");
         assert_eq!(
             hit,
             serde_json::json!({"target": "src/a.ts", "importers": [
@@ -360,6 +367,61 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("no .codearch/imports.md"));
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    fn live_repo(name: &str) -> (PathBuf, PathBuf, PathBuf) {
+        let tmp = std::env::temp_dir().join(format!("codearch-mcp-live-{}-{name}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let repo = tmp.join("repo");
+        std::fs::create_dir_all(repo.join("src")).unwrap();
+        std::fs::write(repo.join("src/a.ts"), "export const a = 1;\n").unwrap();
+        std::fs::write(repo.join("src/b.ts"), "import { a } from \"./a\";\nexport const b = a;\n").unwrap();
+        let dir = tmp.join("state");
+        (tmp, repo, dir)
+    }
+
+    fn importers_call(server: &Server) -> serde_json::Value {
+        let replies = session(
+            server,
+            &[r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"importers","arguments":{"path":"src/a.ts"}}}"#],
+        );
+        let text = replies[0]["result"]["content"][0]["text"].as_str().unwrap();
+        serde_json::from_str(text).unwrap()
+    }
+
+    #[test]
+    fn refresh_rebuilds_a_stale_index_before_answering() {
+        let (tmp, repo, dir) = live_repo("refresh");
+        let server = Server::new(repo.clone(), Some(dir.clone())).with_refresh(true);
+        let first = importers_call(&server);
+        assert_eq!(first["importers"], serde_json::json!([{"path": "src/b.ts", "depth": 1}]));
+        assert_eq!(first["freshness"]["state"], "fresh");
+        assert_eq!(first["freshness"]["refreshed"], true);
+        let again = importers_call(&server);
+        assert!(again["freshness"].get("refreshed").is_none());
+        std::fs::write(repo.join("src/c.ts"), "import { a } from \"./a\";\nexport const c = a;\n").unwrap();
+        let after = importers_call(&server);
+        assert_eq!(
+            after["importers"],
+            serde_json::json!([{"path": "src/b.ts", "depth": 1}, {"path": "src/c.ts", "depth": 1}])
+        );
+        assert_eq!(after["freshness"]["refreshed"], true);
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn without_refresh_a_stale_index_is_reported_and_left_alone() {
+        let (tmp, repo, dir) = live_repo("report");
+        crate::freshness::rebuild(&repo, &dir).unwrap();
+        let before = std::fs::read_to_string(dir.join("imports.md")).unwrap();
+        std::fs::write(repo.join("src/c.ts"), "import { a } from \"./a\";\nexport const c = a;\n").unwrap();
+        let server = Server::new(repo, Some(dir.clone()));
+        let answer = importers_call(&server);
+        assert_eq!(answer["importers"], serde_json::json!([{"path": "src/b.ts", "depth": 1}]));
+        assert_eq!(answer["freshness"]["state"], "stale");
+        assert_eq!(answer["freshness"]["changed"], serde_json::json!(["src/c.ts"]));
+        assert_eq!(std::fs::read_to_string(dir.join("imports.md")).unwrap(), before);
         let _ = std::fs::remove_dir_all(&tmp);
     }
 

@@ -34,7 +34,7 @@ transitively, from a static import index. Run it before changing a file to see w
     }
     lines.extend([
         "",
-        "Answers come from the last `codearch` run; if files moved since, run `codearch` first.",
+        "Each answer reports whether the index is fresh. If it says stale or unknown, run `codearch` and ask again.",
         END,
     ]);
     lines.join("\n")
@@ -83,6 +83,13 @@ mod tests {
         assert!(block(true).contains("codearch callers"));
         assert!(!block(false).contains("codearch callers"));
         assert!(block(false).starts_with(START) && block(false).ends_with(END));
+    }
+
+    #[test]
+    fn block_tells_agents_to_act_on_freshness() {
+        let text = block(false);
+        assert!(text.contains("whether the index is fresh"));
+        assert!(text.contains("stale or unknown"));
     }
 
     #[test]
