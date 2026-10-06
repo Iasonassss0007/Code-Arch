@@ -79,9 +79,26 @@ enum Commands {
         /// `src\a.ts`, or an absolute path inside the repo).
         file: String,
         /// Deepest hop to report (default: no limit).
-        #[arg(long)]
-        depth: Option<usize>,
+        #[arg(long, value_parser = clap::value_parser!(u64).range(1..))]
+        depth: Option<u64>,
         /// Emit one JSON object instead of `depth  path` lines.
+        #[arg(long)]
+        json: bool,
+        #[arg(long, help = REFRESH_HELP)]
+        refresh: bool,
+        /// Repository root (default: `.`).
+        #[arg(long)]
+        repo: Option<PathBuf>,
+        /// Where imports.md is read from (default: <repo>/.codearch).
+        #[arg(long)]
+        codearch_dir: Option<PathBuf>,
+    },
+    /// Files that FILE imports, as repo-relative paths.
+    Deps {
+        /// File to look up, as the agent has it (`src/a.ts`, `./src/a.ts`,
+        /// `src\a.ts`, or an absolute path inside the repo).
+        file: String,
+        /// Emit one JSON object instead of one path per line.
         #[arg(long)]
         json: bool,
         #[arg(long, help = REFRESH_HELP)]
@@ -361,9 +378,10 @@ fn run_query(command: &Commands) -> i32 {
                     return 2;
                 }
             };
-            let hits = query::importers(&query::parse_imports(&text), &target, *depth);
+            let index = query::parse_imports(&text);
+            let hits = query::importers(&index, &target, depth.map(|d| d as usize));
             if hits.is_empty() {
-                eprintln!("{}", query::importers_miss(&target, fresh.is_stale()));
+                eprintln!("{}", query::importers_miss(&index, &target, fresh.is_stale()));
                 eprintln!("{}", fresh.summary_line());
                 if *json {
                     println!("{}", query::importers_json_with(&target, &hits, &fresh.to_json()));
@@ -374,6 +392,49 @@ fn run_query(command: &Commands) -> i32 {
                 println!("{}", query::importers_json_with(&target, &hits, &fresh.to_json()));
             } else {
                 print!("{}", query::importers_text(&hits));
+            }
+            eprintln!("{}", fresh.summary_line());
+            0
+        }
+        Commands::Deps {
+            file,
+            json,
+            refresh,
+            repo,
+            codearch_dir,
+        } => {
+            let repo = repo.clone().unwrap_or_else(|| PathBuf::from("."));
+            let dir = codearch_dir.clone().unwrap_or_else(|| repo.join(".codearch"));
+            let target = match query::normalize_target(&repo, file) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("{e}");
+                    return 2;
+                }
+            };
+            let fresh = codearch::freshness::resolve(&repo, &dir, *refresh);
+            let text = match query::index_text(&dir, "imports.md", &repo.display().to_string()) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("{e}");
+                    eprintln!("{}", fresh.summary_line());
+                    return 2;
+                }
+            };
+            let index = query::parse_imports(&text);
+            let hits = query::deps(&index, &target);
+            if hits.is_empty() {
+                eprintln!("{}", query::deps_miss(&index, &target));
+                eprintln!("{}", fresh.summary_line());
+                if *json {
+                    println!("{}", query::deps_json_with(&target, &hits, &fresh.to_json()));
+                }
+                return 0;
+            }
+            if *json {
+                println!("{}", query::deps_json_with(&target, &hits, &fresh.to_json()));
+            } else {
+                print!("{}", query::deps_text(&hits));
             }
             eprintln!("{}", fresh.summary_line());
             0
@@ -578,6 +639,10 @@ mod tests {
             Some(Commands::Importers { refresh: true, .. })
         ));
         assert!(matches!(
+            cli(&["deps", "src/a.ts", "--refresh"]).command,
+            Some(Commands::Deps { refresh: true, .. })
+        ));
+        assert!(matches!(
             cli(&["callers", "V", "--refresh"]).command,
             Some(Commands::Callers { refresh: true, .. })
         ));
@@ -643,6 +708,21 @@ mod tests {
             .err()
             .expect("view and path conflict");
         assert_eq!(err.exit_code(), 2);
+    }
+
+    #[test]
+    fn depth_below_one_is_rejected() {
+        for args in [
+            vec!["codearch", "importers", "src/a.ts", "--depth", "0"],
+            vec!["codearch", "importers", "src/a.ts", "--depth=-1"],
+        ] {
+            let err = Cli::try_parse_from(&args).err().expect("rejected");
+            assert_eq!(err.exit_code(), 2, "{args:?}: {err}");
+        }
+        match cli(&["importers", "src/a.ts", "--depth", "1"]).command {
+            Some(Commands::Importers { depth: Some(1), .. }) => {}
+            other => panic!("unexpected parse: {other:?}"),
+        }
     }
 
     #[test]

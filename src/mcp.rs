@@ -202,9 +202,10 @@ impl Server {
             Ok(t) => t,
             Err(e) => return tool_error(id, &e),
         };
-        let hits = query::importers(&query::parse_imports(&text), &target, depth);
+        let index = query::parse_imports(&text);
+        let hits = query::importers(&index, &target, depth);
         if hits.is_empty() {
-            let reason = query::importers_miss(&target, fresh.is_stale());
+            let reason = query::importers_miss(&index, &target, fresh.is_stale());
             return tool_text(id, &format!("{reason}\n{}", fresh.summary_line()), false);
         }
         tool_text(id, &query::importers_json_with(&target, &hits, &fresh.to_json()), false)

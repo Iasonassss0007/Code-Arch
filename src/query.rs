@@ -1,7 +1,7 @@
 //! Query interface — serve the indexes as lookups.
 //!
-//! Job    Answer `importers` and `callers` lookups from the index files a
-//!        previous `codearch` run wrote (`.codearch/imports.md`,
+//! Job    Answer `importers`, `deps`, and `callers` lookups from the index
+//!        files a previous `codearch` run wrote (`.codearch/imports.md`,
 //!        `.codearch/routes.md`). No analysis, no writing: if the files do
 //!        not hold what a lookup needs, the lookup reports a miss rather
 //!        than re-analyzing.
@@ -242,13 +242,84 @@ fn importers_value(target: &str, hits: &[(String, usize)]) -> serde_json::Value 
     })
 }
 
-pub fn importers_miss(target: &str, stale: bool) -> String {
+pub fn importers_miss(index: &BTreeMap<String, Vec<String>>, target: &str, stale: bool) -> String {
+    if !path_in_index(index, target) {
+        return not_in_index(index, target);
+    }
     let reasons = if stale {
         "nothing imports it, it was not analyzed, or the index is stale"
     } else {
         "nothing imports it, or it was not analyzed"
     };
     format!("no importers for '{target}': {reasons}")
+}
+
+/// What `target` imports: every left-hand path whose importer list contains
+/// it. Sorted. A file with no outgoing edges and a file absent from the
+/// index both yield an empty list; the miss text tells them apart.
+pub fn deps(index: &BTreeMap<String, Vec<String>>, target: &str) -> Vec<String> {
+    let mut out: Vec<String> = index
+        .iter()
+        .filter(|(_, importers)| importers.iter().any(|p| p == target))
+        .map(|(path, _)| path.clone())
+        .collect();
+    out.sort();
+    out
+}
+
+pub fn deps_text(paths: &[String]) -> String {
+    let mut s = String::new();
+    for path in paths {
+        s.push_str(path);
+        s.push('\n');
+    }
+    s
+}
+
+pub fn deps_json_with(file: &str, paths: &[String], freshness: &serde_json::Value) -> String {
+    serde_json::json!({
+        "file": file,
+        "deps": paths,
+        "freshness": freshness,
+    })
+    .to_string()
+}
+
+pub fn deps_miss(index: &BTreeMap<String, Vec<String>>, target: &str) -> String {
+    if path_in_index(index, target) {
+        format!("no dependencies for '{target}'")
+    } else {
+        not_in_index(index, target)
+    }
+}
+
+fn path_in_index(index: &BTreeMap<String, Vec<String>>, target: &str) -> bool {
+    index.contains_key(target) || index.values().any(|importers| importers.iter().any(|p| p == target))
+}
+
+fn not_in_index(index: &BTreeMap<String, Vec<String>>, target: &str) -> String {
+    let mut msg = format!("'{target}' is not in the index");
+    let suggestions = suggest_paths(index, target);
+    if !suggestions.is_empty() {
+        msg.push_str(&format!("; similar indexed paths: {}", suggestions.join(", ")));
+    }
+    msg
+}
+
+/// Up to 5 indexed paths containing `query` (case-insensitive), in path order.
+pub fn suggest_paths(index: &BTreeMap<String, Vec<String>>, query: &str) -> Vec<String> {
+    let q = query.to_lowercase();
+    if q.is_empty() {
+        return Vec::new();
+    }
+    let mut paths: BTreeSet<&str> = BTreeSet::new();
+    for (imported, importers) in index {
+        paths.insert(imported.as_str());
+        for importer in importers {
+            paths.insert(importer.as_str());
+        }
+    }
+    paths.into_iter().filter(|p| p.to_lowercase().contains(&q)).take(5).map(str::to_string).collect()
 }
 
 pub fn normalize_route_path(path: &str) -> String {
@@ -438,17 +509,47 @@ mod tests {
 
     #[test]
     fn miss_messages_name_staleness_only_when_stale() {
+        let mut index = BTreeMap::new();
+        index.insert("src/b.ts".to_string(), vec!["src/a.ts".to_string()]);
+        index.insert("src/leaf.ts".to_string(), Vec::new());
         assert_eq!(
-            importers_miss("src/a.ts", false),
+            importers_miss(&index, "src/a.ts", false),
             "no importers for 'src/a.ts': nothing imports it, or it was not analyzed"
         );
-        assert!(importers_miss("src/a.ts", true).ends_with("or the index is stale"));
-        let mut index = BTreeMap::new();
-        index.insert("TagViewSet".to_string(), Vec::new());
-        let fresh = callers_miss(&index, "tag", false);
+        assert_eq!(
+            importers_miss(&index, "src/leaf.ts", false),
+            "no importers for 'src/leaf.ts': nothing imports it, or it was not analyzed"
+        );
+        assert!(importers_miss(&index, "src/a.ts", true).ends_with("or the index is stale"));
+        let absent = importers_miss(&index, "src/missing.ts", false);
+        assert_eq!(absent, "'src/missing.ts' is not in the index");
+        assert!(!absent.contains("stale"));
+        let hinted = importers_miss(&index, "SRC/B", false);
+        assert!(hinted.starts_with("'SRC/B' is not in the index"));
+        assert!(hinted.contains("similar indexed paths: src/b.ts"));
+        let mut views = BTreeMap::new();
+        views.insert("TagViewSet".to_string(), Vec::new());
+        let fresh = callers_miss(&views, "tag", false);
         assert!(fresh.contains("similar indexed views: TagViewSet"));
         assert!(!fresh.contains("stale"));
-        assert!(callers_miss(&index, "tag", true).ends_with("so the view may be new"));
+        assert!(callers_miss(&views, "tag", true).ends_with("so the view may be new"));
+    }
+
+    #[test]
+    fn deps_inverts_the_import_index() {
+        let text = "src/a.ts ← src/b.ts, src/c.ts\nsrc/b.ts ← src/c.ts\n";
+        let idx = parse_imports(text);
+        assert_eq!(deps(&idx, "src/c.ts"), vec!["src/a.ts".to_string(), "src/b.ts".to_string()]);
+        assert!(deps(&idx, "src/a.ts").is_empty());
+        assert_eq!(deps_miss(&idx, "src/a.ts"), "no dependencies for 'src/a.ts'");
+        assert_eq!(deps_miss(&idx, "nope.ts"), "'nope.ts' is not in the index");
+        let fresh = serde_json::json!({"state": "fresh"});
+        let value: serde_json::Value =
+            serde_json::from_str(&deps_json_with("src/c.ts", &deps(&idx, "src/c.ts"), &fresh)).unwrap();
+        assert_eq!(value["file"], "src/c.ts");
+        assert_eq!(value["deps"], serde_json::json!(["src/a.ts", "src/b.ts"]));
+        assert_eq!(value["freshness"], fresh);
+        assert_eq!(deps_text(&deps(&idx, "src/c.ts")), "src/a.ts\nsrc/b.ts\n");
     }
 
     #[test]

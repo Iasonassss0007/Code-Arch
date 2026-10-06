@@ -216,6 +216,34 @@ fn mono_importers_miss_is_empty_stdout() {
 }
 
 #[test]
+fn mono_deps_lists_what_the_file_imports() {
+    let scratch = copy_fixture("mono");
+    index(&scratch.path);
+    let out = query(&scratch.path, &["deps", "packages/web/src/index.ts"]);
+    assert_eq!(out.status.code(), Some(0), "mono deps exit");
+    assert_eq!(
+        out.stdout,
+        b"packages/shared/util.ts\npackages/web/src/home.ts\n",
+        "mono deps stdout"
+    );
+}
+
+#[test]
+fn mono_importers_of_an_unknown_path_says_not_in_the_index() {
+    let scratch = copy_fixture("mono");
+    index(&scratch.path);
+    let out = query(&scratch.path, &["importers", "no/such/file.ts", "--json"]);
+    assert_eq!(out.status.code(), Some(0), "unknown importers exit");
+    let stderr = stderr_text(&out);
+    assert!(
+        stderr.contains("'no/such/file.ts' is not in the index"),
+        "unknown importers stderr: {stderr}"
+    );
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).expect("unknown importers json");
+    assert_eq!(value["importers"], serde_json::json!([]), "unknown importers json");
+}
+
+#[test]
 fn mono_callers_without_routes_exits_2() {
     let scratch = copy_fixture("mono");
     index(&scratch.path);
