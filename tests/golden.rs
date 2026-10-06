@@ -284,4 +284,48 @@ fn django_routes_snapshot_and_tagview_callers() {
         value["freshness"]["state"], "fresh",
         "django callers freshness"
     );
+    let by_path = query(&scratch.path, &["callers", "--path", "tags", "--json"]);
+    assert_eq!(by_path.status.code(), Some(0), "django path json exit");
+    let path_value: serde_json::Value =
+        serde_json::from_slice(&by_path.stdout).expect("django path json");
+    assert_eq!(path_value["path"], "tags", "django path key");
+    assert!(path_value.get("view").is_none(), "path json has no top-level view");
+    assert_eq!(
+        path_value["matches"],
+        serde_json::json!([{
+            "view": "TagView",
+            "file": "views.py",
+            "routes": ["tags"],
+            "callers": ["ui/api.ts"]
+        }]),
+        "django path matches"
+    );
+    let slashed = query(&scratch.path, &["callers", "--path", "/tags/"]);
+    assert_eq!(slashed.status.code(), Some(0), "django slashed path exit");
+    assert_eq!(
+        slashed.stdout,
+        b"TagView  views.py  (routes: tags)\n  ui/api.ts\n",
+        "django slashed path text"
+    );
+}
+
+#[test]
+fn unresolved_flag_lists_the_broken_import() {
+    let scratch = Scratch::new("unresolved");
+    write_file(
+        &scratch.path.join("src/app.ts"),
+        "import './missing';\n",
+    );
+    let with_flag = codearch(&[
+        std::ffi::OsString::from("--unresolved"),
+        scratch.path.as_os_str().to_os_string(),
+    ]);
+    assert_eq!(with_flag.status.code(), Some(0), "unresolved flag exit");
+    let stdout = String::from_utf8(with_flag.stdout.clone()).expect("unresolved stdout utf-8");
+    assert!(stdout.contains("Unresolved:"), "unresolved header: {stdout}");
+    assert!(stdout.contains("src/app.ts: ./missing"), "unresolved pair: {stdout}");
+    let without = codearch(&[scratch.path.as_os_str().to_os_string()]);
+    assert_eq!(without.status.code(), Some(0), "plain index exit");
+    let plain = String::from_utf8(without.stdout).expect("plain stdout utf-8");
+    assert!(!plain.contains("Unresolved:"), "plain index printed unresolved: {plain}");
 }

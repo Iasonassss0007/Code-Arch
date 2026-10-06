@@ -59,6 +59,10 @@ struct Cli {
     #[arg(long)]
     codearch_dir: Option<PathBuf>,
 
+    /// List unresolved import specifiers after the resolution summary.
+    #[arg(long)]
+    unresolved: bool,
+
     /// Look up the index instead of analyzing: `importers` serves the
     /// reverse import index, `callers` the route index. A directory
     /// literally named `importers` or `callers` still analyzes as
@@ -92,7 +96,11 @@ enum Commands {
     /// Frontend files calling a backend view, from the route index.
     Callers {
         /// View name, e.g. `TagViewSet`.
-        view: String,
+        #[arg(required_unless_present = "path")]
+        view: Option<String>,
+        /// Route string to look up instead of a view name (`tags` or `/tags/`).
+        #[arg(long, conflicts_with = "view")]
+        path: Option<String>,
         /// Emit one JSON object instead of text blocks.
         #[arg(long)]
         json: bool,
@@ -149,6 +157,7 @@ fn main() -> Result<()> {
         no_git: cli.no_git,
         codearch_dir: cli.codearch_dir,
         map: cli.map,
+        unresolved: cli.unresolved,
     };
 
     println!("Analyzing repository...");
@@ -167,6 +176,7 @@ fn main() -> Result<()> {
         report.source_tokens_estimate
     );
     print_resolution(&report);
+    print_unresolved(&report, opts.unresolved);
     println!(
         "Git co-change:       {}",
         if report.commits_read == 0 {
@@ -247,6 +257,17 @@ imports, so merging them further would assert a relationship the code does not h
     Ok(())
 }
 
+fn print_unresolved(report: &codearch::RunReport, show: bool) {
+    if !show || report.unresolved_pairs.is_empty() {
+        return;
+    }
+    println!();
+    println!("Unresolved:");
+    for (path, spec) in &report.unresolved_pairs {
+        println!("  {path}: {spec}");
+    }
+}
+
 fn print_resolution(report: &codearch::RunReport) {
     println!(
         "Import resolution:   {:.0}% of first-party imports{}",
@@ -268,6 +289,7 @@ fn print_index_report(report: &codearch::RunReport, opts: &Options) {
     println!();
     println!("Source files:        {}", report.files);
     print_resolution(report);
+    print_unresolved(report, opts.unresolved);
     println!("Import index:        {} imports", report.import_edges);
     println!(
         "Route callers:       {}",
@@ -357,6 +379,7 @@ fn run_query(command: &Commands) -> i32 {
         }
         Commands::Callers {
             view,
+            path,
             json,
             refresh,
             repo,
@@ -373,11 +396,50 @@ fn run_query(command: &Commands) -> i32 {
                 }
             };
             let index = query::parse_routes(&text);
-            let matches = index.get(view.as_str()).cloned().unwrap_or_default();
             // Optional: without an import index the answer is callers only.
             let imports = query::index_text(&dir, "imports.md", "")
                 .ok()
                 .map(|t| query::parse_imports(&t));
+            if let Some(raw_path) = path {
+                let normalized = query::normalize_route_path(raw_path);
+                let matches = query::callers_for_path(&index, raw_path);
+                if matches.is_empty() {
+                    eprintln!("no route in the index matches path '{normalized}'");
+                    eprintln!("{}", fresh.summary_line());
+                    if *json {
+                        println!(
+                            "{}",
+                            query::callers_path_json_with(
+                                &normalized,
+                                &matches,
+                                None,
+                                &fresh.to_json()
+                            )
+                        );
+                    }
+                    return 0;
+                }
+                if *json {
+                    println!(
+                        "{}",
+                        query::callers_path_json_with(
+                            &normalized,
+                            &matches,
+                            imports.as_ref(),
+                            &fresh.to_json()
+                        )
+                    );
+                } else {
+                    print!("{}", query::callers_path_text(&matches, imports.as_ref()));
+                }
+                eprintln!("{}", fresh.summary_line());
+                return 0;
+            }
+            let Some(view) = view.as_deref() else {
+                eprintln!("callers needs a view name or --path");
+                return 2;
+            };
+            let matches = index.get(view).cloned().unwrap_or_default();
             if matches.is_empty() {
                 eprintln!("{}", query::callers_miss(&index, view, fresh.is_stale()));
                 eprintln!("{}", fresh.summary_line());
@@ -542,12 +604,46 @@ mod tests {
             other => panic!("unexpected parse: {other:?}"),
         }
         match cli(&["callers", "TagViewSet", "--json"]).command {
-            Some(Commands::Callers { view, json, .. }) => {
-                assert_eq!(view, "TagViewSet");
+            Some(Commands::Callers { view, path, json, .. }) => {
+                assert_eq!(view.as_deref(), Some("TagViewSet"));
+                assert_eq!(path, None);
                 assert!(json);
             }
             other => panic!("unexpected parse: {other:?}"),
         }
+    }
+
+    #[test]
+    fn callers_path_parses_and_conflicts_with_a_view_name() {
+        match cli(&["callers", "--path", "/tags/"]).command {
+            Some(Commands::Callers { view, path, json, .. }) => {
+                assert_eq!(view, None);
+                assert_eq!(path.as_deref(), Some("/tags/"));
+                assert!(!json);
+            }
+            other => panic!("unexpected parse: {other:?}"),
+        }
+        match cli(&["callers", "TagView"]).command {
+            Some(Commands::Callers { view, path, .. }) => {
+                assert_eq!(view.as_deref(), Some("TagView"));
+                assert_eq!(path, None);
+            }
+            other => panic!("unexpected parse: {other:?}"),
+        }
+        let err = Cli::try_parse_from(["codearch", "callers", "--path", "tags", "TagView"])
+            .err()
+            .expect("view and path conflict");
+        assert_eq!(err.exit_code(), 2);
+    }
+
+    #[test]
+    fn unresolved_flag_is_long_only_on_the_analysis_run() {
+        assert!(cli(&["--unresolved", "."]).unresolved);
+        assert!(!cli(&["."]).unresolved);
+        let err = Cli::try_parse_from(["codearch", "-u", "."])
+            .err()
+            .expect("no short flag");
+        assert_eq!(err.exit_code(), 2);
     }
 
     #[test]

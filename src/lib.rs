@@ -69,6 +69,7 @@ pub struct Options {
     /// stops after contracts and writes only the lookup indexes. The library
     /// default stays `true`; the CLI defaults to indexes only (`--map` opts in).
     pub map: bool,
+    pub unresolved: bool,
 }
 
 impl Default for Options {
@@ -83,6 +84,7 @@ impl Default for Options {
             no_git: false,
             codearch_dir: None,
             map: true,
+            unresolved: false,
         }
     }
 }
@@ -147,6 +149,7 @@ pub struct RunReport {
     pub source_tokens_estimate: usize,
     pub resolution_rate: f64,
     pub unresolved: usize,
+    pub unresolved_pairs: Vec<(String, String)>,
     pub external_refs: usize,
     pub asset_refs: usize,
     pub excluded_refs: usize,
@@ -251,6 +254,23 @@ fn write_atomic(path: &std::path::Path, text: &str) -> Result<()> {
     std::fs::rename(&tmp, path).with_context(|| format!("cannot write {}", path.display()))
 }
 
+fn unresolved_pairs(inv: &inventory::Inventory, res: &resolve::Resolution) -> Vec<(String, String)> {
+    let mut pairs: Vec<(String, String)> = res
+        .unresolved
+        .iter()
+        .map(|(id, spec)| {
+            let path = inv
+                .files
+                .get(*id)
+                .map(|f| f.rel.clone())
+                .unwrap_or_else(|| "?".to_string());
+            (path, spec.clone())
+        })
+        .collect();
+    pairs.sort();
+    pairs
+}
+
 pub fn run(opts: &Options) -> Result<RunReport> {
     // Stage timings to stderr when CODEARCH_TIME is set. Permanent
     // instrumentation, not a debug leftover: the M5 exit ("re-run in
@@ -319,6 +339,7 @@ pub fn run(opts: &Options) -> Result<RunReport> {
             source_tokens_estimate: (source_bytes / 4) as usize,
             resolution_rate: res.resolution_rate,
             unresolved: res.unresolved.len(),
+            unresolved_pairs: unresolved_pairs(&inv, &res),
             external_refs: res.externals.values().sum(),
             asset_refs: res.asset_refs,
             excluded_refs: res.excluded_refs,
@@ -550,6 +571,7 @@ pub fn run(opts: &Options) -> Result<RunReport> {
         source_tokens_estimate: (source_bytes / 4) as usize,
         resolution_rate: res.resolution_rate,
         unresolved: res.unresolved.len(),
+        unresolved_pairs: unresolved_pairs(&inv, &res),
         external_refs: res.externals.values().sum(),
         asset_refs: res.asset_refs,
         excluded_refs: res.excluded_refs,
@@ -797,6 +819,38 @@ fn bucket_label(unit: &split::CoarseUnit) -> Label {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unresolved_pairs_use_repo_paths_and_mark_unknown_ids() {
+        use crate::types::{FileClass, FileRecord, Language};
+        let inv = inventory::Inventory {
+            root: PathBuf::from("."),
+            files: vec![FileRecord {
+                id: 0,
+                rel: "src/app.ts".to_string(),
+                abs: PathBuf::from("src/app.ts"),
+                language: Language::Ts,
+                bytes: 10,
+                loc: 1,
+                class: FileClass::Source,
+            }],
+            skipped: Vec::new(),
+            manifests: Vec::new(),
+            excluded: Default::default(),
+        };
+        let mut res = resolve::Resolution::default();
+        res.unresolved.push((0, "./missing".to_string()));
+        res.unresolved.push((9, "./gone".to_string()));
+        res.unresolved.push((0, "./a".to_string()));
+        assert_eq!(
+            unresolved_pairs(&inv, &res),
+            vec![
+                ("?".to_string(), "./gone".to_string()),
+                ("src/app.ts".to_string(), "./a".to_string()),
+                ("src/app.ts".to_string(), "./missing".to_string()),
+            ]
+        );
+    }
 
     #[test]
     fn index_only_run_writes_the_same_index_and_keeps_the_map_cache() {

@@ -10,7 +10,7 @@
 //! Fails  Never on content: unparseable lines are skipped the way the eval's
 //!        Python readers skip them (a line without the arrow is not an edge).
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::Path;
 
 /// The arrow separating an imported file from its importers. Same literal
@@ -251,6 +251,33 @@ pub fn importers_miss(target: &str, stale: bool) -> String {
     format!("no importers for '{target}': {reasons}")
 }
 
+pub fn normalize_route_path(path: &str) -> String {
+    path.trim().trim_matches('/').to_string()
+}
+
+pub fn callers_for_path(
+    index: &BTreeMap<String, Vec<RouteEntry>>,
+    path: &str,
+) -> Vec<(String, RouteEntry)> {
+    let want = normalize_route_path(path);
+    let mut by_route: BTreeMap<&str, Vec<(String, RouteEntry)>> = BTreeMap::new();
+    for (view, entries) in index {
+        for entry in entries {
+            let mut seen = BTreeSet::new();
+            for route in &entry.routes {
+                if !seen.insert(route.as_str()) {
+                    continue;
+                }
+                by_route
+                    .entry(route.as_str())
+                    .or_default()
+                    .push((view.clone(), entry.clone()));
+            }
+        }
+    }
+    by_route.remove(want.as_str()).unwrap_or_default()
+}
+
 pub fn callers_miss(index: &BTreeMap<String, Vec<RouteEntry>>, view: &str, stale: bool) -> String {
     let mut reason = format!("no route in the index names this view '{view}'");
     let suggestions = suggest_views(index, view);
@@ -282,17 +309,40 @@ pub fn caller_importers(
 /// Plain-text `callers` answer: one block per matching section, the defining
 /// file and its routes first, then each caller indented, followed by the
 /// files importing it when an import index is at hand.
+fn append_callers_block(
+    out: &mut String,
+    lead: &str,
+    entry: &RouteEntry,
+    imports: Option<&BTreeMap<String, Vec<String>>>,
+) {
+    out.push_str(&format!("{lead}  (routes: {})\n", entry.routes.join(", ")));
+    let by = imports
+        .map(|i| caller_importers(i, &entry.callers))
+        .unwrap_or_default();
+    for c in &entry.callers {
+        out.push_str(&format!("  {c}\n"));
+        if let Some(list) = by.get(c) {
+            out.push_str(&format!("    imported by: {}\n", list.join(", ")));
+        }
+    }
+}
+
 pub fn callers_text(matches: &[RouteEntry], imports: Option<&BTreeMap<String, Vec<String>>>) -> String {
     let mut s = String::new();
     for m in matches {
-        s.push_str(&format!("{}  (routes: {})\n", m.file, m.routes.join(", ")));
-        let by = imports.map(|i| caller_importers(i, &m.callers)).unwrap_or_default();
-        for c in &m.callers {
-            s.push_str(&format!("  {c}\n"));
-            if let Some(list) = by.get(c) {
-                s.push_str(&format!("    imported by: {}\n", list.join(", ")));
-            }
-        }
+        append_callers_block(&mut s, &m.file, m, imports);
+    }
+    s
+}
+
+pub fn callers_path_text(
+    matches: &[(String, RouteEntry)],
+    imports: Option<&BTreeMap<String, Vec<String>>>,
+) -> String {
+    let mut s = String::new();
+    for (view, entry) in matches {
+        let lead = format!("{view}  {}", entry.file);
+        append_callers_block(&mut s, &lead, entry, imports);
     }
     s
 }
@@ -319,6 +369,24 @@ pub fn callers_json_with(
     value.to_string()
 }
 
+fn section_value(
+    entry: &RouteEntry,
+    imports: Option<&BTreeMap<String, Vec<String>>>,
+) -> serde_json::Value {
+    let mut o = serde_json::json!({
+        "file": entry.file,
+        "routes": entry.routes,
+        "callers": entry.callers,
+    });
+    let by = imports
+        .map(|i| caller_importers(i, &entry.callers))
+        .unwrap_or_default();
+    if !by.is_empty() {
+        o["importers"] = serde_json::json!(by);
+    }
+    o
+}
+
 fn callers_value(
     view: &str,
     matches: &[RouteEntry],
@@ -326,17 +394,26 @@ fn callers_value(
 ) -> serde_json::Value {
     serde_json::json!({
         "view": view,
-        "matches": matches.iter().map(|m| {
-            let mut o = serde_json::json!({
-                "file": m.file, "routes": m.routes, "callers": m.callers,
-            });
-            let by = imports.map(|i| caller_importers(i, &m.callers)).unwrap_or_default();
-            if !by.is_empty() {
-                o["importers"] = serde_json::json!(by);
-            }
+        "matches": matches.iter().map(|m| section_value(m, imports)).collect::<Vec<_>>(),
+    })
+}
+
+pub fn callers_path_json_with(
+    path: &str,
+    matches: &[(String, RouteEntry)],
+    imports: Option<&BTreeMap<String, Vec<String>>>,
+    freshness: &serde_json::Value,
+) -> String {
+    let mut value = serde_json::json!({
+        "path": path,
+        "matches": matches.iter().map(|(view, entry)| {
+            let mut o = section_value(entry, imports);
+            o["view"] = serde_json::json!(view);
             o
         }).collect::<Vec<_>>(),
-    })
+    });
+    value["freshness"] = freshness.clone();
+    value.to_string()
 }
 
 #[cfg(test)]
@@ -477,6 +554,72 @@ mod tests {
             "v.py  (routes: tags)\n  ui/a.ts\n    imported by: ui/x.ts, ui/y.ts\n  ui/b.ts\n"
         );
         assert_eq!(callers_text(&m, None), "v.py  (routes: tags)\n  ui/a.ts\n  ui/b.ts\n");
+    }
+
+    #[test]
+    fn callers_for_path_matches_the_normalized_route_string() {
+        let md = "\
+## `TagView` — `views.py`
+
+Routes: `tags`, `tags/extra`
+
+- `ui/api.ts`
+
+## `Other` — `other.py`
+
+Routes: `tags`
+
+- `ui/other.ts`
+";
+        let index = parse_routes(md);
+        let hits = callers_for_path(&index, " /tags/ ");
+        assert_eq!(
+            hits,
+            vec![
+                (
+                    "Other".to_string(),
+                    RouteEntry {
+                        file: "other.py".to_string(),
+                        routes: vec!["tags".to_string()],
+                        callers: vec!["ui/other.ts".to_string()],
+                    },
+                ),
+                (
+                    "TagView".to_string(),
+                    RouteEntry {
+                        file: "views.py".to_string(),
+                        routes: vec!["tags".to_string(), "tags/extra".to_string()],
+                        callers: vec!["ui/api.ts".to_string()],
+                    },
+                ),
+            ]
+        );
+        assert_eq!(callers_for_path(&index, "tags/extra").len(), 1);
+        assert_eq!(callers_for_path(&index, "tags/extra")[0].0, "TagView");
+        assert!(callers_for_path(&index, "missing").is_empty());
+        assert_eq!(
+            callers_path_text(&hits, None),
+            "Other  other.py  (routes: tags)\n  ui/other.ts\nTagView  views.py  (routes: tags, tags/extra)\n  ui/api.ts\n"
+        );
+        assert_eq!(
+            callers_text(index.get("TagView").unwrap(), None),
+            "views.py  (routes: tags, tags/extra)\n  ui/api.ts\n"
+        );
+        let json: serde_json::Value = serde_json::from_str(&callers_path_json_with(
+            "tags",
+            &hits,
+            None,
+            &serde_json::json!({"state": "fresh"}),
+        ))
+        .unwrap();
+        assert_eq!(json["path"], "tags");
+        assert!(json.get("view").is_none());
+        assert_eq!(json["matches"][0]["view"], "Other");
+        assert_eq!(json["matches"][1]["callers"], serde_json::json!(["ui/api.ts"]));
+        let by_name: serde_json::Value =
+            serde_json::from_str(&callers_json("TagView", index.get("TagView").unwrap(), None)).unwrap();
+        assert_eq!(by_name["view"], "TagView");
+        assert!(by_name["matches"][0].get("view").is_none());
     }
 
     #[test]
