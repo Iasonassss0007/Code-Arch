@@ -1,0 +1,287 @@
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+use std::sync::atomic::{AtomicU64, Ordering};
+
+struct FixtureCase {
+    name: &'static str,
+    files: &'static [&'static str],
+}
+
+const FIXTURES: &[FixtureCase] = &[
+    FixtureCase {
+        name: "mono",
+        files: &["imports.md"],
+    },
+    FixtureCase {
+        name: "xlang",
+        files: &["imports.md"],
+    },
+    FixtureCase {
+        name: "tier1",
+        files: &["imports.md"],
+    },
+];
+
+struct Scratch {
+    path: PathBuf,
+}
+
+impl Scratch {
+    fn new(name: &str) -> Scratch {
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let n = NEXT.fetch_add(1, Ordering::Relaxed);
+        let path =
+            std::env::temp_dir().join(format!("codearch-golden-{}-{name}-{n}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&path);
+        std::fs::create_dir_all(&path)
+            .unwrap_or_else(|err| panic!("create {}: {err}", path.display()));
+        Scratch { path }
+    }
+}
+
+impl Drop for Scratch {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.path);
+    }
+}
+
+fn fixture_src(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("eval/fixtures")
+        .join(name)
+}
+
+fn copy_tree(from: &Path, to: &Path) {
+    std::fs::create_dir_all(to).unwrap_or_else(|err| panic!("mkdir {}: {err}", to.display()));
+    let entries =
+        std::fs::read_dir(from).unwrap_or_else(|err| panic!("read {}: {err}", from.display()));
+    for entry in entries {
+        let entry = entry.unwrap_or_else(|err| panic!("dirent: {err}"));
+        let dest = to.join(entry.file_name());
+        let kind = entry
+            .file_type()
+            .unwrap_or_else(|err| panic!("file type: {err}"));
+        if kind.is_dir() {
+            copy_tree(&entry.path(), &dest);
+        } else {
+            std::fs::copy(entry.path(), &dest)
+                .unwrap_or_else(|err| panic!("copy {}: {err}", dest.display()));
+        }
+    }
+}
+
+fn copy_fixture(name: &str) -> Scratch {
+    let scratch = Scratch::new(name);
+    copy_tree(&fixture_src(name), &scratch.path);
+    scratch
+}
+
+fn codearch(args: &[std::ffi::OsString]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_codearch"))
+        .args(args)
+        .output()
+        .unwrap_or_else(|err| panic!("spawn codearch: {err}"))
+}
+
+fn index(root: &Path) {
+    let out = codearch(&[root.as_os_str().to_os_string()]);
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "index {} exit\n{}",
+        root.display(),
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+fn query(root: &Path, args: &[&str]) -> Output {
+    let mut full: Vec<std::ffi::OsString> = args.iter().map(std::ffi::OsString::from).collect();
+    full.push("--repo".into());
+    full.push(root.as_os_str().into());
+    codearch(&full)
+}
+
+fn stderr_text(out: &Output) -> String {
+    String::from_utf8(out.stderr.clone()).unwrap_or_else(|err| panic!("stderr utf-8: {err}"))
+}
+
+fn substitute_root_dir_name(bytes: &[u8], root: &Path) -> Vec<u8> {
+    let name = root
+        .file_name()
+        .unwrap_or_else(|| panic!("temp dir has no name"))
+        .to_string_lossy();
+    String::from_utf8(bytes.to_vec())
+        .unwrap_or_else(|err| panic!("index utf-8: {err}"))
+        .replace(name.as_ref(), "<ROOT>")
+        .into_bytes()
+}
+
+fn assert_snapshot(root: &Path, name: &str, file: &str) {
+    let got = std::fs::read(root.join(".codearch").join(file))
+        .unwrap_or_else(|err| panic!("read {name} {file}: {err}"));
+    let got = substitute_root_dir_name(&got, root);
+    let want = std::fs::read(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/golden")
+            .join(name)
+            .join(file),
+    )
+    .unwrap_or_else(|err| panic!("snapshot {name}/{file}: {err}"));
+    assert_eq!(got, want, "{name} {file} bytes");
+}
+
+fn write_file(path: &Path, text: &str) {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .unwrap_or_else(|err| panic!("mkdir {}: {err}", parent.display()));
+    }
+    std::fs::write(path, text).unwrap_or_else(|err| panic!("write {}: {err}", path.display()));
+}
+
+#[test]
+fn fixture_indexes_match_golden_snapshots() {
+    for case in FIXTURES {
+        let scratch = copy_fixture(case.name);
+        index(&scratch.path);
+        for file in case.files {
+            assert_snapshot(&scratch.path, case.name, file);
+        }
+        if !case.files.contains(&"routes.md") {
+            let name = case.name;
+            assert!(
+                !scratch.path.join(".codearch/routes.md").exists(),
+                "{name} routes.md must be absent"
+            );
+        }
+    }
+}
+
+#[test]
+fn mono_importers_json_names_the_importer() {
+    let scratch = copy_fixture("mono");
+    index(&scratch.path);
+    let out = query(
+        &scratch.path,
+        &["importers", "packages/shared/util.ts", "--json"],
+    );
+    assert_eq!(out.status.code(), Some(0), "mono importers json exit");
+    let value: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("mono importers json");
+    assert_eq!(
+        value["target"], "packages/shared/util.ts",
+        "mono importers json target"
+    );
+    assert_eq!(
+        value["importers"],
+        serde_json::json!([{"depth": 1, "path": "packages/web/src/index.ts"}]),
+        "mono importers json importers"
+    );
+    assert_eq!(
+        value["freshness"]["state"], "fresh",
+        "mono importers json freshness"
+    );
+}
+
+#[test]
+fn mono_importers_text_is_exact() {
+    let scratch = copy_fixture("mono");
+    index(&scratch.path);
+    let out = query(&scratch.path, &["importers", "packages/shared/util.ts"]);
+    assert_eq!(out.status.code(), Some(0), "mono importers text exit");
+    assert_eq!(
+        out.stdout, b"1  packages/web/src/index.ts\n",
+        "mono importers text stdout"
+    );
+    let stderr = stderr_text(&out);
+    assert!(
+        stderr.starts_with("index: fresh"),
+        "fresh index stderr: {stderr}"
+    );
+}
+
+#[test]
+fn mono_importers_miss_is_empty_stdout() {
+    let scratch = copy_fixture("mono");
+    index(&scratch.path);
+    let out = query(&scratch.path, &["importers", "packages/web/src/index.ts"]);
+    assert_eq!(out.status.code(), Some(0), "mono importers miss exit");
+    assert_eq!(out.stdout, b"", "mono importers miss stdout");
+    let stderr = stderr_text(&out);
+    assert!(
+        stderr.contains(
+            "no importers for 'packages/web/src/index.ts': nothing imports it, or it was not analyzed"
+        ),
+        "mono importers miss stderr: {stderr}"
+    );
+}
+
+#[test]
+fn mono_callers_without_routes_exits_2() {
+    let scratch = copy_fixture("mono");
+    index(&scratch.path);
+    let out = query(&scratch.path, &["callers", "TagView"]);
+    assert_eq!(out.status.code(), Some(2), "mono callers exit");
+    let stderr = stderr_text(&out);
+    assert!(
+        stderr.contains("no .codearch/routes.md"),
+        "mono callers stderr: {stderr}"
+    );
+}
+
+#[test]
+fn changed_file_marks_index_stale_without_rewriting_imports() {
+    let scratch = copy_fixture("mono");
+    index(&scratch.path);
+    let imports = scratch.path.join(".codearch/imports.md");
+    let before = std::fs::read(&imports).expect("imports.md before");
+    let src = scratch.path.join("packages/web/src/index.ts");
+    let mut body = std::fs::read(&src).expect("index.ts");
+    let size_before = body.len() as u64;
+    body.extend_from_slice(b"\nexport const touched = 1;\n");
+    std::fs::write(&src, &body).expect("append to index.ts");
+    let size_after = std::fs::metadata(&src).expect("index.ts metadata").len();
+    assert!(size_after > size_before, "appended line must grow index.ts");
+    let out = query(&scratch.path, &["importers", "packages/shared/util.ts"]);
+    assert_eq!(out.status.code(), Some(0), "stale importers exit");
+    let stderr = stderr_text(&out);
+    assert!(
+        stderr.contains("index: stale (1 file changed"),
+        "stale stderr: {stderr}"
+    );
+    let after = std::fs::read(&imports).expect("imports.md after");
+    assert_eq!(after, before, "stale importers must not rewrite imports.md");
+}
+
+#[test]
+fn django_routes_snapshot_and_tagview_callers() {
+    let scratch = Scratch::new("django");
+    write_file(
+        &scratch.path.join("urls.py"),
+        "urlpatterns = [\n    path('tags/', TagView.as_view()),\n]\n",
+    );
+    write_file(&scratch.path.join("views.py"), "class TagView:\n    pass\n");
+    write_file(
+        &scratch.path.join("ui/api.ts"),
+        "export function load() { return fetch('tags/') }\n",
+    );
+    index(&scratch.path);
+    assert_snapshot(&scratch.path, "django", "routes.md");
+    let out = query(&scratch.path, &["callers", "TagView", "--json"]);
+    assert_eq!(out.status.code(), Some(0), "django callers exit");
+    let value: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("django callers json");
+    assert_eq!(value["view"], "TagView", "django callers view");
+    assert_eq!(
+        value["matches"],
+        serde_json::json!([{
+            "file": "views.py",
+            "routes": ["tags"],
+            "callers": ["ui/api.ts"]
+        }]),
+        "django callers matches"
+    );
+    assert_eq!(
+        value["freshness"]["state"], "fresh",
+        "django callers freshness"
+    );
+}
