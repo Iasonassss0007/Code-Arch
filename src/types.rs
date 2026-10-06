@@ -12,6 +12,8 @@ pub enum Language {
     Js,
     Jsx,
     Python,
+    Vue,
+    Svelte,
 }
 
 impl Language {
@@ -22,6 +24,8 @@ impl Language {
             "js" | "mjs" | "cjs" => Some(Language::Js),
             "jsx" => Some(Language::Jsx),
             "py" => Some(Language::Python),
+            "vue" => Some(Language::Vue),
+            "svelte" => Some(Language::Svelte),
             _ => None,
         }
     }
@@ -33,6 +37,8 @@ impl Language {
             Language::Js => "JavaScript",
             Language::Jsx => "JSX",
             Language::Python => "Python",
+            Language::Vue => "Vue",
+            Language::Svelte => "Svelte",
         }
     }
 

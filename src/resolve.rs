@@ -20,7 +20,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 /// `py` rides last: it only decides same-stem ties, and TS behavior is
 /// exactly what it was before M4 added it here (it must be listed at all so
 /// `strip_extension` stems `.py` files for the index).
-const EXT_PRECEDENCE: &[&str] = &["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "py"];
+const EXT_PRECEDENCE: &[&str] = &["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "vue", "svelte", "py"];
 
 /// Node builtins that carry no `node:` prefix.
 const NODE_BUILTINS: &[&str] = &[

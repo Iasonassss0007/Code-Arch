@@ -525,6 +525,8 @@ mod tests {
             Language::from_path(std::path::Path::new("pkg/models.py")),
             Some(Language::Python)
         );
+        assert_eq!(Language::from_path(std::path::Path::new("App.vue")), Some(Language::Vue));
+        assert_eq!(Language::from_path(std::path::Path::new("App.svelte")), Some(Language::Svelte));
         assert_eq!(Language::Python.name(), "Python");
     }
 }

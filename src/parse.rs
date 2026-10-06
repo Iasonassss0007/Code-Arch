@@ -131,6 +131,7 @@ impl Parsers {
             Language::Ts | Language::Tsx => &mut self.ts,
             Language::Js | Language::Jsx => &mut self.js,
             Language::Python => &mut self.py,
+            Language::Vue | Language::Svelte => &mut self.ts,
         }
     }
 }
@@ -197,7 +198,126 @@ pub fn parse_all_cached(
         .collect()
 }
 
+fn parse_sfc(parsers: &mut Parsers, id: FileId, src: &str) -> FileParse {
+    let mut out = FileParse {
+        file: id,
+        ..Default::default()
+    };
+    for (lang, body) in script_blocks(src) {
+        let one = parse_one(parsers, id, lang, &body);
+        out.refs.extend(one.refs);
+        out.symbols.extend(one.symbols);
+        out.urls.extend(one.urls);
+        out.url_segments.extend(one.url_segments);
+        out.url_segment_seqs.extend(one.url_segment_seqs);
+        out.extends.extend(one.extends);
+        out.http |= one.http;
+        out.partial |= one.partial;
+    }
+    out.urls.sort();
+    out.urls.dedup();
+    out.url_segments.sort();
+    out.url_segments.dedup();
+    out.url_segment_seqs.sort();
+    out.url_segment_seqs.dedup();
+    out
+}
+
+fn script_blocks(src: &str) -> Vec<(Language, String)> {
+    let lower = src.to_ascii_lowercase();
+    let bytes = src.as_bytes();
+    let mut out = Vec::new();
+    let mut search = 0;
+    while search < src.len() {
+        let Some(rel) = lower[search..].find("<script") else {
+            break;
+        };
+        let start = search + rel;
+        let after = start + "<script".len();
+        let boundary = bytes.get(after).copied();
+        if !matches!(boundary, Some(b'>' | b'/' | b' ' | b'\t' | b'\n' | b'\r')) {
+            search = after;
+            continue;
+        }
+        let Some(gt) = src[after..].find('>') else {
+            break;
+        };
+        let tag_end = after + gt;
+        let tag = &src[start..=tag_end];
+        let body_start = tag_end + 1;
+        if tag.ends_with("/>") {
+            search = body_start;
+            continue;
+        }
+        let Some(end_rel) = lower[body_start..].find("</script>") else {
+            break;
+        };
+        let body_end = body_start + end_rel;
+        if let Some(lang) = script_lang(tag) {
+            let newlines = src[..body_start].bytes().filter(|b| *b == b'\n').count();
+            let mut body = "\n".repeat(newlines);
+            body.push_str(&src[body_start..body_end]);
+            out.push((lang, body));
+        }
+        search = body_end + "</script>".len();
+    }
+    out
+}
+
+fn script_lang(tag: &str) -> Option<Language> {
+    match lang_attr(&tag.to_ascii_lowercase()).as_deref() {
+        None | Some("js") | Some("javascript") => Some(Language::Js),
+        Some("ts") | Some("typescript") | Some("tsx") => Some(Language::Ts),
+        Some("jsx") => Some(Language::Jsx),
+        _ => None,
+    }
+}
+
+fn lang_attr(tag: &str) -> Option<String> {
+    let bytes = tag.as_bytes();
+    let mut i = 0;
+    while i + 4 <= bytes.len() {
+        if bytes[i..].starts_with(b"lang") {
+            let before_ok = i == 0 || !bytes[i - 1].is_ascii_alphanumeric();
+            if before_ok {
+                let mut j = i + 4;
+                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                    j += 1;
+                }
+                if j < bytes.len() && bytes[j] == b'=' {
+                    j += 1;
+                    while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                        j += 1;
+                    }
+                    if j >= bytes.len() {
+                        return None;
+                    }
+                    if bytes[j] == b'"' || bytes[j] == b'\'' {
+                        let quote = bytes[j];
+                        j += 1;
+                        let start = j;
+                        while j < bytes.len() && bytes[j] != quote {
+                            j += 1;
+                        }
+                        return Some(tag[start..j].to_string());
+                    }
+                    let start = j;
+                    while j < bytes.len() && !bytes[j].is_ascii_whitespace() && bytes[j] != b'>' && bytes[j] != b'/' {
+                        j += 1;
+                    }
+                    return Some(tag[start..j].to_string());
+                }
+            }
+        }
+        i += 1;
+    }
+    None
+}
+
 pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -> FileParse {
+    if matches!(lang, Language::Vue | Language::Svelte) {
+        return parse_sfc(parsers, id, src);
+    }
     let mut out = FileParse {
         file: id,
         ..Default::default()
@@ -1018,6 +1138,17 @@ mod tests {
         );
         let specs: Vec<&str> = out.refs.iter().map(|r| r.specifier.as_str()).collect();
         assert_eq!(specs, vec!["./mod", "./keep", "./all"]);
+    }
+
+    #[test]
+    fn vue_and_svelte_scripts_are_refs_and_other_blocks_are_not() {
+        let src = "<template>{{ import x from './tmpl' }}</template>\n<style>import './styled'</style>\n<script lang=\"coffee\">import x from './nope'</script>\n<script lang=\"ts\">import { x } from './util'</script>\n<script>import y from './plain'</script>\n";
+        let vue = parse(src, Language::Vue);
+        let mut specs: Vec<&str> = vue.refs.iter().map(|r| r.specifier.as_str()).collect();
+        specs.sort();
+        assert_eq!(specs, vec!["./plain", "./util"]);
+        let svelte = parse("<script lang=\"ts\">import { x } from './util'</script>\n", Language::Svelte);
+        assert_eq!(svelte.refs.iter().map(|r| r.specifier.as_str()).collect::<Vec<_>>(), vec!["./util"]);
     }
 
     fn parse(src: &str, lang: Language) -> FileParse {

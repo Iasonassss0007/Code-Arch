@@ -244,6 +244,28 @@ fn mono_importers_of_an_unknown_path_says_not_in_the_index() {
 }
 
 #[test]
+fn vue_script_import_is_an_importer() {
+    let scratch = Scratch::new("vue");
+    write_file(
+        &scratch.path.join("App.vue"),
+        "<script lang=\"ts\">import { x } from './util'</script>\n",
+    );
+    write_file(&scratch.path.join("util.ts"), "export const x = 1\n");
+    write_file(&scratch.path.join("main.ts"), "import App from './App.vue'\n");
+    index(&scratch.path);
+    let out = query(&scratch.path, &["importers", "util.ts"]);
+    assert_eq!(out.status.code(), Some(0), "vue importers exit");
+    assert!(
+        out.stdout.starts_with(b"1  App.vue\n"),
+        "vue importers stdout: {}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+    let component = query(&scratch.path, &["importers", "App.vue"]);
+    assert_eq!(component.status.code(), Some(0), "vue component importers exit");
+    assert_eq!(component.stdout, b"1  main.ts\n", "vue component importers stdout");
+}
+
+#[test]
 fn mono_callers_without_routes_exits_2() {
     let scratch = copy_fixture("mono");
     index(&scratch.path);
