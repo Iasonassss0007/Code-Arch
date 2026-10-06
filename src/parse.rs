@@ -948,6 +948,20 @@ mod tests {
     }
 
     #[test]
+    fn side_effect_import_is_a_ref() {
+        let out = parse("import \"./side\";\n", Language::Ts);
+        let specs: Vec<&str> = out.refs.iter().map(|r| r.specifier.as_str()).collect();
+        assert_eq!(specs, vec!["./side"]);
+    }
+
+    #[test]
+    fn export_star_from_is_a_ref() {
+        let out = parse("export * from \"./all\";\n", Language::Ts);
+        let specs: Vec<&str> = out.refs.iter().map(|r| r.specifier.as_str()).collect();
+        assert_eq!(specs, vec!["./all"]);
+    }
+
+    #[test]
     fn extracts_require_and_dynamic_import() {
         let out = parse(
             r#"
@@ -1035,6 +1049,15 @@ mod tests {
     }
 
     #[test]
+    fn type_checking_import_is_still_a_ref() {
+        let out = parse_py(
+            "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from .models import User\n",
+        );
+        let specs: Vec<&str> = out.refs.iter().map(|r| r.specifier.as_str()).collect();
+        assert_eq!(specs, vec!["typing", ".models"]);
+    }
+
+    #[test]
     fn python_future_import_is_kept_for_resolve() {
         let out = parse_py("from __future__ import annotations\n");
         assert_eq!(
@@ -1107,6 +1130,13 @@ urlpatterns = [
         assert!(got.contains(&(s(&["api", "documents", "bulk_edit"]), "BulkEditView".into())));
         assert!(got.contains(&(s(&["api", "profile"]), "ProfileView".into())));
         assert!(got.contains(&(s(&["api", "login"]), "login".into())));
+    }
+
+    #[test]
+    fn flask_route_decorator_fills_urls_and_not_routes() {
+        let out = parse_py("@app.route('/api/users')\ndef users():\n    return None\n");
+        assert_eq!(out.urls, vec!["api/users".to_string()]);
+        assert_eq!(out.routes, Vec::<Route>::new());
     }
 
     #[test]

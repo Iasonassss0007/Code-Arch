@@ -836,6 +836,50 @@ mod tests {
     }
 
     #[test]
+    fn alias_import_of_a_generated_file_is_unresolved_relative_is_excluded() {
+        let dir = std::env::temp_dir().join(format!(
+            "codearch-gen-alias-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("src")).unwrap();
+        std::fs::write(
+            dir.join("src/app.ts"),
+            "import { A } from \"@gen/catalog\";\nimport { B } from \"./catalog\";\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("src/catalog.ts"),
+            "// @generated\nexport const A = 1;\n",
+        )
+        .unwrap();
+        let inv = crate::inventory::collect(&dir).unwrap();
+        assert_eq!(inv.excluded.generated, 1);
+        assert_eq!(inv.files.len(), 1);
+        assert_eq!(inv.files[0].rel, "src/app.ts");
+        assert_eq!(inv.skipped.len(), 1);
+        assert_eq!(inv.skipped[0].rel, "src/catalog.ts");
+        assert_eq!(inv.skipped[0].class, crate::types::FileClass::Generated);
+        let src = std::fs::read_to_string(&inv.files[0].abs).unwrap();
+        let mut parsers = crate::parse::Parsers::new();
+        let parsed = crate::parse::parse_one(
+            &mut parsers,
+            inv.files[0].id,
+            inv.files[0].language,
+            &src,
+        );
+        let mappings = PathMappings {
+            paths: vec![("@gen/*".into(), vec!["src/*".into()])],
+            ..Default::default()
+        };
+        let res = resolve_all(&inv, &[parsed], &mappings, &[]);
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(res.unresolved, vec![(0, "@gen/catalog".to_string())]);
+        assert_eq!(res.excluded_refs, 1);
+        assert!(res.edges.is_empty());
+    }
+
+    #[test]
     fn python_first_party_miss_is_unresolved_not_external() {
         let inv = inventory(&["sdk/src/harness/__init__.py", "app.py"]);
         let res = resolve_all(
@@ -1128,6 +1172,24 @@ mod tests {
         assert_eq!(res.edges, vec![(3, 0), (3, 1), (3, 2), (3, 4)]);
         assert!(res.unresolved.is_empty());
         assert!((res.resolution_rate - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn type_checking_import_resolves_to_an_edge() {
+        let inv = inventory(&["pkg/app.py", "pkg/models.py"]);
+        let src = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from .models import User\n";
+        let parsed = parsed_py(0, src);
+        assert_eq!(
+            parsed
+                .refs
+                .iter()
+                .map(|r| r.specifier.as_str())
+                .collect::<Vec<_>>(),
+            vec!["typing", ".models"]
+        );
+        let res = resolve_all(&inv, &[parsed], &PathMappings::default(), &[]);
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert!(res.unresolved.is_empty());
     }
 
     #[test]

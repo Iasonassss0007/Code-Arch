@@ -834,6 +834,37 @@ mod tests {
     }
 
     #[test]
+    fn index_only_run_deletes_a_stale_routes_file() {
+        let tmp = std::env::temp_dir().join(format!(
+            "codearch-stale-routes-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let root = tmp.join("repo");
+        std::fs::create_dir_all(root.join("src")).unwrap();
+        std::fs::write(root.join("src/a.ts"), "export const a = 1;\n").unwrap();
+        let state = tmp.join("state");
+        std::fs::create_dir_all(&state).unwrap();
+        std::fs::write(state.join("routes.md"), "stale callers\n").unwrap();
+        let report = run(&Options {
+            root,
+            codearch_dir: Some(state.clone()),
+            map: false,
+            ..Options::default()
+        })
+        .unwrap();
+        let imports_written = state.join("imports.md").is_file();
+        let routes_present = state.join("routes.md").exists();
+        let routes_path = report.routes_path.clone();
+        let route_views = report.route_views;
+        let _ = std::fs::remove_dir_all(&tmp);
+        assert!(imports_written);
+        assert!(!routes_present);
+        assert_eq!(routes_path, None);
+        assert_eq!(route_views, 0);
+    }
+
+    #[test]
     fn run_writes_the_import_index_and_links_it_from_the_map() {
         let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("eval/fixtures/tier1");
         let tmp = std::env::temp_dir().join(format!("codearch-imports-test-{}", std::process::id()));
