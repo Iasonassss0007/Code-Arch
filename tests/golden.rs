@@ -222,9 +222,29 @@ fn mono_callers_without_routes_exits_2() {
     let out = query(&scratch.path, &["callers", "TagView"]);
     assert_eq!(out.status.code(), Some(2), "mono callers exit");
     let stderr = stderr_text(&out);
+    let expected = format!(
+        "the index under {} has no Django route declarations; codearch callers needs path(), re_path(), url(), or register() in Python",
+        scratch.path.join(".codearch").display()
+    );
     assert!(
-        stderr.contains("no .codearch/routes.md"),
+        stderr.contains(&expected),
         "mono callers stderr: {stderr}"
+    );
+}
+
+#[test]
+fn refresh_on_an_empty_repo_reports_the_rebuild_failure() {
+    let scratch = Scratch::new("empty-refresh");
+    let out = query(&scratch.path, &["importers", "x.ts", "--refresh"]);
+    assert_eq!(out.status.code(), Some(2), "empty refresh exit");
+    let stderr = stderr_text(&out);
+    assert!(
+        stderr.contains("rebuild failed"),
+        "empty refresh stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("no JavaScript, TypeScript or Python"),
+        "empty refresh stderr: {stderr}"
     );
 }
 

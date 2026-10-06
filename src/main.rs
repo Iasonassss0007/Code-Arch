@@ -357,6 +357,7 @@ fn run_query(command: &Commands) -> i32 {
                 Ok(t) => t,
                 Err(e) => {
                     eprintln!("{e}");
+                    eprintln!("{}", fresh.summary_line());
                     return 2;
                 }
             };
@@ -391,7 +392,15 @@ fn run_query(command: &Commands) -> i32 {
             let text = match query::index_text(&dir, "routes.md", &repo.display().to_string()) {
                 Ok(t) => t,
                 Err(e) => {
-                    eprintln!("{e}");
+                    if dir.join("imports.md").exists() && !dir.join("routes.md").exists() {
+                        eprintln!(
+                            "the index under {} has no Django route declarations; codearch callers needs path(), re_path(), url(), or register() in Python",
+                            dir.display()
+                        );
+                    } else {
+                        eprintln!("{e}");
+                    }
+                    eprintln!("{}", fresh.summary_line());
                     return 2;
                 }
             };
