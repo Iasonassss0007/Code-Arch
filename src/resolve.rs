@@ -282,6 +282,9 @@ fn resolve_bare(
     mappings: &PathMappings,
     index: &FileIndex,
 ) -> Option<FileId> {
+    if spec.starts_with('#') {
+        return resolve_hash_import(spec, from_dir, mappings, index);
+    }
     let chosen = nearest_scope(&mappings.scopes, from_dir).filter(|s| !s.dir.is_empty());
     if let Some(scope) = chosen {
         if let Some(id) = paths_hit(&scope.paths, spec, index, &[]) {
@@ -395,9 +398,91 @@ fn resolve_workspace(spec: &str, pkgs: &[WorkspacePackage], index: &FileIndex) -
             .or_else(|| lookup(&pkg.dir, index))
             .or_else(|| lookup(&format!("{}/src/index", pkg.dir), index))
     } else {
-        lookup(&format!("{}/{rest}", pkg.dir), index)
-            .or_else(|| lookup(&format!("{}/src/{rest}", pkg.dir), index))
+        match lookup_pattern_map(&pkg.subpaths, rest, index) {
+            MapLookup::Hit(id) => return Some(id),
+            MapLookup::MappedMiss => return None,
+            MapLookup::NoKey => lookup(&format!("{}/{rest}", pkg.dir), index)
+                .or_else(|| lookup(&format!("{}/src/{rest}", pkg.dir), index)),
+        }
     }
+}
+
+enum MapLookup {
+    Hit(FileId),
+    MappedMiss,
+    NoKey,
+}
+
+fn resolve_hash_import(
+    spec: &str,
+    from_dir: &str,
+    mappings: &PathMappings,
+    index: &FileIndex,
+) -> Option<FileId> {
+    if let Some(pkg) = nearest_package(from_dir, &mappings.workspace_packages) {
+        match lookup_pattern_map(&pkg.imports, spec, index) {
+            MapLookup::Hit(id) => return Some(id),
+            MapLookup::MappedMiss => return None,
+            MapLookup::NoKey => {}
+        }
+    }
+    match lookup_pattern_map(&mappings.root_imports, spec, index) {
+        MapLookup::Hit(id) => Some(id),
+        _ => None,
+    }
+}
+
+fn nearest_package<'a>(from_dir: &str, pkgs: &'a [WorkspacePackage]) -> Option<&'a WorkspacePackage> {
+    pkgs.iter()
+        .filter(|p| !p.dir.is_empty() && scope_covers(&p.dir, from_dir))
+        .max_by_key(|p| p.dir.len())
+}
+
+fn lookup_pattern_map(entries: &[(String, Vec<String>)], spec: &str, index: &FileIndex) -> MapLookup {
+    let mut patterns = Vec::new();
+    for (key, targets) in entries {
+        let Some(star) = pattern_star(key, spec) else {
+            continue;
+        };
+        if key.contains('*') {
+            patterns.push((star, targets));
+            continue;
+        }
+        return finish_targets(targets, &star, index);
+    }
+    let mut miss = false;
+    for (star, targets) in &patterns {
+        match finish_targets(targets, star, index) {
+            MapLookup::Hit(id) => return MapLookup::Hit(id),
+            MapLookup::MappedMiss => miss = true,
+            MapLookup::NoKey => {}
+        }
+    }
+    if miss {
+        MapLookup::MappedMiss
+    } else {
+        MapLookup::NoKey
+    }
+}
+
+fn pattern_star(key: &str, spec: &str) -> Option<String> {
+    let key = key.strip_prefix("./").unwrap_or(key);
+    if key == "." {
+        return None;
+    }
+    match_alias(key, spec)
+}
+
+fn finish_targets(targets: &[String], star: &str, index: &FileIndex) -> MapLookup {
+    if targets.is_empty() {
+        return MapLookup::MappedMiss;
+    }
+    for target in targets {
+        if let Some(id) = lookup(&target.replace('*', star), index) {
+            return MapLookup::Hit(id);
+        }
+    }
+    MapLookup::MappedMiss
 }
 
 /// Relative imports of files the inventory never holds.
@@ -1252,6 +1337,7 @@ mod tests {
             name: name.into(),
             dir: dir.into(),
             entries: entries.iter().map(|e| (*e).into()).collect(),
+            ..Default::default()
         }
     }
 
@@ -1279,6 +1365,54 @@ mod tests {
         assert_eq!(res.externals.get("react"), Some(&1));
         assert!(!res.externals.contains_key("shared"));
         assert!(res.unresolved.is_empty());
+    }
+
+    #[test]
+    fn package_subpath_exports_and_hash_imports_resolve_to_source() {
+        let inv = inventory(&[
+            "packages/pkg/src/a.ts",
+            "packages/pkg/src/util.ts",
+            "packages/pkg/src/remote.ts",
+            "packages/pkg/src/other.ts",
+            "packages/pkg/src/extra.ts",
+        ]);
+        let m = PathMappings {
+            workspace_packages: vec![WorkspacePackage {
+                name: "pkg".into(),
+                dir: "packages/pkg".into(),
+                subpaths: vec![
+                    ("./util".into(), vec!["packages/pkg/src/util.ts".into()]),
+                    ("./remote".into(), vec!["packages/pkg/lib/remote.js".into()]),
+                    ("./*".into(), vec!["packages/pkg/src/*.ts".into()]),
+                ],
+                imports: vec![("#util".into(), vec!["packages/pkg/src/util.ts".into()])],
+                ..Default::default()
+            }],
+            local_packages: ["pkg".to_string()].into(),
+            ..Default::default()
+        };
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["pkg/util", "#util", "pkg/remote", "pkg/other", "pkg/extra", "#missing"])],
+            &m,
+            &[],
+        );
+        assert_eq!(res.edges, vec![(0, 1), (0, 3), (0, 4)]);
+        assert_eq!(
+            res.unresolved,
+            vec![(0, "pkg/remote".to_string()), (0, "#missing".to_string())]
+        );
+        assert!(res.externals.is_empty());
+
+        let root = PathMappings {
+            root_imports: vec![("#util".into(), vec!["top.ts".into()])],
+            ..Default::default()
+        };
+        let outside = inventory(&["app.ts", "top.ts"]);
+        let res = resolve_all(&outside, &[parsed(0, &["#util", "#nope"])], &root, &[]);
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert_eq!(res.unresolved, vec![(0, "#nope".to_string())]);
+        assert!(res.externals.is_empty());
     }
 
     #[test]

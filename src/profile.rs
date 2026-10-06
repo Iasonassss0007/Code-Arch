@@ -84,6 +84,8 @@ pub struct PathMappings {
     /// package. Tried after every tsconfig rule, as node_modules is.
     pub workspace_packages: Vec<WorkspacePackage>,
     pub local_packages: BTreeSet<String>,
+    /// Root `package.json` `"imports"` map. Tried after the nearest package.
+    pub root_imports: Vec<(String, Vec<String>)>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -94,6 +96,10 @@ pub struct WorkspacePackage {
     /// Repository-relative entry candidates for the bare name, in order
     /// (`exports["."]`, `module`, `main`).
     pub entries: Vec<String>,
+    /// `exports` keys other than `.`, pattern to rebased targets.
+    pub subpaths: Vec<(String, Vec<String>)>,
+    /// `imports` keys (`#…`) to rebased targets.
+    pub imports: Vec<(String, Vec<String>)>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -150,6 +156,7 @@ pub fn detect(inv: &Inventory) -> Profile {
     let root_raw = read_json(&inv.root.join("package.json"));
     if let Some(raw) = root_raw.as_ref() {
         read_package_json(raw, "", &mut p);
+        p.mappings.root_imports = manifest_map(raw, "imports", "");
     }
     read_pyproject(&inv.root, &mut p);
     read_requirements(&inv.root, &mut p);
@@ -254,6 +261,32 @@ fn read_package_json(raw: &serde_json::Value, prefix: &str, p: &mut Profile) {
     }
 }
 
+const EXPORT_CONDITIONS: &[&str] = &["source", "import", "module", "default", "require", "node"];
+
+fn manifest_target(value: &serde_json::Value) -> Option<String> {
+    match value {
+        serde_json::Value::String(s) => Some(s.clone()),
+        serde_json::Value::Object(o) => EXPORT_CONDITIONS
+            .iter()
+            .find_map(|k| o.get(*k).and_then(|v| v.as_str()).map(str::to_string)),
+        _ => None,
+    }
+}
+
+fn manifest_map(raw: &serde_json::Value, field: &str, dir: &str) -> Vec<(String, Vec<String>)> {
+    let Some(obj) = raw.get(field).and_then(|v| v.as_object()) else {
+        return Vec::new();
+    };
+    obj.iter()
+        .filter(|(key, _)| field != "exports" || *key != ".")
+        .filter(|(key, _)| field != "imports" || key.starts_with('#'))
+        .map(|(key, value)| {
+            let targets = manifest_target(value).map(|t| vec![rebase(dir, &t)]).unwrap_or_default();
+            (key.clone(), targets)
+        })
+        .collect()
+}
+
 /// A workspace package's name and entry candidates. Conditional `exports`
 /// take the first string among the usual source-bearing conditions; `types`
 /// is skipped (declaration files are not analyzed).
@@ -264,21 +297,21 @@ fn workspace_package(raw: &serde_json::Value, dir: &str) -> Option<WorkspacePack
         Some(serde_json::Value::Object(o)) => o.get("."),
         other => other,
     };
-    let export = match dot {
-        Some(serde_json::Value::String(s)) => Some(s.as_str()),
-        Some(serde_json::Value::Object(o)) => ["source", "import", "module", "default", "require", "node"]
-            .iter()
-            .find_map(|k| o.get(*k).and_then(|v| v.as_str())),
-        _ => None,
-    };
-    let fields = ["module", "main"].map(|k| raw.get(k).and_then(|v| v.as_str()));
+    let export = dot.and_then(manifest_target);
+    let fields = ["module", "main"].map(|k| raw.get(k).and_then(|v| v.as_str()).map(str::to_string));
     for e in std::iter::once(export).chain(fields).flatten() {
-        let e = rebase(dir, e);
+        let e = rebase(dir, &e);
         if !entries.contains(&e) {
             entries.push(e);
         }
     }
-    Some(WorkspacePackage { name, dir: dir.to_string(), entries })
+    Some(WorkspacePackage {
+        name,
+        dir: dir.to_string(),
+        entries,
+        subpaths: manifest_map(raw, "exports", dir),
+        imports: manifest_map(raw, "imports", dir),
+    })
 }
 
 /// The root tsconfig block, generalized the same way. Package baseUrls cannot
@@ -1428,6 +1461,43 @@ name = \"backend\"
                 ("@acme/ui", "packages/ui", vec!["packages/ui/src/index.ts", "packages/ui/dist/index.js"]),
             ]
         );
+    }
+
+    #[test]
+    fn package_json_reads_export_subpaths_and_imports() {
+        let dir = std::env::temp_dir().join(format!("codearch-exports-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        write_tree(
+            &dir.join("package.json"),
+            r##"{"name":"mono","workspaces":["packages/*"],"imports":{"#root":"./src/root.ts"}}"##,
+        );
+        write_tree(
+            &dir.join("packages/pkg/package.json"),
+            r##"{"name":"pkg","exports":{".":"./src/index.ts","./util":"./src/util.ts","./remote":{"types":"./lib/remote.d.ts","default":"./lib/remote.js"},"./*":"./src/*.ts"},"imports":{"#util":"./src/util.ts","#nested":{"import":{"default":"./src/x.ts"}}}}"##,
+        );
+        let p = detect(&test_inventory_at(dir.clone(), &[]));
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(
+            p.mappings.root_imports,
+            vec![("#root".to_string(), vec!["src/root.ts".to_string()])]
+        );
+        let pkg = p.mappings.workspace_packages.iter().find(|w| w.name == "pkg").unwrap();
+        assert_eq!(
+            pkg.subpaths,
+            vec![
+                ("./*".to_string(), vec!["packages/pkg/src/*.ts".to_string()]),
+                ("./remote".to_string(), vec!["packages/pkg/lib/remote.js".to_string()]),
+                ("./util".to_string(), vec!["packages/pkg/src/util.ts".to_string()]),
+            ]
+        );
+        assert_eq!(
+            pkg.imports,
+            vec![
+                ("#nested".to_string(), Vec::<String>::new()),
+                ("#util".to_string(), vec!["packages/pkg/src/util.ts".to_string()]),
+            ]
+        );
+        assert_eq!(pkg.entries, vec!["packages/pkg/src/index.ts".to_string()]);
     }
 
     #[test]
