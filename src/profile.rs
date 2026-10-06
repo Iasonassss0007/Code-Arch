@@ -62,6 +62,13 @@ const FRAMEWORKS: &[(&str, &str)] = &[
     ("djangorestframework", "DRF"),
 ];
 
+#[derive(Debug, Clone)]
+pub struct PathScope {
+    pub dir: String,
+    pub paths: Vec<(String, Vec<String>)>,
+    pub base_url: Option<String>,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct PathMappings {
     /// tsconfig `compilerOptions.baseUrl`, repository-relative and slash-normalized.
@@ -71,6 +78,7 @@ pub struct PathMappings {
     /// Package-level baseUrls rebased to repository-relative form (slice 2).
     /// Tried in order after `base_url`; first hit wins.
     pub extra_base_urls: Vec<String>,
+    pub scopes: Vec<PathScope>,
     /// Workspace packages by `package.json` name, so `import 'shared/x'` in a
     /// monorepo reaches `packages/shared/x` instead of filing as an npm
     /// package. Tried after every tsconfig rule, as node_modules is.
@@ -308,12 +316,10 @@ fn read_tsconfig(root: &Path, prefix: &str, local: &HashMap<String, String>, p: 
                 p.mappings.extra_base_urls.push(rebased);
             }
         }
+        let mut scope_paths = Vec::new();
         if let Some((paths, decl)) = &ts.paths {
             let anchor = base_url.as_deref().unwrap_or(decl);
             for (alias, targets) in paths {
-                if p.mappings.paths.iter().any(|(a, _)| a == alias) {
-                    continue;
-                }
                 let list: Vec<String> = targets
                     .as_array()
                     .map(|a| {
@@ -323,11 +329,21 @@ fn read_tsconfig(root: &Path, prefix: &str, local: &HashMap<String, String>, p: 
                             .collect()
                     })
                     .unwrap_or_default();
-                if !list.is_empty() {
-                    p.mappings.paths.push((alias.clone(), list));
+                if list.is_empty() {
+                    continue;
                 }
+                scope_paths.push((alias.clone(), list.clone()));
+                if p.mappings.paths.iter().any(|(a, _)| a == alias) {
+                    continue;
+                }
+                p.mappings.paths.push((alias.clone(), list));
             }
         }
+        p.mappings.scopes.push(PathScope {
+            dir: prefix.to_string(),
+            paths: scope_paths,
+            base_url,
+        });
         break;
     }
 }
@@ -1358,6 +1374,8 @@ mod tests {
             "@ext/*".to_string(),
             vec!["node_modules/@ext/cfg/ext/*".to_string()]
         )));
+        let web = p.mappings.scopes.iter().find(|s| s.dir == "apps/web").unwrap();
+        assert_eq!(web.paths, vec![("@lib/*".to_string(), vec!["libs/*".to_string()])]);
     }
 
     #[test]

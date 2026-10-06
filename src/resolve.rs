@@ -12,7 +12,7 @@
 
 use crate::inventory::Inventory;
 use crate::parse::{DJANGO_INCLUDE_MARKER, FileParse};
-use crate::profile::{PathMappings, WorkspacePackage};
+use crate::profile::{PathMappings, PathScope, WorkspacePackage};
 use crate::types::FileId;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
@@ -183,7 +183,7 @@ pub fn resolve_all(
             // to the repo file. node_modules is excluded from the inventory,
             // so the repo file is the saner reading.
             if !spec.starts_with('.') {
-                if let Some(to) = resolve_bare(spec, mappings, &index) {
+                if let Some(to) = resolve_bare(spec, &from_dir, mappings, &index) {
                     internal_attempts += 1;
                     internal_hits += 1;
                     if to != from && seen.insert((from, to)) {
@@ -270,49 +270,109 @@ fn resolve_one(
         return lookup(&joined, index);
     }
 
-    resolve_bare(spec, mappings, index)
+    resolve_bare(spec, from_dir, mappings, index)
 }
 
 /// Alias table and baseUrl lookup for a non-relative specifier. Called twice
 /// for bare specs — once as an internal-attempt probe before the external
 /// heuristic, once inside `resolve_one` — so it must stay side-effect free.
-fn resolve_bare(spec: &str, mappings: &PathMappings, index: &FileIndex) -> Option<FileId> {
-    for (pattern, targets) in &mappings.paths {
-        if let Some(tail) = match_alias(pattern, spec) {
-            for target in targets {
-                let candidate = target.replace('*', &tail);
-                if let Some(id) = lookup(&candidate, index) {
-                    return Some(id);
-                }
-            }
+fn resolve_bare(
+    spec: &str,
+    from_dir: &str,
+    mappings: &PathMappings,
+    index: &FileIndex,
+) -> Option<FileId> {
+    let chosen = nearest_scope(&mappings.scopes, from_dir).filter(|s| !s.dir.is_empty());
+    if let Some(scope) = chosen {
+        if let Some(id) = paths_hit(&scope.paths, spec, index, &[]) {
+            return Some(id);
+        }
+    }
+    let shadowed: Vec<&str> = chosen
+        .map(|s| s.paths.iter().map(|(p, _)| p.as_str()).collect())
+        .unwrap_or_default();
+    if let Some(id) = paths_hit(&mappings.paths, spec, index, &shadowed) {
+        return Some(id);
+    }
+
+    let local_base = chosen.and_then(|s| s.base_url.as_deref());
+    if let Some(base) = local_base {
+        if let Some(id) = base_hit(base, spec, index) {
+            return Some(id);
         }
     }
 
     if let Some(base) = &mappings.base_url {
-        let candidate = if base == "." || base.is_empty() {
-            spec.to_string()
-        } else {
-            format!("{base}/{spec}")
-        };
-        if let Some(id) = lookup(&candidate, index) {
-            return Some(id);
+        if Some(base.as_str()) != local_base {
+            if let Some(id) = base_hit(base, spec, index) {
+                return Some(id);
+            }
         }
     }
 
     // Workspace packages each carry their own baseUrl (slice 2). Tried in
     // order after the root's; the profile keeps them sorted and deduplicated.
     for base in &mappings.extra_base_urls {
-        let candidate = if base == "." || base.is_empty() {
-            spec.to_string()
-        } else {
-            format!("{base}/{spec}")
-        };
-        if let Some(id) = lookup(&candidate, index) {
+        if Some(base.as_str()) == local_base {
+            continue;
+        }
+        if let Some(id) = base_hit(base, spec, index) {
             return Some(id);
         }
     }
 
     resolve_workspace(spec, &mappings.workspace_packages, index)
+}
+
+fn nearest_scope<'a>(scopes: &'a [PathScope], from_dir: &str) -> Option<&'a PathScope> {
+    let mut best: Option<&PathScope> = None;
+    for scope in scopes {
+        if !scope_covers(&scope.dir, from_dir) {
+            continue;
+        }
+        if best.is_none_or(|cur| scope.dir.len() > cur.dir.len()) {
+            best = Some(scope);
+        }
+    }
+    best
+}
+
+fn scope_covers(dir: &str, from_dir: &str) -> bool {
+    dir.is_empty()
+        || from_dir == dir
+        || from_dir.strip_prefix(dir).is_some_and(|rest| rest.starts_with('/'))
+}
+
+fn paths_hit(
+    paths: &[(String, Vec<String>)],
+    spec: &str,
+    index: &FileIndex,
+    skip: &[&str],
+) -> Option<FileId> {
+    for (pattern, targets) in paths {
+        if skip.contains(&pattern.as_str()) {
+            continue;
+        }
+        let Some(tail) = match_alias(pattern, spec) else {
+            continue;
+        };
+        for target in targets {
+            let candidate = target.replace('*', &tail);
+            if let Some(id) = lookup(&candidate, index) {
+                return Some(id);
+            }
+        }
+    }
+    None
+}
+
+fn base_hit(base: &str, spec: &str, index: &FileIndex) -> Option<FileId> {
+    let candidate = if base == "." || base.is_empty() {
+        spec.to_string()
+    } else {
+        format!("{base}/{spec}")
+    };
+    lookup(&candidate, index)
 }
 
 /// `shared/x` or `@acme/ui` against the monorepo's own packages. The bare
@@ -935,6 +995,86 @@ mod tests {
         let res = resolve_all(&inv, &[parsed(0, &["@shared/util"])], &m, &[]);
         assert_eq!(res.edges, vec![(0, 1)]);
         assert!(res.unresolved.is_empty());
+    }
+
+    #[test]
+    fn nearest_tsconfig_paths_resolve_inside_each_app() {
+        let dir = std::env::temp_dir().join(format!(
+            "codearch-nearest-paths-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        let write = |rel: &str, content: &str| {
+            let path = dir.join(rel);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, content).unwrap();
+        };
+        write(
+            "package.json",
+            r#"{"name":"mono","private":true,"workspaces":["apps/*"]}"#,
+        );
+        write(
+            "tsconfig.json",
+            r#"{"compilerOptions":{"paths":{"@/*":["lib/*"]}}}"#,
+        );
+        write(
+            "apps/web/tsconfig.json",
+            r#"{"compilerOptions":{"paths":{"@/*":["./src/*"]}}}"#,
+        );
+        write(
+            "apps/api/tsconfig.json",
+            r#"{"compilerOptions":{"paths":{"@/*":["./src/*"]}}}"#,
+        );
+        write("apps/web/src/page.ts", "import { x } from \"@/util\";\n");
+        write("apps/api/src/main.ts", "import { x } from \"@/util\";\n");
+        write("apps/web/src/util.ts", "export const x = 1;\n");
+        write("apps/api/src/util.ts", "export const x = 1;\n");
+        write("src/root.ts", "import { x } from \"@/util\";\n");
+        write("lib/util.ts", "export const x = 1;\n");
+        let inv = crate::inventory::collect(&dir).unwrap();
+        let profile = crate::profile::detect(&inv);
+        let mut parsers = crate::parse::Parsers::new();
+        let parsed: Vec<_> = inv
+            .files
+            .iter()
+            .map(|f| {
+                let src = std::fs::read_to_string(&f.abs).unwrap();
+                crate::parse::parse_one(&mut parsers, f.id, f.language, &src)
+            })
+            .collect();
+        let res = resolve_all(&inv, &parsed, &profile.mappings, &profile.package_dirs);
+        let _ = std::fs::remove_dir_all(&dir);
+        let id = |rel: &str| inv.files.iter().find(|f| f.rel == rel).unwrap().id;
+        let has = |from: &str, to: &str| res.edges.contains(&(id(from), id(to)));
+        assert!(has("apps/web/src/page.ts", "apps/web/src/util.ts"));
+        assert!(!has("apps/web/src/page.ts", "apps/api/src/util.ts"));
+        assert!(has("apps/api/src/main.ts", "apps/api/src/util.ts"));
+        assert!(!has("apps/api/src/main.ts", "apps/web/src/util.ts"));
+        assert!(has("src/root.ts", "lib/util.ts"));
+        assert!(!has("src/root.ts", "apps/web/src/util.ts"));
+        assert!(!has("src/root.ts", "apps/api/src/util.ts"));
+        let paths_of = |dir_name: &str| {
+            profile
+                .mappings
+                .scopes
+                .iter()
+                .find(|s| s.dir == dir_name)
+                .unwrap()
+                .paths
+                .clone()
+        };
+        assert_eq!(
+            paths_of(""),
+            vec![("@/*".to_string(), vec!["lib/*".to_string()])]
+        );
+        assert_eq!(
+            paths_of("apps/web"),
+            vec![("@/*".to_string(), vec!["apps/web/src/*".to_string()])]
+        );
+        assert_eq!(
+            paths_of("apps/api"),
+            vec![("@/*".to_string(), vec!["apps/api/src/*".to_string()])]
+        );
     }
 
     #[test]
