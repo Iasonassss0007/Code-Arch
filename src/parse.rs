@@ -95,6 +95,10 @@ pub struct FileParse {
     /// otherwise silent, so these never count toward resolution.
     #[serde(default)]
     pub py_members: Vec<RawRef>,
+    /// Cross-file Django `include('pkg.urls')` prefixes. Applied after
+    /// resolution by copying the target file's routes.
+    #[serde(default)]
+    pub includes: Vec<RouteInclude>,
     /// The grammar reported at least one ERROR node.
     pub partial: bool,
 }
@@ -105,6 +109,14 @@ pub struct FileParse {
 pub struct Route {
     pub segments: Vec<String>,
     pub view: String,
+}
+
+/// A string `include('dotted.path')` under a route prefix. The target file's
+/// own routes stay unchanged; copies gain `segments` in front.
+#[derive(Debug, Default, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct RouteInclude {
+    pub segments: Vec<String>,
+    pub module: String,
 }
 
 pub struct Parsers {
@@ -334,7 +346,7 @@ pub fn parse_one(parsers: &mut Parsers, id: FileId, lang: Language, src: &str) -
     visit(root, src, false, lang.is_python(), &mut out, 0, false);    out.urls.sort();
     out.urls.dedup();
     if lang.is_python() {
-        python_routes(root, src, &[], &mut out.routes, 0);
+        python_routes(root, src, &[], &mut out.routes, &mut out.includes, 0);
     } else {
         out.http = HTTP_MARKERS.iter().any(|m| src.contains(m));
         out.url_segments.sort();
@@ -433,7 +445,14 @@ pub fn route_segments(raw: &str) -> Vec<String> {
 /// argument is a string is a route: its second argument names the view
 /// (`View`, `View.as_view()`, `module.view`) or holds an `include(...)`,
 /// whose routes inherit the pattern as prefix.
-fn python_routes(node: Node, src: &str, prefix: &[String], out: &mut Vec<Route>, depth: usize) {
+fn python_routes(
+    node: Node,
+    src: &str,
+    prefix: &[String],
+    out: &mut Vec<Route>,
+    includes: &mut Vec<RouteInclude>,
+    depth: usize,
+) {
     if depth > MAX_DEPTH {
         return;
     }
@@ -444,15 +463,22 @@ fn python_routes(node: Node, src: &str, prefix: &[String], out: &mut Vec<Route>,
             if let Some(view) = view_name(target, src) {
                 out.push(Route { segments, view });
             } else {
-                python_routes(target, src, &segments, out, depth + 1);
+                if let Some(module) = include_module(target, src) {
+                    includes.push(RouteInclude { segments: segments.clone(), module });
+                }
+                python_routes(target, src, &segments, out, includes, depth + 1);
             }
             return;
         }
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        python_routes(child, src, prefix, out, depth + 1);
+        python_routes(child, src, prefix, out, includes, depth + 1);
     }
+}
+
+fn include_module(node: Node, src: &str) -> Option<String> {
+    django_include_specifier(node, src).and_then(|spec| spec.strip_prefix(DJANGO_INCLUDE_MARKER).map(str::to_string))
 }
 
 /// `(pattern, second positional argument)` of a route-declaring call.
@@ -1355,6 +1381,7 @@ urlpatterns = [
         assert!(got.contains(&(s(&["api", "documents", "bulk_edit"]), "BulkEditView".into())));
         assert!(got.contains(&(s(&["api", "profile"]), "ProfileView".into())));
         assert!(got.contains(&(s(&["api", "login"]), "login".into())));
+        assert!(out.includes.is_empty());
     }
 
     #[test]

@@ -302,12 +302,13 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     timer.done("profile");
 
     // 2 — Parse
-    let parsed = parse::parse_all_cached(&inv, &mut store.files);
+    let mut parsed = parse::parse_all_cached(&inv, &mut store.files);
     timer.done("parse");
 
     // 3 — Resolve
     let res = resolve::resolve_all(&inv, &parsed, &profile.mappings, &profile.package_dirs);
     timer.done("resolve");
+    resolve::stitch_route_includes(&inv, &mut parsed, &profile.package_dirs);
 
     // 3.5 — Cross-language contracts. Stage-2 URL evidence joined across
     // languages; feeds stage-5 fusion and the render caveat. Semantic

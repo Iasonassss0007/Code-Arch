@@ -747,6 +747,46 @@ fn lookup(path: &str, index: &FileIndex) -> Option<FileId> {
     index.get(&format!("{path}/index"))
 }
 
+pub fn stitch_route_includes(inv: &Inventory, parsed: &mut [FileParse], package_dirs: &[String]) {
+    let index = FileIndex::build(inv);
+    let roots = python_roots(inv, package_dirs);
+    let originals: Vec<Vec<crate::parse::Route>> = parsed.iter().map(|p| p.routes.clone()).collect();
+    let mut by_file: HashMap<FileId, usize> = HashMap::new();
+    for (i, p) in parsed.iter().enumerate() {
+        by_file.insert(p.file, i);
+    }
+    for i in 0..parsed.len() {
+        if !inv.get(parsed[i].file).language.is_python() {
+            continue;
+        }
+        let includes = parsed[i].includes.clone();
+        let mut added = Vec::new();
+        for inc in includes {
+            let Some(to) = resolve_dotted(&inc.module, &roots, &index) else {
+                continue;
+            };
+            if to == parsed[i].file {
+                continue;
+            }
+            let Some(&j) = by_file.get(&to) else {
+                continue;
+            };
+            if !inv.get(parsed[j].file).language.is_python() {
+                continue;
+            }
+            for route in &originals[j] {
+                let mut segments = inc.segments.clone();
+                segments.extend(route.segments.iter().cloned());
+                added.push(crate::parse::Route {
+                    segments,
+                    view: route.view.clone(),
+                });
+            }
+        }
+        parsed[i].routes.extend(added);
+    }
+}
+
 /// `@/*` against `@/auth/login` yields `auth/login`.
 fn match_alias(pattern: &str, spec: &str) -> Option<String> {
     match pattern.split_once('*') {
@@ -1413,6 +1453,24 @@ mod tests {
         assert_eq!(res.edges, vec![(0, 1)]);
         assert_eq!(res.unresolved, vec![(0, "#nope".to_string())]);
         assert!(res.externals.is_empty());
+    }
+
+    #[test]
+    fn cross_file_django_include_prefixes_copied_routes() {
+        let inv = inventory(&["proj/urls.py", "app/urls.py"]);
+        let parent = "urlpatterns = [path('api/', include('app.urls'))]\n";
+        let child = "class TagView:\n    pass\nurlpatterns = [path('tags/', TagView.as_view())]\n";
+        let mut parsed = vec![parsed_py(0, parent), parsed_py(1, child)];
+        let child_routes = parsed[1].routes.clone();
+        stitch_route_includes(&inv, &mut parsed, &[]);
+        assert_eq!(parsed[1].routes, child_routes);
+        assert_eq!(
+            parsed[0].routes,
+            vec![crate::parse::Route {
+                segments: vec!["api".to_string(), "tags".to_string()],
+                view: "TagView".to_string(),
+            }]
+        );
     }
 
     #[test]

@@ -41,7 +41,9 @@ use std::path::Path;
 /// labeler.
 /// v8: `FileParse` gains `py_members` (`from X import name` candidates);
 /// v7 parses would serve without them and drop those edges.
-pub const FORMAT: u32 = 9;
+/// v10: `FileParse` gains `includes` (cross-file Django `include()` prefixes).
+/// A stored parse without them would serve routes without those prefixes.
+pub const FORMAT: u32 = 10;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StoredFile {
