@@ -468,9 +468,9 @@ fn python_roots(inv: &Inventory, package_dirs: &[String]) -> Vec<String> {
 
 /// One Python ref, dispatched by shape. Attempt counting is asymmetric on
 /// purpose: an absolute miss goes external without touching the rate unless
-/// its top-level name is a package in the repository, while a relative miss
-/// is always the tool's failure and counts. `__future__` is external by
-/// definition.
+/// its top-level name is a package in the repository, or a sibling module
+/// in a directory that is not a package. A relative miss is always the
+/// tool's failure and counts. `__future__` is external by definition.
 #[allow(clippy::too_many_arguments)]
 fn resolve_py(
     spec: &str,
@@ -523,12 +523,29 @@ fn resolve_py(
             *hits += 1;
             push_edge(out, seen, from, to);
         }
-        None if local.contains(spec.split('.').next().unwrap_or(spec)) => {
-            *attempts += 1;
-            out.unresolved.push((from, spec.to_string()));
-        }
-        None => push_external(out, from, spec.split('.').next().unwrap_or(spec)),
+        None => match resolve_py_sibling(spec, from_dir, index) {
+            Some(to) => {
+                *attempts += 1;
+                *hits += 1;
+                push_edge(out, seen, from, to);
+            }
+            None if local.contains(spec.split('.').next().unwrap_or(spec)) => {
+                *attempts += 1;
+                out.unresolved.push((from, spec.to_string()));
+            }
+            None => push_external(out, from, spec.split('.').next().unwrap_or(spec)),
+        },
     }
+}
+
+fn resolve_py_sibling(spec: &str, from_dir: &str, index: &FileIndex) -> Option<FileId> {
+    if spec.starts_with('.') || from_dir.is_empty() {
+        return None;
+    }
+    if lookup(&format!("{from_dir}/__init__.py"), index).is_some() {
+        return None;
+    }
+    lookup(&format!("{from_dir}/{}", spec.replace('.', "/")), index)
 }
 
 fn python_packages(inv: &Inventory) -> HashSet<String> {
@@ -1334,7 +1351,8 @@ mod tests {
 
     #[test]
     fn python_package_root_ignored_without_package_python() {
-        // A TS-only package dir adds no root: `models` still files external.
+        // A TS-only package dir adds no root. `models` still resolves: the
+        // importer directory is not a package, so the sibling file is the edge.
         let inv = inventory(&["packages/api/app.py", "packages/api/models.py"]);
         let res = resolve_all(
             &inv,
@@ -1342,7 +1360,52 @@ mod tests {
             &PathMappings::default(),
             &["packages/web".to_string()],
         );
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert!(res.externals.is_empty());
+        assert!(res.unresolved.is_empty());
+    }
+
+    #[test]
+    fn python_sibling_import_resolves_outside_a_package() {
+        let inv = inventory(&["backend/server.py", "backend/db.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["db"])],
+            &PathMappings::default(),
+            &[],
+        );
+        assert_eq!(res.edges, vec![(0, 1)]);
+        assert!(!res.externals.contains_key("db"));
+        assert!(res.unresolved.is_empty());
+        assert!((res.resolution_rate - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn python_sibling_import_stays_external_inside_a_package() {
+        let inv = inventory(&["backend/server.py", "backend/db.py", "backend/__init__.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(0, &["db"])],
+            &PathMappings::default(),
+            &[],
+        );
         assert!(res.edges.is_empty());
-        assert_eq!(res.externals.get("models"), Some(&1));
+        assert_eq!(res.externals.get("db"), Some(&1));
+        assert!(res.unresolved.is_empty());
+    }
+
+    #[test]
+    fn python_root_module_wins_over_a_missing_sibling() {
+        let inv = inventory(&["db.py", "backend/server.py"]);
+        let res = resolve_all(
+            &inv,
+            &[parsed(1, &["db"])],
+            &PathMappings::default(),
+            &[],
+        );
+        assert_eq!(res.edges, vec![(1, 0)]);
+        assert!(res.externals.is_empty());
+        assert!(res.unresolved.is_empty());
+        assert!((res.resolution_rate - 1.0).abs() < 1e-9);
     }
 }
