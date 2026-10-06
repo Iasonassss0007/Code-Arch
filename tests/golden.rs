@@ -14,7 +14,7 @@ const FIXTURES: &[FixtureCase] = &[
     },
     FixtureCase {
         name: "xlang",
-        files: &["imports.md"],
+        files: &["imports.md", "routes.md"],
     },
     FixtureCase {
         name: "tier1",
@@ -270,6 +270,56 @@ fn changed_file_marks_index_stale_without_rewriting_imports() {
     );
     let after = std::fs::read(&imports).expect("imports.md after");
     assert_eq!(after, before, "stale importers must not rewrite imports.md");
+}
+
+#[test]
+fn xlang_callers_hit_the_frontend_fetch() {
+    let scratch = copy_fixture("xlang");
+    index(&scratch.path);
+    let by_view = query(&scratch.path, &["callers", "users", "--json"]);
+    assert_eq!(
+        by_view.status.code(),
+        Some(0),
+        "xlang callers exit\n{}",
+        stderr_text(&by_view)
+    );
+    let view_value: serde_json::Value =
+        serde_json::from_slice(&by_view.stdout).expect("xlang callers json");
+    assert!(
+        json_callers(&view_value).iter().any(|c| c == "frontend/api.ts"),
+        "xlang callers users: {view_value}"
+    );
+    let by_path = query(
+        &scratch.path,
+        &["callers", "--path", "api/users", "--json"],
+    );
+    assert_eq!(
+        by_path.status.code(),
+        Some(0),
+        "xlang path exit\n{}",
+        stderr_text(&by_path)
+    );
+    let path_value: serde_json::Value =
+        serde_json::from_slice(&by_path.stdout).expect("xlang path json");
+    assert!(
+        json_callers(&path_value).iter().any(|c| c == "frontend/api.ts"),
+        "xlang callers path: {path_value}"
+    );
+}
+
+fn json_callers(value: &serde_json::Value) -> Vec<String> {
+    value["matches"]
+        .as_array()
+        .unwrap_or_else(|| panic!("matches array: {value}"))
+        .iter()
+        .flat_map(|m| {
+            m["callers"]
+                .as_array()
+                .unwrap_or_else(|| panic!("callers array: {m}"))
+                .iter()
+                .filter_map(|c| c.as_str().map(str::to_string))
+        })
+        .collect()
 }
 
 #[test]

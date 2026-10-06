@@ -216,7 +216,7 @@ pub fn route_join(inv: &Inventory, parsed: &[FileParse]) -> Vec<RouteLink> {
     }
     let mount: HashSet<&str> = first
         .into_iter()
-        .filter(|&(_, n)| n * 2 > nested)
+        .filter(|&(_, n)| n > 1 && n * 2 > nested)
         .map(|(s, _)| s)
         .collect();
 

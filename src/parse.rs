@@ -625,6 +625,9 @@ fn visit_python(node: Node, src: &str, line: usize, out: &mut FileParse) {
             }
         }
         "function_definition" | "class_definition" => {
+            if node.kind() == "function_definition" {
+                push_decorator_routes(node, src, out);
+            }
             if let Some(name_node) = node.child_by_field_name("name") {
                 if let Ok(name) = name_node.utf8_text(src.as_bytes()) {
                     // No export keyword in Python; everything reads
@@ -881,6 +884,78 @@ fn first_string_descendant(node: Node, src: &str) -> Option<String> {
     None
 }
 
+fn route_decorator_name(name: &str) -> bool {
+    matches!(
+        name,
+        "route"
+            | "get"
+            | "post"
+            | "put"
+            | "patch"
+            | "delete"
+            | "head"
+            | "options"
+            | "trace"
+            | "api_route"
+    )
+}
+
+fn decorator_route_pattern(decorator: Node, src: &str) -> Option<String> {
+    let mut cursor = decorator.walk();
+    let call = decorator.children(&mut cursor).find(|c| c.kind() == "call")?;
+    let callee = call.child_by_field_name("function")?;
+    if callee.kind() != "attribute" {
+        return None;
+    }
+    let name = callee
+        .child_by_field_name("attribute")?
+        .utf8_text(src.as_bytes())
+        .ok()?;
+    if !route_decorator_name(name) {
+        return None;
+    }
+    let args = call.child_by_field_name("arguments")?;
+    let mut cursor = args.walk();
+    let mut positional = args
+        .named_children(&mut cursor)
+        .filter(|c| c.kind() != "keyword_argument" && c.kind() != "comment");
+    let pattern = string_value(positional.next()?, src)?;
+    pattern.contains('/').then_some(pattern)
+}
+
+fn push_decorator_routes(func: Node, src: &str, out: &mut FileParse) {
+    let Some(parent) = func.parent() else {
+        return;
+    };
+    if parent.kind() != "decorated_definition" {
+        return;
+    }
+    let Some(view) = func
+        .child_by_field_name("name")
+        .and_then(|n| n.utf8_text(src.as_bytes()).ok())
+        .map(str::to_string)
+    else {
+        return;
+    };
+    let mut cursor = parent.walk();
+    for child in parent.children(&mut cursor) {
+        if child.kind() != "decorator" {
+            continue;
+        }
+        let Some(pattern) = decorator_route_pattern(child, src) else {
+            continue;
+        };
+        let segments = route_segments(&pattern);
+        if segments.is_empty() {
+            continue;
+        }
+        out.routes.push(Route {
+            segments,
+            view: view.clone(),
+        });
+    }
+}
+
 /// `path('api/x/', …)` / `re_path` / `url`: Django URLconfs without
 /// `include()`. Gated on the callee name so ordinary calls never contribute.
 fn path_call_string(node: Node, src: &str) -> Option<String> {
@@ -1129,10 +1204,57 @@ urlpatterns = [
     }
 
     #[test]
-    fn flask_route_decorator_fills_urls_and_not_routes() {
+    fn flask_route_decorator_fills_urls_and_routes() {
         let out = parse_py("@app.route('/api/users')\ndef users():\n    return None\n");
         assert_eq!(out.urls, vec!["api/users".to_string()]);
-        assert_eq!(out.routes, Vec::<Route>::new());
+        assert_eq!(
+            out.routes,
+            vec![Route {
+                segments: vec!["api".to_string(), "users".to_string()],
+                view: "users".to_string(),
+            }]
+        );
+    }
+
+    #[test]
+    fn fastapi_get_decorator_fills_urls_and_routes() {
+        let out = parse_py("@app.get('/items/{item_id}')\ndef read_item():\n    return None\n");
+        assert_eq!(out.urls, vec!["items/{item_id}".to_string()]);
+        assert_eq!(
+            out.routes,
+            vec![Route {
+                segments: vec!["items".to_string()],
+                view: "read_item".to_string(),
+            }]
+        );
+    }
+
+    #[test]
+    fn blueprint_post_decorator_names_the_function() {
+        let out = parse_py("@bp.post('/api/users')\ndef create_user():\n    return None\n");
+        assert_eq!(
+            out.routes,
+            vec![Route {
+                segments: vec!["api".to_string(), "users".to_string()],
+                view: "create_user".to_string(),
+            }]
+        );
+    }
+
+    #[test]
+    fn non_route_decorators_do_not_add_routes() {
+        for src in [
+            "@pytest.mark.parametrize('/api/users', ['x'])\ndef case():\n    return None\n",
+            "@login_required('/api/users')\ndef case():\n    return None\n",
+            "@action('/api/users')\ndef case():\n    return None\n",
+            "@app.route(path='/api/users')\ndef users():\n    return None\n",
+        ] {
+            let out = parse_py(src);
+            assert!(out.routes.is_empty(), "{src}");
+        }
+        let parametrize =
+            parse_py("@pytest.mark.parametrize('/api/users', ['x'])\ndef case():\n    return None\n");
+        assert_eq!(parametrize.urls, vec!["api/users".to_string()]);
     }
 
     #[test]
