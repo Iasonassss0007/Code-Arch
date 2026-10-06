@@ -430,6 +430,18 @@ fn visit(
             }
         }
 
+        if kind == "import_require_clause" {
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                if let Some(spec) = string_value(child, src) {
+                    out.refs.push(RawRef {
+                        specifier: spec,
+                        line,
+                    });
+                }
+            }
+        }
+
         if let Some(spec) = augmented
             .and_then(|n| string_value(n, src))
             .filter(|s| !s.contains('*'))
@@ -514,6 +526,7 @@ fn visit(
     let arguments = node.child_by_field_name("arguments");
     for child in node.children(&mut cursor) {
         let child_spec = in_specifier
+            || kind == "import_require_clause"
             || (is_source && source.is_some_and(|s| s.id() == child.id()))
             || ((is_import_call || skip_args)
                 && arguments.is_some_and(|a| a.id() == child.id()))
@@ -996,6 +1009,16 @@ fn is_interesting_symbol(name: &str, kind: SymbolKind) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn import_equals_require_is_a_ref() {
+        let out = parse(
+            "import x = require(\"./mod\");\nimport { y } from \"./keep\";\nexport * from \"./all\";\n",
+            Language::Ts,
+        );
+        let specs: Vec<&str> = out.refs.iter().map(|r| r.specifier.as_str()).collect();
+        assert_eq!(specs, vec!["./mod", "./keep", "./all"]);
+    }
 
     fn parse(src: &str, lang: Language) -> FileParse {
         let mut p = Parsers::new();
