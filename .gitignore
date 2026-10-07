@@ -30,3 +30,6 @@ eval/*.txt
 /eval/tasks-nav-groq-partial.json
 /eval/tasks-nav-groq-typedi.json
 /eval/README.recovered-partial.md
+
+# Index produced by running codearch in this repository
+.codearch/

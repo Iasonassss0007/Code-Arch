@@ -43,7 +43,10 @@ use std::path::Path;
 /// v7 parses would serve without them and drop those edges.
 /// v10: `FileParse` gains `includes` (cross-file Django `include()` prefixes).
 /// A stored parse without them would serve routes without those prefixes.
-pub const FORMAT: u32 = 10;
+/// v11: `Store` gains `configs` (mtime and size of manifests the index reads).
+/// A v10 store has no config stats, so freshness must say unknown rather than
+/// treat a changed tsconfig as fresh.
+pub const FORMAT: u32 = 11;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StoredFile {
@@ -79,10 +82,18 @@ pub struct SplitDecision {
     pub split: bool,
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ConfigStat {
+    pub mtime_ns: u64,
+    pub size: u64,
+}
+
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Store {
     pub version: u32,
     pub files: HashMap<String, StoredFile>,
+    #[serde(default)]
+    pub configs: HashMap<String, ConfigStat>,
     pub git: Option<StoredGit>,
     pub split_decision: Option<SplitDecision>,
 }

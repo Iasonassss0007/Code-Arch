@@ -288,6 +288,13 @@ pub fn run(opts: &Options) -> Result<RunReport> {
     let mut store = cache::Store::load(&dir);
     timer.done("cache-load");
     let inv = inventory::collect_cached(&root, &mut store.files)?;
+    if let Ok(snap) = inventory::stat_snapshot(&root) {
+        store.configs = snap
+            .configs
+            .into_iter()
+            .map(|(path, (mtime_ns, size))| (path, cache::ConfigStat { mtime_ns, size }))
+            .collect();
+    }
     timer.done("inventory");
     if inv.is_empty() {
         anyhow::bail!(

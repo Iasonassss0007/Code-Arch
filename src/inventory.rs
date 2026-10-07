@@ -318,32 +318,81 @@ fn mtime_ns(meta: &std::fs::Metadata) -> Option<u64> {
         .map(|d| d.as_nanos() as u64)
 }
 
-pub fn stat_snapshot(root: &Path) -> Result<HashMap<String, (u64, u64)>> {
+pub struct StatSnapshot {
+    pub sources: HashMap<String, (u64, u64)>,
+    pub configs: HashMap<String, (u64, u64)>,
+}
+
+pub fn stat_snapshot(root: &Path) -> Result<StatSnapshot> {
     let root = canonical_root(root)?;
-    let mut out = HashMap::new();
+    let mut sources = HashMap::new();
+    let mut configs = HashMap::new();
+    let mut tsconfigs: Vec<std::path::PathBuf> = Vec::new();
+    let mut local_packages: HashMap<String, String> = HashMap::new();
     for entry in build_walker(&root).flatten() {
         if entry.file_type().is_some_and(|t| t.is_dir()) {
             continue;
         }
         let abs = entry.path();
-        if Language::from_path(abs).is_none() {
-            continue;
-        }
-        let Ok(rel) = abs.strip_prefix(&root) else {
+        let Ok(rel_path) = abs.strip_prefix(&root) else {
             continue;
         };
+        let rel = rel_path.to_string_lossy().replace('\\', "/");
         let Ok(meta) = entry.metadata() else {
             continue;
         };
-        if meta.len() > MAX_SOURCE_BYTES {
+        if tracked_config(&rel) {
+            configs.insert(rel.clone(), (mtime_ns(&meta).unwrap_or(0), meta.len()));
+            let base = rel.rsplit('/').next().unwrap_or(&rel);
+            if base == "tsconfig.json" || base == "jsconfig.json" {
+                tsconfigs.push(abs.to_path_buf());
+            }
+            if base == "package.json"
+                && let Some(name) = package_name(abs)
+            {
+                let dir = rel.rsplit_once('/').map(|(d, _)| d.to_string()).unwrap_or_default();
+                local_packages.insert(name, dir);
+            }
+        }
+        if Language::from_path(abs).is_none() || meta.len() > MAX_SOURCE_BYTES {
             continue;
         }
-        out.insert(
-            rel.to_string_lossy().replace('\\', "/"),
-            (mtime_ns(&meta).unwrap_or(0), meta.len()),
-        );
+        sources.insert(rel, (mtime_ns(&meta).unwrap_or(0), meta.len()));
     }
-    Ok(out)
+    for file in tsconfigs {
+        for extra in crate::profile::in_repo_extends(&root, &file, &local_packages) {
+            let Ok(rel_path) = extra.strip_prefix(&root) else {
+                continue;
+            };
+            let rel = rel_path.to_string_lossy().replace('\\', "/");
+            if configs.contains_key(&rel) {
+                continue;
+            }
+            let Ok(meta) = std::fs::metadata(&extra) else {
+                continue;
+            };
+            configs.insert(rel, (mtime_ns(&meta).unwrap_or(0), meta.len()));
+        }
+    }
+    Ok(StatSnapshot { sources, configs })
+}
+
+fn tracked_config(rel: &str) -> bool {
+    let base = rel.rsplit('/').next().unwrap_or(rel);
+    match base {
+        "tsconfig.json" | "jsconfig.json" | "package.json" | "pyproject.toml" => true,
+        "pnpm-workspace.yaml" => !rel.contains('/'),
+        _ => false,
+    }
+}
+
+fn package_name(path: &std::path::Path) -> Option<String> {
+    let text = std::fs::read_to_string(path).ok()?;
+    serde_json::from_str::<serde_json::Value>(&text)
+        .ok()?
+        .get("name")?
+        .as_str()
+        .map(str::to_string)
 }
 
 /// A virtualenv or conda env, whatever it is called. Recognized by its

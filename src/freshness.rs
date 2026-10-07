@@ -36,6 +36,8 @@ pub struct Freshness {
 struct LightStore {
     version: u32,
     files: HashMap<String, LightFile>,
+    #[serde(default)]
+    configs: HashMap<String, LightFile>,
 }
 
 #[derive(serde::Deserialize)]
@@ -44,19 +46,30 @@ struct LightFile {
     size: u64,
 }
 
-fn stored_stats(dir: &Path) -> Option<HashMap<String, (u64, u64)>> {
+type SigMap = HashMap<String, (u64, u64)>;
+
+fn stored_stats(dir: &Path) -> Option<(SigMap, SigMap)> {
     let text = std::fs::read_to_string(dir.join("cache").join("store.json")).ok()?;
     let store: LightStore = serde_json::from_str(&text).ok()?;
     if store.version != cache::FORMAT || store.files.is_empty() {
         return None;
     }
-    Some(
-        store
-            .files
+    let file_sig = |files: HashMap<String, LightFile>| {
+        files
             .into_iter()
             .map(|(path, f)| (path, (f.mtime_ns, f.size)))
-            .collect(),
-    )
+            .collect()
+    };
+    Some((file_sig(store.files), file_sig(store.configs)))
+}
+
+fn changed_paths(stored: &SigMap, current: &SigMap) -> Vec<String> {
+    current
+        .iter()
+        .filter(|(path, sig)| stored.get(*path) != Some(*sig))
+        .map(|(path, _)| path.clone())
+        .chain(stored.keys().filter(|p| !current.contains_key(*p)).cloned())
+        .collect()
 }
 
 pub fn check(repo: &Path, dir: &Path) -> Freshness {
@@ -68,15 +81,13 @@ pub fn check(repo: &Path, dir: &Path) -> Freshness {
         refreshed: false,
         refresh_error: None,
     };
-    let (Some(stored), Ok(current)) = (stored_stats(dir), inventory::stat_snapshot(repo)) else {
+    let (Some((stored_sources, stored_configs)), Ok(current)) =
+        (stored_stats(dir), inventory::stat_snapshot(repo))
+    else {
         return out;
     };
-    let mut changed: Vec<String> = current
-        .iter()
-        .filter(|(path, sig)| stored.get(*path) != Some(*sig))
-        .map(|(path, _)| path.clone())
-        .chain(stored.keys().filter(|p| !current.contains_key(*p)).cloned())
-        .collect();
+    let mut changed = changed_paths(&stored_sources, &current.sources);
+    changed.extend(changed_paths(&stored_configs, &current.configs));
     changed.sort();
     out.changed_count = changed.len();
     changed.truncate(MAX_LISTED);
@@ -300,6 +311,171 @@ mod tests {
         assert!(f.refresh_error.as_deref().unwrap().contains("no JavaScript"));
         assert!(f.to_json().get("refreshed").is_none());
         assert!(f.summary_line().contains("rebuild failed"));
+    }
+
+    fn write_rel(repo: &Path, rel: &str, text: &str) {
+        let path = repo.join(rel);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    }
+
+    fn config_edit_is_stale(name: &str, rel: &str, before: &str, after: &str) {
+        let fx = Fixture::new(name);
+        write_rel(&fx.repo, rel, before);
+        fx.index();
+        assert_eq!(check(&fx.repo, &fx.dir).state, State::Fresh, "{rel} indexed");
+        write_rel(&fx.repo, rel, after);
+        let f = check(&fx.repo, &fx.dir);
+        assert_eq!(f.state, State::Stale, "{rel}");
+        assert!(f.changed.iter().any(|p| p == rel), "{rel} {:?}", f.changed);
+    }
+
+    #[test]
+    fn tsconfig_paths_change_is_stale_and_refresh_moves_the_edge() {
+        let fx = Fixture::new("tsconfig-alias");
+        write_rel(
+            &fx.repo,
+            "tsconfig.json",
+            r#"{"compilerOptions":{"paths":{"@x/*":["src/lib/*"]}}}"#,
+        );
+        write_rel(&fx.repo, "src/lib/a.ts", "export const a = 1;\n");
+        write_rel(&fx.repo, "src/other/a.ts", "export const a = 2;\n");
+        write_rel(&fx.repo, "src/main.ts", "import { a } from \"@x/a\";\n");
+        fx.index();
+        let before = std::fs::read_to_string(fx.dir.join("imports.md")).unwrap();
+        assert!(before.contains("src/lib/a.ts ← src/main.ts"), "{before}");
+        write_rel(
+            &fx.repo,
+            "tsconfig.json",
+            r#"{"compilerOptions":{"paths":{"@x/*":["src/other/*"]}}}"#,
+        );
+        let f = check(&fx.repo, &fx.dir);
+        assert_eq!(f.state, State::Stale);
+        assert!(f.changed.iter().any(|p| p == "tsconfig.json"), "{:?}", f.changed);
+        assert!(f.summary_line().contains("index: stale"));
+        let held = std::fs::read_to_string(fx.dir.join("imports.md")).unwrap();
+        assert!(held.contains("src/lib/a.ts ← src/main.ts"));
+        let rebuilt = resolve(&fx.repo, &fx.dir, true);
+        assert_eq!(rebuilt.state, State::Fresh);
+        let after = std::fs::read_to_string(fx.dir.join("imports.md")).unwrap();
+        assert!(after.contains("src/other/a.ts ← src/main.ts"), "{after}");
+        assert!(!after.contains("src/lib/a.ts ← src/main.ts"), "{after}");
+    }
+
+    #[test]
+    fn jsconfig_change_is_stale() {
+        config_edit_is_stale(
+            "jsconfig",
+            "jsconfig.json",
+            r#"{"compilerOptions":{"baseUrl":"."}}"#,
+            r#"{"compilerOptions":{"baseUrl":"src"}}"#,
+        );
+    }
+
+    #[test]
+    fn package_json_change_is_stale() {
+        config_edit_is_stale(
+            "pkg",
+            "package.json",
+            r##"{"name":"app","imports":{"#a":"./src/a.ts"}}"##,
+            r##"{"name":"app","imports":{"#a":"./src/b.ts"}}"##,
+        );
+    }
+
+    #[test]
+    fn pnpm_workspace_change_is_stale() {
+        config_edit_is_stale(
+            "pnpm",
+            "pnpm-workspace.yaml",
+            "packages:\n  - 'packages/*'\n",
+            "packages:\n  - 'apps/*'\n",
+        );
+    }
+
+    #[test]
+    fn pyproject_change_is_stale() {
+        config_edit_is_stale(
+            "pyproject",
+            "pyproject.toml",
+            "[project]\nname = \"app\"\n",
+            "[project]\nname = \"renamed\"\n",
+        );
+    }
+
+    #[test]
+    fn in_repo_tsconfig_extends_change_is_stale() {
+        let fx = Fixture::new("extends");
+        write_rel(&fx.repo, "tsconfig.json", r#"{ "extends": "./tsconfig.base.json" }"#);
+        write_rel(
+            &fx.repo,
+            "tsconfig.base.json",
+            r#"{"compilerOptions":{"paths":{"@x/*":["src/lib/*"]}}}"#,
+        );
+        write_rel(&fx.repo, "src/lib/a.ts", "export const a = 1;\n");
+        write_rel(&fx.repo, "src/main.ts", "import { a } from \"@x/a\";\n");
+        fx.index();
+        let before = std::fs::read_to_string(fx.dir.join("imports.md")).unwrap();
+        assert!(before.contains("src/lib/a.ts ← src/main.ts"), "{before}");
+        write_rel(
+            &fx.repo,
+            "tsconfig.base.json",
+            r#"{"compilerOptions":{"paths":{"@x/*":["src/missing/*"]}}}"#,
+        );
+        let f = check(&fx.repo, &fx.dir);
+        assert_eq!(f.state, State::Stale);
+        assert!(
+            f.changed.iter().any(|p| p == "tsconfig.base.json"),
+            "{:?}",
+            f.changed
+        );
+    }
+
+    #[test]
+    fn node_modules_extends_change_stays_fresh() {
+        let fx = Fixture::new("nm-extends");
+        write_rel(&fx.repo, "tsconfig.json", r#"{ "extends": "@ext/cfg" }"#);
+        write_rel(
+            &fx.repo,
+            "node_modules/@ext/cfg/tsconfig.json",
+            r#"{"compilerOptions":{"paths":{"@x/*":["../../../src/lib/*"]}}}"#,
+        );
+        write_rel(&fx.repo, "src/lib/a.ts", "export const a = 1;\n");
+        write_rel(&fx.repo, "src/other/a.ts", "export const a = 2;\n");
+        write_rel(&fx.repo, "src/main.ts", "import { a } from \"@x/a\";\n");
+        fx.index();
+        let before = std::fs::read_to_string(fx.dir.join("imports.md")).unwrap();
+        assert!(before.contains("src/lib/a.ts ← src/main.ts"), "{before}");
+        write_rel(
+            &fx.repo,
+            "node_modules/@ext/cfg/tsconfig.json",
+            r#"{"compilerOptions":{"paths":{"@x/*":["../../../src/other/*"]}}}"#,
+        );
+        let f = check(&fx.repo, &fx.dir);
+        assert_eq!(f.state, State::Fresh);
+        assert!(f.changed.is_empty(), "{:?}", f.changed);
+    }
+
+    #[test]
+    fn requirements_txt_change_stays_fresh() {
+        let fx = Fixture::new("requirements");
+        write_rel(&fx.repo, "requirements.txt", "django==4.2\n");
+        fx.index();
+        write_rel(&fx.repo, "requirements.txt", "django==5.0\n");
+        let f = check(&fx.repo, &fx.dir);
+        assert_eq!(f.state, State::Fresh);
+        assert!(f.changed.is_empty(), "{:?}", f.changed);
+    }
+
+    #[test]
+    fn old_cache_without_config_stats_is_unknown() {
+        let fx = Fixture::new("old-cache");
+        fx.index();
+        let path = fx.dir.join("cache").join("store.json");
+        let text = std::fs::read_to_string(&path).unwrap().replace("\"version\":11", "\"version\":10");
+        std::fs::write(&path, text).unwrap();
+        let f = check(&fx.repo, &fx.dir);
+        assert_eq!(f.state, State::Unknown);
+        assert!(f.summary_line().contains("freshness unknown"));
     }
 
     #[test]

@@ -11,7 +11,7 @@
 
 use crate::inventory::Inventory;
 use crate::types::{FileRecord, RouteHint};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 /// Dependency name -> display name. Order here is the order shown in the map.
@@ -419,6 +419,53 @@ fn load_tsconfig(root: &Path, file: &Path, local: &HashMap<String, String>, dept
         out.paths = Some((paths.clone(), rel_dir));
     }
     Some(out)
+}
+
+pub fn in_repo_extends(root: &Path, file: &Path, local: &HashMap<String, String>) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let mut seen = HashSet::new();
+    collect_extends(root, file, local, 0, &mut seen, &mut out);
+    out
+}
+
+fn collect_extends(
+    root: &Path,
+    file: &Path,
+    local: &HashMap<String, String>,
+    depth: usize,
+    seen: &mut HashSet<PathBuf>,
+    out: &mut Vec<PathBuf>,
+) {
+    if depth > 16 || !seen.insert(file.to_path_buf()) {
+        return;
+    }
+    let Ok(text) = std::fs::read_to_string(file) else {
+        return;
+    };
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&strip_jsonc(&text)) else {
+        return;
+    };
+    let dir = file.parent().unwrap_or(root);
+    let parents: Vec<String> = match v.get("extends") {
+        Some(serde_json::Value::String(s)) => vec![s.clone()],
+        Some(serde_json::Value::Array(a)) => a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect(),
+        _ => return,
+    };
+    for spec in parents {
+        let Some(target) = extends_target(root, dir, &spec, local) else {
+            continue;
+        };
+        let Ok(rel) = target.strip_prefix(root) else {
+            continue;
+        };
+        if rel.components().any(|c| c.as_os_str() == "node_modules") {
+            continue;
+        }
+        if !seen.contains(&target) {
+            out.push(target.clone());
+        }
+        collect_extends(root, &target, local, depth + 1, seen, out);
+    }
 }
 
 fn extends_target(root: &Path, dir: &Path, spec: &str, local: &HashMap<String, String>) -> Option<PathBuf> {
