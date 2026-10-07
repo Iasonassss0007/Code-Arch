@@ -35,14 +35,18 @@ codearch callers --path /tags/            # the same lookup by route path
 codearch agents --write AGENTS.md         # tell your agents these lookups exist
 ```
 
-Add `--json` for machine-readable output, and re-run `codearch` when the code changes.
+Add `--json` for machine-readable output. Re-run `codearch` when source files change.
+Also re-run it when `tsconfig.json`, `jsconfig.json`, `package.json`,
+`pnpm-workspace.yaml`, or `pyproject.toml` changes, and when an `extends` file
+inside the repository changes.
 Commit `.codearch/*.md` so a fresh clone can answer lookups right away
 (`.codearch/cache/` is ignored automatically).
 
-Every lookup says whether the index still matches the code: `fresh`, `stale` (with the
-changed files) or `unknown` (a fresh clone has no cache yet). The CLI prints this on
-stderr and `--json` adds a `freshness` object. Add `--refresh` to rebuild first when the
-answer would be stale or unknown.
+Every lookup says whether the index still matches those files: `fresh`, `stale` (with the
+changed files), or `unknown`. A fresh clone has no cache yet, so the lookup is unknown.
+A cache written by an older codearch is unknown too, until the next `codearch` run. The
+CLI prints this on stderr and `--json` adds a `freshness` object. Add `--refresh` to
+rebuild first when the answer would be stale or unknown.
 
 For MCP clients (Claude Code and others):
 
@@ -51,7 +55,7 @@ claude mcp add codearch -- codearch mcp --repo /path/to/repo --refresh
 ```
 
 Each answer carries the same `freshness` object. With `--refresh` the server rebuilds a
-stale index before answering. Without it, the server never writes files.
+stale or unknown index before answering. Without it, the server never writes files.
 
 ## Results
 
