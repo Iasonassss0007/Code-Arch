@@ -1,14 +1,17 @@
 # codearch
 
 Local code lookups for coding agents. `codearch` indexes a repository on your machine
-and answers two questions agents otherwise answer by grepping and guessing:
+and answers three questions agents otherwise answer by grepping and guessing:
 
 - **Who imports this file?** Directly and transitively.
-- **Which frontend files call this backend endpoint?** From a Django view to the
-  TypeScript files that request it.
+- **What does this file import?**
+- **Which frontend files call this backend endpoint?** From a Django, Flask, or
+  FastAPI route to the TypeScript files that request it. A route path works as
+  well as a view name.
 
-Works with TypeScript, JavaScript and Python, including monorepos (workspaces,
-tsconfig `paths` and `extends`).
+Works with TypeScript, JavaScript, and Python, including `<script>` blocks in
+`.vue` and `.svelte` files, and monorepos (workspaces, tsconfig `paths` and
+`extends`).
 
 ## Install
 
@@ -26,7 +29,9 @@ cargo install --path .
 cd /path/to/repo
 codearch                                  # build the index
 codearch importers src/lib/auth.ts        # who depends on this file
+codearch deps src/lib/auth.ts             # what this file imports
 codearch callers TagViewSet               # which frontend files call this view
+codearch callers --path /tags/            # the same lookup by route path
 codearch agents --write AGENTS.md         # tell your agents these lookups exist
 ```
 
