@@ -11,7 +11,7 @@ It is faster and more complete than grep for transitive questions, and it uses f
 ## Setup
 
 1. Check that the binary exists: `codearch --version`.
-2. If the command is missing, install it once with `npm install -g codearch`.
+2. If the command is missing, install it once with `npm install -g @iasonas/codearch`.
    If npm fails, use the installer for the platform:
    - macOS or Linux: `curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Iasonassss0007/Code-Arch/releases/latest/download/codearch-installer.sh | sh`
    - Windows: `powershell -ExecutionPolicy Bypass -c "irm https://github.com/Iasonassss0007/Code-Arch/releases/latest/download/codearch-installer.ps1 | iex"`

@@ -18,7 +18,7 @@ Works with TypeScript, JavaScript, and Python, including `<script>` blocks in
 Pick one. Each installs a prebuilt binary for Windows, macOS, or Linux; no Rust needed.
 
 ```
-npm install -g codearch
+npm install -g @iasonas/codearch
 ```
 
 ```
