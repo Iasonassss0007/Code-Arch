@@ -1,110 +1,60 @@
 # codearch
 
-Local code lookups for coding agents. `codearch` indexes a repository on your machine
-and answers three questions agents otherwise answer by grepping and guessing:
+Fast, local code lookups for AI coding agents. Instead of grepping and guessing, an agent asks:
 
-- **Who imports this file?** Directly and transitively.
+- **Who imports this file?** Directly or transitively.
 - **What does this file import?**
-- **Which frontend files call this backend endpoint?** From a Django, Flask, or
-  FastAPI route to the TypeScript files that request it. A route path works as
-  well as a view name.
+- **Which frontend files call this backend endpoint?** Django, Flask, or FastAPI routes to their TypeScript callers.
 
-Works with TypeScript, JavaScript, and Python, including `<script>` blocks in
-`.vue` and `.svelte` files, and monorepos (workspaces, tsconfig `paths` and
-`extends`).
+Supports TypeScript, JavaScript, and Python, including `.vue`/`.svelte` scripts and monorepos.
 
-## Install
-
-Pick one. Each installs a prebuilt binary for Windows, macOS, or Linux; no Rust needed.
+## Quick start
 
 ```
 npm install -g @iasonas/codearch
+npx skills add Iasonassss0007/Code-Arch
 ```
+
+The first line installs the `codearch` command. The second teaches your agent when to use it.
+
+Other installers (no Node needed):
 
 ```
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Iasonassss0007/Code-Arch/releases/latest/download/codearch-installer.sh | sh
-```
-
-```
 powershell -ExecutionPolicy Bypass -c "irm https://github.com/Iasonassss0007/Code-Arch/releases/latest/download/codearch-installer.ps1 | iex"
 ```
-
-From source (Rust 1.85 or newer): `cargo install --git https://github.com/Iasonassss0007/Code-Arch`.
-
-### Teach your agent
-
-Pick the one that fits your setup:
-
-- **Skill** (Claude Code and other agents that read `SKILL.md`): `npx skills add Iasonassss0007/Code-Arch`,
-  or copy [`skills/codearch/`](skills/codearch/SKILL.md) into `~/.claude/skills/`.
-  The agent learns when to use each lookup and how to act on a stale index.
-- **MCP server**: `claude mcp add codearch -- codearch mcp --refresh`, run inside the repository.
-- **Per repository**: `codearch agents --write AGENTS.md` adds a short block that agents read.
 
 ## Use
 
 ```
-cd /path/to/repo
-codearch                                  # build the index
-codearch importers src/lib/auth.ts        # who depends on this file
-codearch deps src/lib/auth.ts             # what this file imports
-codearch callers TagViewSet               # which frontend files call this view
-codearch callers --path /tags/            # the same lookup by route path
-codearch agents --write AGENTS.md         # tell your agents these lookups exist
+codearch                           # build the index in the current repo
+codearch importers src/lib/auth.ts # who depends on this file
+codearch deps src/lib/auth.ts      # what this file imports
+codearch callers TagViewSet        # frontend files calling this view
+codearch callers --path /tags/     # same, by route path
 ```
 
-Add `--json` for machine-readable output. Re-run `codearch` when source files change.
-Also re-run it when `tsconfig.json`, `jsconfig.json`, `package.json`,
-`pnpm-workspace.yaml`, or `pyproject.toml` changes, and when an `extends` file
-inside the repository changes.
-Commit `.codearch/*.md` so a fresh clone can answer lookups right away
-(`.codearch/cache/` is ignored automatically).
+- Add `--json` for machine-readable output.
+- Every answer says whether the index is `fresh`, `stale`, or `unknown`. Add `--refresh` to rebuild first when needed.
+- Commit `.codearch/*.md` so a fresh clone can answer lookups right away.
 
-Every lookup says whether the index still matches those files: `fresh`, `stale` (with the
-changed files), or `unknown`. A fresh clone has no cache yet, so the lookup is unknown.
-A cache written by an older codearch is unknown too, until the next `codearch` run. The
-CLI prints this on stderr and `--json` adds a `freshness` object. Add `--refresh` to
-rebuild first when the answer would be stale or unknown.
+## Other ways to connect an agent
 
-For MCP clients (Claude Code and others):
-
-```
-claude mcp add codearch -- codearch mcp --repo /path/to/repo --refresh
-```
-
-Each answer carries the same `freshness` object. With `--refresh` the server rebuilds a
-stale or unknown index before answering. Without it, the server never writes files.
+- **MCP server:** `claude mcp add codearch -- codearch mcp --refresh` (run inside the repo).
+- **Per repo:** `codearch agents --write AGENTS.md` adds a short instruction block.
 
 ## Results
 
-**Agents answer better with a lookup than with a codebase summary.** Asked "if I
-change this file, which files are affected?", models using the `codearch` lookup
-found the right files 98% of the time on navigation tasks and 100% on cross-language
-ones. With no help they scored 61% and 87%. A codebase map in the prompt did worse
-than no help. The lookup also cut the context read by 34–56% and the token cost by
-18–77%.
+Asked "if I change this file, which files are affected?", agents using codearch found the right
+files 98% of the time (100% on cross-language tasks), versus 61% (87%) with no help. They also
+read 34–56% less context.
 
 ![Answer quality: lookup tool 98% vs map 58% vs no help 61% on navigation; lookup tool 100% vs no help 87% on cross-language](docs/images/agent-quality.svg)
 
-Tested with Gemini models on Hono, Next.js Commerce, TypeDI and paperless-ngx. The
-cross-language result rests on one repository.
+- **Cheaper than grep:** up to 38x fewer tokens for transitive impact on a 2,800-file repo ([script](eval/grep_vs_codearch.py)).
+- **Accurate:** 100% recall and 99.8–100% precision against the TypeScript compiler on a 245-package monorepo ([report](eval/resolution_report.md)).
 
-**Cheaper than grep for transitive impact.** Context for one `codearch importers` call
-vs a batched grep search, one regex per depth
-([`eval/grep_vs_codearch.py`](eval/grep_vs_codearch.py)):
-
-| Repo | grep | codearch | Ratio |
-|---|---:|---:|---:|
-| ~155 TS/JS files | 2,240 tokens | 1,152 tokens | 1.9x |
-| ~2,800 TS/JS/Python files | 148,757 tokens | 3,896 tokens | 38x |
-
-For a single direct-importer lookup, `grep -l` is just as good.
-
-**Accurate on a large monorepo.** On a pnpm monorepo with 245 packages, 99.8% of
-first-party imports resolve. Compared with the TypeScript compiler's import graph,
-codearch's transitive importers have 100% recall and 99.8–100% precision across five
-target files. Details are in
-[`eval/resolution_report.md`](eval/resolution_report.md).
+Tested with Gemini models on Hono, Next.js Commerce, TypeDI and paperless-ngx.
 
 ## Development
 
