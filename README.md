@@ -15,13 +15,31 @@ Works with TypeScript, JavaScript, and Python, including `<script>` blocks in
 
 ## Install
 
-Requires Rust 1.85 or newer.
+Pick one. Each installs a prebuilt binary for Windows, macOS, or Linux; no Rust needed.
 
 ```
-git clone https://github.com/Iasonassss0007/Code-Arch.git
-cd Code-Arch
-cargo install --path .
+npm install -g codearch
 ```
+
+```
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Iasonassss0007/Code-Arch/releases/latest/download/codearch-installer.sh | sh
+```
+
+```
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/Iasonassss0007/Code-Arch/releases/latest/download/codearch-installer.ps1 | iex"
+```
+
+From source (Rust 1.85 or newer): `cargo install --git https://github.com/Iasonassss0007/Code-Arch`.
+
+### Teach your agent
+
+Pick the one that fits your setup:
+
+- **Skill** (Claude Code and other agents that read `SKILL.md`): `npx skills add Iasonassss0007/Code-Arch`,
+  or copy [`skills/codearch/`](skills/codearch/SKILL.md) into `~/.claude/skills/`.
+  The agent learns when to use each lookup and how to act on a stale index.
+- **MCP server**: `claude mcp add codearch -- codearch mcp --refresh`, run inside the repository.
+- **Per repository**: `codearch agents --write AGENTS.md` adds a short block that agents read.
 
 ## Use
 
